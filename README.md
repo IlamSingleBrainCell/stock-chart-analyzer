@@ -1,70 +1,66 @@
-# Getting Started with Create React App
+# Stock Chart Analyzer
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+## Project Description
 
-## Available Scripts
+Stock Chart Analyzer is a React application designed to help users identify common stock chart patterns from an uploaded image and provide a (currently simulated) prediction of future price trends. This tool is intended for educational purposes to help users learn about technical analysis and chart patterns.
 
-In the project directory, you can run:
+Please note: The current version of the application uses a mock analysis to simulate pattern detection and prediction.
 
-### `npm start`
+## Features
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Upload Stock Chart Images:** Users can upload images of stock charts directly into the application.
+- **Chart Pattern Analysis (Simulated):** The application identifies common chart patterns from the uploaded image. (Note: This analysis is currently simulated).
+- **Trend Prediction:** Based on the detected pattern, the tool predicts whether the stock is likely to go up, down, or continue its current trend.
+- **Estimated Timeframe:** Provides an estimated timeframe for the predicted trend.
+- **Pattern Descriptions:** Offers descriptions of various common chart patterns to help users understand the analysis.
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## How to Use
 
-### `npm test`
+1.  **Upload Image:** Click on the "Upload Stock Chart Image" section or drag and drop an image file of a stock chart.
+2.  **Analyze Chart:** Once the image is uploaded and a preview is visible, click the "Analyze Chart Pattern" button.
+3.  **View Results:** The application will display:
+    *   The detected chart pattern (e.g., Head and Shoulders, Double Bottom).
+    *   A prediction of the likely price trend (Up, Down, or Continuation).
+    *   An estimated timeframe for this prediction.
+    *   A description of the detected pattern.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+## Disclaimer
 
-### `npm run build`
+**Important:** This tool is for educational purposes only. Stock predictions are not guaranteed and should not be used as investment advice.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+This application does not provide financial advice. Chart pattern recognition is subjective and past patterns do not guarantee future results. Always conduct your own research before making investment decisions.
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+## Running the Project Locally
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+To run the Stock Chart Analyzer on your local machine, follow these steps:
 
-### `npm run eject`
+1.  **Clone the repository (if you haven't already):**
+    ```bash
+    git clone <repository-url>
+    cd stock-chart-analyzer
+    ```
+2.  **Install dependencies:**
+    Open your terminal in the project's root directory and run:
+    ```bash
+    npm install
+    ```
+3.  **Start the development server:**
+    After the installation is complete, run:
+    ```bash
+    npm start
+    ```
+    This will open the application in your default web browser, usually at `http://localhost:3000`.
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+## Deployment
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+This project is set up for deployment to GitHub Pages.
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+-   **Build the project:** `npm run build`
+-   **Deploy to GitHub Pages:** `npm run deploy`
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+The live version of this application can be accessed at:
+[https://IlamSingleBrainCell.github.io/stock-chart-analyzer](https://IlamSingleBrainCell.github.io/stock-chart-analyzer)
 
-## Learn More
+## Attribution
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
-
-To learn React, check out the [React documentation](https://reactjs.org/).
-
-### Code Splitting
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
-
-### Analyzing the Bundle Size
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
-
-### Making a Progressive Web App
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
-
-### Advanced Configuration
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
-
-### Deployment
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `npm run build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+Developed by Ilam.
