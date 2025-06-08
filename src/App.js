@@ -2,6 +2,9 @@ import React, { useState } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart } from 'lucide-react';
 import './App.css'; // Make sure you have this import
 
+// TODO: Replace with your actual backend API endpoint for chart analysis.
+const API_ENDPOINT = '/api/analyze-chart'; // Define API_ENDPOINT
+
 function App() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
@@ -89,50 +92,74 @@ function App() {
 
   const analyzeChart = () => {
     setLoading(true);
-    
-    // Simulate analysis with a timeout
-    setTimeout(() => {
-      // This is a mock analysis - in a real app, you would use image recognition or ML
-      // to actually analyze the chart patterns
-      
-      // Randomly select a pattern for demonstration
-      const patterns = Object.keys(chartPatterns);
-      const randomPattern = patterns[Math.floor(Math.random() * patterns.length)];
-      const selectedPattern = chartPatterns[randomPattern];
-      
-      setPatternDetected({
-        name: randomPattern,
-        ...selectedPattern
-      });
-      
-      setPrediction(selectedPattern.prediction);
-      
-      // Create a detailed time estimate based on the pattern
-      let timeInfo = '';
-      
-      if (selectedPattern.prediction === 'up') {
-        timeInfo = `Expected to rise for ${selectedPattern.daysUp}`;
-      } else if (selectedPattern.prediction === 'down') {
-        timeInfo = `Expected to decline for ${selectedPattern.daysDown}`;
-      } else if (selectedPattern.prediction === 'continuation') {
-        // For continuation patterns, randomly choose between up and down
-        if (Math.random() > 0.5) {
-          timeInfo = `Current uptrend likely to continue for ${selectedPattern.daysUp}`;
-        } else {
-          timeInfo = `Current downtrend likely to continue for ${selectedPattern.daysDown}`;
+
+    // In a real application, you would prepare the image data here.
+    // For example, if uploadedImage is a File object:
+    // const formData = new FormData();
+    // formData.append('chartImage', uploadedImage); // 'uploadedImage' should be the File object itself
+    //
+    // Then, you would use this formData in the fetch call:
+    // fetch(API_ENDPOINT, {
+    //   method: 'POST',
+    //   body: formData,
+    // })
+    // .then(response => response.json())
+    // .then(data => { ... })
+    // .catch(error => { ... })
+    // .finally(() => { setLoading(false); });
+
+    // MOCKED API CALL FOR DEMONSTRATION:
+    // This simulates a network request to the API_ENDPOINT.
+    // It randomly selects a chart pattern after a short delay.
+    // Replace this with a real fetch call to your backend service.
+    new Promise((resolve, reject) => {
+      setTimeout(() => {
+        try {
+          const patternKeys = Object.keys(chartPatterns);
+          const randomPatternKey = patternKeys[Math.floor(Math.random() * patternKeys.length)];
+          const selectedPattern = chartPatterns[randomPatternKey];
+
+          resolve({
+            name: randomPatternKey,
+            ...selectedPattern
+          });
+        } catch (error) {
+          reject(error);
         }
-      } else {
-        // For 'varies' prediction
+      }, 1000 + Math.random() * 1000); // Simulate 1-2 second delay
+    })
+    .then(selectedPatternData => {
+      setPatternDetected(selectedPatternData);
+      setPrediction(selectedPatternData.prediction);
+
+      let timeInfo = '';
+      if (selectedPatternData.prediction === 'up') {
+        timeInfo = `Expected to rise for ${selectedPatternData.daysUp}`;
+      } else if (selectedPatternData.prediction === 'down') {
+        timeInfo = `Expected to decline for ${selectedPatternData.daysDown}`;
+      } else if (selectedPatternData.prediction === 'continuation') {
         if (Math.random() > 0.5) {
-          timeInfo = `Likely to rise for ${selectedPattern.daysUp} after breaking out`;
+          timeInfo = `Current uptrend likely to continue for ${selectedPatternData.daysUp}`;
         } else {
-          timeInfo = `Likely to fall for ${selectedPattern.daysDown} after breaking down`;
+          timeInfo = `Current downtrend likely to continue for ${selectedPatternData.daysDown}`;
+        }
+      } else { // 'varies'
+        if (Math.random() > 0.5) {
+          timeInfo = `Likely to rise for ${selectedPatternData.daysUp} after breaking out`;
+        } else {
+          timeInfo = `Likely to fall for ${selectedPatternData.daysDown} after breaking down`;
         }
       }
-      
       setTimeEstimate(timeInfo);
+    })
+    .catch(error => {
+      console.error('Error analyzing chart:', error);
+      // Optionally, set an error state here to display to the user
+      // For example: setError('Failed to analyze chart. Please try again.');
+    })
+    .finally(() => {
       setLoading(false);
-    }, 2000);
+    });
   };
 
   return (
