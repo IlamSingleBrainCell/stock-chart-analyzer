@@ -155,10 +155,10 @@ body {
 
 /* Results container */
 .results-container {
-  background-color: white;
-  padding: 24px;
+  background-color: white; /* Or keep it transparent if analyzer-container provides bg */
+  padding: 0; /* Remove padding if analysis-summary-card has its own */
   border-radius: 8px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  /* box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1); Removed to avoid double shadow if card has it */
   margin-bottom: 24px;
 }
 
@@ -169,135 +169,175 @@ body {
   color: #333;
 }
 
+/* REMOVE OLD .results-grid and .result-card if no longer used, or ensure they don't conflict */
+/* For example, if .results-grid is completely replaced by .analysis-summary-card */
 .results-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  margin-bottom: 24px;
+ display: none; /* If completely replaced by analysis-summary-card */
 }
-
-@media (min-width: 768px) {
-  .results-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 .result-card {
-  background-color: #f9f9f9;
-  padding: 16px;
-  border-radius: 6px;
+  display: none; /* If completely replaced by analysis-summary-card */
 }
 
-.result-header {
+
+/* New Analysis Summary Card Styles */
+.analysis-summary-card {
+  background-color: #ffffff; /* White background for the card */
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  margin-bottom: 24px; /* Space before pattern-description */
+  padding: 0; /* Padding will be on sections if needed, or uniformly here if preferred */
+}
+
+.summary-section {
+  padding: 16px;
+  border-bottom: 1px solid #eee;
+}
+
+.summary-section:last-child {
+  border-bottom: none;
+}
+
+.summary-header {
   display: flex;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 10px; /* Increased space */
 }
 
-.result-header h3 {
+.summary-title { /* Targets h3 in summary-header */
+  font-size: 1.15em; /* Slightly larger */
+  font-weight: 600; /* Bolder */
+  margin: 0 0 0 10px; /* Adjusted margin-left */
+  color: #333;
+}
+
+.summary-text {
+  font-size: 1em;
+  margin-bottom: 8px; /* Space before details */
+  line-height: 1.5;
+}
+
+/* Prediction text specific styling if needed beyond color */
+.prediction-text.text-up,
+.prediction-text.text-down,
+.prediction-text.text-neutral {
+  font-weight: bold; /* Make prediction text bolder */
+}
+
+
+.summary-detail {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 8px; /* Space for details */
+}
+
+.summary-detail .duration-label { /* Make label within detail stand out a bit */
   font-weight: 500;
-  margin: 0;
-  margin-left: 8px;
-  font-size: 16px;
+  color: #333;
 }
 
-.icon-up {
-  color: #22c55e;
+
+/* Background colors for prediction sections */
+.prediction-section.bg-up {
+  background-color: #e6fffa; /* Light green/teal */
 }
 
-.icon-down {
-  color: #ef4444;
+.prediction-section.bg-down {
+  background-color: #ffe5e5; /* Light red */
 }
 
-.icon-neutral {
-  color: #3b82f6;
+.prediction-section.bg-neutral-varies {
+  background-color: #eef2f7; /* Light blue/gray */
 }
 
-.icon-time {
-  color: #8b5cf6;
+.confidence-score {
+  font-size: 0.85em;
+  color: #777;
+  margin-top: 10px; /* More space for confidence */
+  font-style: italic;
 }
 
-.icon-pattern {
-  color: #3b82f6;
-}
-
-.prediction-text {
-  font-size: 18px;
-  font-weight: 700;
-  margin-bottom: 4px;
-}
-
-.text-up {
-  color: #22c55e;
-}
-
-.text-down {
-  color: #ef4444;
-}
-
-.text-neutral {
-  color: #3b82f6;
-}
-
-.time-text {
-  font-size: 18px;
-  font-weight: 700;
-  color: #8b5cf6;
-  margin-bottom: 4px;
-}
-
-.pattern-text {
-  font-size: 18px;
-  font-weight: 700;
-  color: #3b82f6;
-}
-
-.duration-info {
-  font-size: 14px;
-  margin-top: 8px;
-  color: #666;
-}
-
-.duration-label {
-  font-weight: 500;
-}
-
-/* Pattern description */
+/* Pattern Description and Specifics Box */
 .pattern-description {
-  background-color: #f9f9f9;
-  padding: 16px;
-  border-radius: 6px;
+  /* background-color: #f9f9f9; (Kept from before, or remove if card style is enough) */
+  padding: 16px; /* Kept from before */
+  border-radius: 6px; /* Kept from before */
+  margin-bottom: 24px; /* Space after this whole block */
 }
 
-.pattern-description h3 {
-  font-weight: 500;
+.pattern-description > h3 { /* Targeting the "Pattern Description:" h3 */
+  font-weight: 600; /* Bolder */
+  font-size: 1.1em; /* Consistent with summary titles */
   margin-top: 0;
   margin-bottom: 8px;
-  font-size: 16px;
 }
 
-.pattern-details {
-  margin-top: 16px;
+.pattern-description > p { /* The main description paragraph */
+  margin-bottom: 16px;
+  line-height: 1.6;
 }
 
-.pattern-details h4 {
-  font-weight: 500;
-  font-size: 14px;
-  color: #666;
-  margin-bottom: 8px;
+.pattern-specifics-box {
+  padding: 15px;
+  border: 1px solid #e0e0e0;
+  background-color: #f7f9fc;
+  border-radius: 6px; /* Rounded corners for the box */
+  margin-top: 16px; /* Space from the description p to this box */
+}
+
+.pattern-specifics-box h4 { /* "What to look for:" */
+  font-weight: 600;
+  font-size: 1em;
+  color: #333;
+  margin-top: 0; /* Remove top margin if box has padding */
+  margin-bottom: 10px;
 }
 
 .pattern-list {
-  margin-top: 8px;
-  padding-left: 20px;
-  font-size: 14px;
+  margin-top: 0; /* Remove top margin if h4 has margin-bottom */
+  padding-left: 0; /* Remove default padding */
+  list-style-position: inside; /* Bullets inside the list block */
+  font-size: 0.95em; /* Slightly adjusted font size */
   color: #444;
 }
 
 .pattern-list li {
-  margin-bottom: 4px;
+  margin-bottom: 6px; /* Slightly more space between list items */
 }
 
+
+/* Icon styling (ensure they are vertically centered with text if needed) */
+.icon-up, .icon-down, .icon-neutral, .icon-time, .icon-pattern {
+  flex-shrink: 0; /* Prevent icons from shrinking */
+}
+
+/* Text color utilities (already defined, ensure they work as expected) */
+.text-up {
+  color: #16a34a; /* Darker green for better contrast potentially */
+}
+
+.text-down {
+  color: #dc2626; /* Darker red */
+}
+
+.text-neutral {
+  color: #2563eb; /* Darker blue */
+}
+
+
+/* Original .duration-info, .duration-label if still used elsewhere, or integrate into .summary-detail */
+.duration-info { /* This class is on summary-detail now as well */
+  font-size: 14px; /* Kept from before, but summary-detail might override */
+  margin-top: 8px; /* Kept from before */
+  color: #666; /* Kept from before */
+}
+
+.duration-label { /* This class is on a span inside summary-detail */
+  font-weight: 500; /* Kept from before */
+}
+
+
+/* Footer and other styles remain unchanged from above */
 /* Bottom section */
 .bottom-section {
   display: flex;

@@ -215,19 +215,24 @@ function App() {
         <div className="results-container">
           <h2 className="results-title">Analysis Results</h2>
           
-          <div className="results-grid">
-            <div className="result-card">
-              <div className="result-header">
+          <div className="analysis-summary-card">
+            {/* Prediction Section */}
+            <div className={`summary-section prediction-section ${
+              prediction === 'up' ? 'bg-up' :
+              prediction === 'down' ? 'bg-down' :
+              'bg-neutral-varies'
+            }`}>
+              <div className="summary-header">
                 {prediction === 'up' ? (
-                  <TrendingUp size={20} className="icon-up" />
+                  <TrendingUp size={24} className="icon-up" />
                 ) : prediction === 'down' ? (
-                  <TrendingDown size={20} className="icon-down" />
+                  <TrendingDown size={24} className="icon-down" />
                 ) : (
-                  <BarChart size={20} className="icon-neutral" />
+                  <BarChart size={24} className="icon-neutral" />
                 )}
-                <h3>Prediction</h3>
+                <h3 className="summary-title">Prediction</h3>
               </div>
-              <p className={`prediction-text ${
+              <p className={`summary-text prediction-text ${
                 prediction === 'up' ? 'text-up' : 
                 prediction === 'down' ? 'text-down' : 
                 'text-neutral'
@@ -236,39 +241,40 @@ function App() {
                 prediction === 'down' ? 'Likely to go DOWN' : 
                 'Continuation of current trend'}
               </p>
-              
               {patternDetected && prediction === 'up' && (
-                <div className="duration-info">
+                <div className="summary-detail duration-info">
                   <span className="duration-label">Upward duration:</span> {patternDetected.daysUp}
                 </div>
               )}
-              
               {patternDetected && prediction === 'down' && (
-                <div className="duration-info">
+                <div className="summary-detail duration-info">
                   <span className="duration-label">Downward duration:</span> {patternDetected.daysDown}
                 </div>
               )}
+              <p className="summary-detail confidence-score">Confidence: N/A</p>
             </div>
-            
-            <div className="result-card">
-              <div className="result-header">
-                <Calendar size={20} className="icon-time" />
-                <h3>Time Estimate</h3>
+
+            {/* Time Estimate Section */}
+            <div className="summary-section time-estimate-section">
+              <div className="summary-header">
+                <Calendar size={24} className="icon-time" />
+                <h3 className="summary-title">Time Estimate</h3>
               </div>
-              <p className="time-text">{timeEstimate}</p>
+              <p className="summary-text time-text">{timeEstimate}</p>
               {patternDetected && (
-                <div className="duration-info">
+                <div className="summary-detail duration-info">
                   <span className="duration-label">Typical pattern duration:</span> {patternDetected.timeframe}
                 </div>
               )}
             </div>
-            
-            <div className="result-card">
-              <div className="result-header">
-                <BarChart size={20} className="icon-pattern" />
-                <h3>Pattern Detected</h3>
+
+            {/* Detected Pattern Section */}
+            <div className="summary-section pattern-section">
+              <div className="summary-header">
+                <BarChart size={24} className="icon-pattern" />
+                <h3 className="summary-title">Pattern Detected</h3>
               </div>
-              <p className="pattern-text">
+              <p className="summary-text pattern-text">
                 {patternDetected?.name.split('-').map(word => 
                   word.charAt(0).toUpperCase() + word.slice(1)
                 ).join(' ')}
@@ -280,7 +286,7 @@ function App() {
             <div className="pattern-description">
               <h3>Pattern Description:</h3>
               <p>{patternDetected.description}</p>
-              <div className="pattern-details">
+              <div className="pattern-details pattern-specifics-box">
                 <h4>What to look for:</h4>
                 <ul className="pattern-list">
                   {patternDetected.name === 'head-and-shoulders' && (
