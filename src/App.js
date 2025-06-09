@@ -164,10 +164,6 @@ function App() {
 
   return (
     <div className="analyzer-container">
-      {/* Top Banner Ad */}
-      <div className="ad-banner">
-        <p>Advertisement Placeholder (728x90)</p>
-      </div>
       
       <h1 className="app-title">Stock Chart Pattern Analyzer</h1>
       
@@ -330,28 +326,13 @@ function App() {
                 </ul>
               </div>
               
-              {/* In-content ad */}
-              <div className="ad-content">
-                <p>Advertisement Placeholder (468x60)</p>
-              </div>
             </div>
           )}
         </div>
       )}
       
-      {/* Side Ad - Square */}
-      <div className="bottom-section">
-        <div className="note-section">
-          <p><strong>Important Note:</strong> This application does not provide financial advice. Chart pattern recognition is subjective and past patterns do not guarantee future results. Always conduct your own research before making investment decisions.</p>
-        </div>
-        <div className="ad-square">
-          <p>Advertisement Placeholder (300x250)</p>
-        </div>
-      </div>
-      
-      {/* Bottom Banner Ad */}
-      <div className="ad-banner">
-        <p>Advertisement Placeholder (728x90)</p>
+      <div className="note-section">
+        <p><strong>Important Note:</strong> This application does not provide financial advice. Chart pattern recognition is subjective and past patterns do not guarantee future results. Always conduct your own research before making investment decisions.</p>
       </div>
       
       {/* Footer with Attribution */}
