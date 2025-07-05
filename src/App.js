@@ -119,7 +119,7 @@ function StockChartAnalyzer() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [stockSymbol, setStockSymbol] = useState('');
   const [stockData, setStockData] = useState(null);
-  const [chartImage, setChartImage] = useState(null);
+  // chartImage state removed - not needed as we use uploadedImage directly
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [patternDetected, setPatternDetected] = useState(null);
@@ -392,7 +392,6 @@ function StockChartAnalyzer() {
     setLoading(true);
     setError(null);
     setStockData(null);
-    setChartImage(null);
     
     try {
       const data = await fetchYahooFinanceData(symbol.trim().toUpperCase());
@@ -401,7 +400,6 @@ function StockChartAnalyzer() {
       // Create chart image
       setTimeout(() => {
         const chartImageUrl = createChartFromData(data);
-        setChartImage(chartImageUrl);
         setUploadedImage(chartImageUrl);
       }, 100);
       
@@ -568,7 +566,6 @@ function StockChartAnalyzer() {
       const reader = new FileReader();
       reader.onload = () => {
         setUploadedImage(reader.result);
-        setChartImage(null);
         setStockData(null);
         // Clear previous results
         setPrediction(null);
