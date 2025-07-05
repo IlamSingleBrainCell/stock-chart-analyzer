@@ -373,7 +373,7 @@ function StockChartAnalyzer() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px', background: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid rgba(255, 255, 255, 0.4)' }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       
       {/* Header with Logo */}
@@ -399,9 +399,9 @@ function StockChartAnalyzer() {
           </defs>
           <rect x="5" y="5" width="50" height="50" rx="12" fill="url(#logoGradient)" opacity="0.1"/>
           <g opacity="0.3">
-            <line x1="10" y1="45" x2="50" y2="45" stroke="#ffffff" strokeWidth="0.5"/>
-            <line x1="10" y1="35" x2="50" y2="35" stroke="#ffffff" strokeWidth="0.5"/>
-            <line x1="10" y1="25" x2="50" y2="25" stroke="#ffffff" strokeWidth="0.5"/>
+            <line x1="10" y1="45" x2="50" y2="45" stroke="#1a202c" strokeWidth="0.5"/>
+            <line x1="10" y1="35" x2="50" y2="35" stroke="#1a202c" strokeWidth="0.5"/>
+            <line x1="10" y1="25" x2="50" y2="25" stroke="#1a202c" strokeWidth="0.5"/>
           </g>
           <polyline points="12,42 18,38 24,40 30,28 36,25 42,20 48,15" 
                     fill="none" 
@@ -429,7 +429,7 @@ function StockChartAnalyzer() {
                 fontFamily="Inter, Arial, sans-serif" 
                 fontSize="12" 
                 fontWeight="500" 
-                fill="#cbd5e1"
+                fill="#4a5568"
                 letterSpacing="1px">ANALYZER</text>
           <circle cx="170" cy="15" r="8" fill="none" stroke="url(#chartGradient)" strokeWidth="2" opacity="0.6"/>
           <circle cx="170" cy="15" r="3" fill="url(#chartGradient)"/>
@@ -446,7 +446,10 @@ function StockChartAnalyzer() {
             <rect x="12" width="3" height="4" fill="#10b981" opacity="0.7" rx="1"/>
           </g>
         </svg>
+        <div style={{ fontSize: '15px', color: '#2d3748', background: 'rgba(255, 255, 255, 0.9)', padding: '20px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500' }}>
+        <p><strong>Important Note:</strong> This application does not provide financial advice. Chart pattern recognition is subjective and past patterns do not guarantee future results. Always conduct your own research before making investment decisions.</p>
       </div>
+    </div>
       
       <h1 style={{ fontSize: '36px', fontWeight: '800', textAlign: 'center', marginBottom: '32px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginTop: '-16px' }}>
         AI-Powered Stock Pattern Recognition
@@ -460,20 +463,20 @@ function StockChartAnalyzer() {
       </div>
       
       <div style={{ marginBottom: '32px' }}>
-        <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: '#f9fafb', fontSize: '18px' }}>
+        <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: '#1a202c', fontSize: '18px' }}>
           Upload Stock Chart Image
         </label>
         <input
           type="file"
           accept="image/*"
           onChange={handleImageUpload}
-          style={{ width: '100%', padding: '16px 20px', border: '2px dashed rgba(255, 255, 255, 0.1)', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', fontSize: '16px', fontWeight: '500', color: '#f9fafb', cursor: 'pointer' }}
+          style={{ width: '100%', padding: '16px 20px', border: '2px dashed rgba(0, 0, 0, 0.2)', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.8)', fontSize: '16px', fontWeight: '500', color: '#1a202c', cursor: 'pointer' }}
         />
       </div>
       
       {uploadedImage && (
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ width: '100%', height: '350px', background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', borderRadius: '20px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <div style={{ width: '100%', height: '350px', background: 'rgba(255, 255, 255, 0.9)', borderRadius: '20px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
             <img 
               ref={imageRef}
               src={uploadedImage} 
@@ -492,27 +495,27 @@ function StockChartAnalyzer() {
       )}
       
       {prediction && patternDetected && (
-        <div style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', marginBottom: '32px', overflow: 'hidden' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px', color: '#f9fafb', padding: '24px 24px 0' }}>
+        <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', border: '2px solid rgba(0, 0, 0, 0.1)', marginBottom: '32px', overflow: 'hidden' }}>
+          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px', color: '#1a202c', padding: '24px 24px 0' }}>
             Analysis Results
           </h2>
           
           {/* Prediction Section */}
-          <div style={{ padding: '24px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', background: prediction === 'up' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15))' : prediction === 'down' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(248, 113, 113, 0.15))' : 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15))', borderLeft: `4px solid ${prediction === 'up' ? '#10b981' : prediction === 'down' ? '#ef4444' : '#6366f1'}` }}>
+          <div style={{ padding: '24px', background: prediction === 'up' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.2))' : prediction === 'down' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.2))' : 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))', borderLeft: `6px solid ${prediction === 'up' ? '#10b981' : prediction === 'down' ? '#ef4444' : '#6366f1'}`, border: `2px solid ${prediction === 'up' ? 'rgba(16, 185, 129, 0.4)' : prediction === 'down' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.4)'}`, marginBottom: '4px', borderRadius: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
               {prediction === 'up' ? <TrendingUp size={24} /> : prediction === 'down' ? <TrendingDown size={24} /> : <BarChart size={24} />}
-              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#f9fafb' }}>Prediction</h3>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Prediction</h3>
             </div>
-            <p style={{ fontSize: '18px', marginBottom: '12px', fontWeight: '600', color: prediction === 'up' ? '#34d399' : prediction === 'down' ? '#f87171' : '#8b5cf6' }}>
+            <p style={{ fontSize: '18px', marginBottom: '12px', fontWeight: '800', color: prediction === 'up' ? '#059669' : prediction === 'down' ? '#dc2626' : '#4f46e5' }}>
               {prediction === 'up' ? 'Likely to go UP' : prediction === 'down' ? 'Likely to go DOWN' : 'Continuation of current trend'}
             </p>
-            <div style={{ fontSize: '16px', color: '#e5e7eb', marginTop: '12px', padding: '12px 16px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '12px' }}>
-              <span style={{ fontWeight: '600', color: '#f9fafb' }}>
+            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '12px', padding: '12px 16px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
+              <span style={{ fontWeight: '700', color: '#1a202c' }}>
                 {prediction === 'up' ? 'Upward duration:' : prediction === 'down' ? 'Downward duration:' : 'Pattern duration:'}
               </span> {prediction === 'up' ? patternDetected.daysUp : prediction === 'down' ? patternDetected.daysDown : patternDetected.timeframe}
             </div>
             {confidence && (
-              <p style={{ fontSize: '14px', color: '#9ca3af', marginTop: '16px', fontStyle: 'italic', fontWeight: '500' }}>
+              <p style={{ fontSize: '14px', color: '#1a202c', marginTop: '16px', fontWeight: '700', background: 'rgba(0, 0, 0, 0.05)', padding: '8px 12px', borderRadius: '8px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
                 Confidence: {confidence}%
               </p>
             )}
@@ -520,15 +523,15 @@ function StockChartAnalyzer() {
 
           {/* Recommendation Section */}
           {recommendation && (
-            <div style={{ padding: '24px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px', borderRadius: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
                 <DollarSign size={24} />
-                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#f9fafb' }}>Recommendation</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Recommendation</h3>
               </div>
-              <p style={{ fontSize: '18px', marginBottom: '12px', fontWeight: '600', color: recommendation.action === 'BUY' ? '#34d399' : recommendation.action === 'SELL' ? '#f87171' : '#8b5cf6' }}>
+              <p style={{ fontSize: '18px', marginBottom: '12px', fontWeight: '800', color: recommendation.action === 'BUY' ? '#059669' : recommendation.action === 'SELL' ? '#dc2626' : '#4f46e5' }}>
                 {recommendation.action}
               </p>
-              <p style={{ fontSize: '16px', color: '#e5e7eb', lineHeight: '1.6' }}>
+              <p style={{ fontSize: '16px', color: '#2d3748', lineHeight: '1.6', fontWeight: '500' }}>
                 {recommendation.reasoning}
               </p>
             </div>
@@ -536,41 +539,41 @@ function StockChartAnalyzer() {
 
           {/* Entry/Exit Points */}
           {entryExit && (
-            <div style={{ padding: '24px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px', borderRadius: '8px' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
                 <Target size={24} />
-                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#f9fafb' }}>Entry & Exit Strategy</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Entry & Exit Strategy</h3>
               </div>
               <div style={{ marginBottom: '12px' }}>
-                <span style={{ fontWeight: '600', color: '#34d399' }}>Entry Point: </span>
-                <span style={{ color: '#e5e7eb' }}>{entryExit.entry}</span>
+                <span style={{ fontWeight: '700', color: '#059669' }}>Entry Point: </span>
+                <span style={{ color: '#2d3748', fontWeight: '500' }}>{entryExit.entry}</span>
               </div>
               <div>
-                <span style={{ fontWeight: '600', color: '#f87171' }}>Exit Strategy: </span>
-                <span style={{ color: '#e5e7eb' }}>{entryExit.exit}</span>
+                <span style={{ fontWeight: '700', color: '#dc2626' }}>Exit Strategy: </span>
+                <span style={{ color: '#2d3748', fontWeight: '500' }}>{entryExit.exit}</span>
               </div>
             </div>
           )}
 
           {/* Time Estimate Section */}
-          <div style={{ padding: '24px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)' }}>
+          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px', borderRadius: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
               <Calendar size={24} />
-              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#f9fafb' }}>Time Estimate</h3>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Time Estimate</h3>
             </div>
-            <p style={{ fontSize: '18px', marginBottom: '12px', color: '#e5e7eb' }}>{timeEstimate}</p>
-            <div style={{ fontSize: '16px', color: '#e5e7eb', marginTop: '12px', padding: '12px 16px', background: 'rgba(0, 0, 0, 0.2)', borderRadius: '12px' }}>
-              <span style={{ fontWeight: '600', color: '#f9fafb' }}>Typical pattern duration:</span> {patternDetected.timeframe}
+            <p style={{ fontSize: '18px', marginBottom: '12px', color: '#2d3748', fontWeight: '600' }}>{timeEstimate}</p>
+            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '12px', padding: '12px 16px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
+              <span style={{ fontWeight: '700', color: '#1a202c' }}>Typical pattern duration:</span> {patternDetected.timeframe}
             </div>
           </div>
 
           {/* Pattern Details */}
-          <div style={{ padding: '24px' }}>
+          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
               <BarChart size={24} />
-              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#f9fafb' }}>Pattern Detected</h3>
+              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Pattern Detected</h3>
             </div>
-            <p style={{ fontSize: '18px', marginBottom: '12px', color: '#e5e7eb' }}>
+            <p style={{ fontSize: '18px', marginBottom: '12px', color: '#2d3748', fontWeight: '600' }}>
               {patternDetected.name.split('-').map(word => 
                 word.charAt(0).toUpperCase() + word.slice(1)
               ).join(' ')}
@@ -580,22 +583,22 @@ function StockChartAnalyzer() {
       )}
       
       {patternDetected && (
-        <div style={{ background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(10px)', padding: '24px', borderRadius: '20px', marginBottom: '32px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
-          <h3 style={{ fontWeight: '700', fontSize: '20px', marginTop: '0', marginBottom: '16px', color: '#f9fafb' }}>Pattern Description:</h3>
-          <p style={{ marginBottom: '20px', lineHeight: '1.7', fontSize: '16px', color: '#e5e7eb' }}>{patternDetected.description}</p>
-          <div style={{ padding: '20px', border: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(255, 255, 255, 0.1)', borderRadius: '12px' }}>
-            <h4 style={{ fontWeight: '700', fontSize: '16px', color: '#f9fafb', marginTop: '0', marginBottom: '16px' }}>What to look for:</h4>
-            <ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: '#e5e7eb' }}>
-              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6' }}>
-                <span style={{ position: 'absolute', left: '0', color: '#8b5cf6', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+        <div style={{ background: 'rgba(255, 255, 255, 0.95)', padding: '24px', borderRadius: '20px', marginBottom: '32px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
+          <h3 style={{ fontWeight: '700', fontSize: '20px', marginTop: '0', marginBottom: '16px', color: '#1a202c' }}>Pattern Description:</h3>
+          <p style={{ marginBottom: '20px', lineHeight: '1.7', fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>{patternDetected.description}</p>
+          <div style={{ padding: '20px', border: '2px solid rgba(0, 0, 0, 0.1)', background: 'rgba(0, 0, 0, 0.03)', borderRadius: '12px' }}>
+            <h4 style={{ fontWeight: '700', fontSize: '16px', color: '#1a202c', marginTop: '0', marginBottom: '16px' }}>What to look for:</h4>
+            <ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: '#2d3748' }}>
+              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
+                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Look for clear pattern formation with multiple confirmation points
               </li>
-              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6' }}>
-                <span style={{ position: 'absolute', left: '0', color: '#8b5cf6', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
+                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Check volume patterns that support the chart pattern
               </li>
-              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6' }}>
-                <span style={{ position: 'absolute', left: '0', color: '#8b5cf6', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
+                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Confirm breakout direction before making decisions
               </li>
             </ul>
