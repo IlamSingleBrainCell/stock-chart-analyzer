@@ -115,11 +115,32 @@ const chartPatterns = {
   }
 };
 
+// Stock database for type-ahead functionality
+const stockDatabase = [
+  // US Stocks
+  { symbol: 'AAPL', name: 'Apple Inc.', sector: 'Technology', market: 'US' },
+  { symbol: 'GOOGL', name: 'Alphabet Inc.', sector: 'Technology', market: 'US' },
+  { symbol: 'MSFT', name: 'Microsoft Corporation', sector: 'Technology', market: 'US' },
+  { symbol: 'TSLA', name: 'Tesla Inc.', sector: 'Automotive', market: 'US' },
+  { symbol: 'AMZN', name: 'Amazon.com Inc.', sector: 'E-commerce', market: 'US' },
+  { symbol: 'META', name: 'Meta Platforms Inc.', sector: 'Technology', market: 'US' },
+  { symbol: 'NVDA', name: 'NVIDIA Corporation', sector: 'Technology', market: 'US' },
+  { symbol: 'NFLX', name: 'Netflix Inc.', sector: 'Entertainment', market: 'US' },
+  // Indian Stocks (NSE)
+  { symbol: 'TCS.NS', name: 'Tata Consultancy Services', sector: 'IT Services', market: 'India' },
+  { symbol: 'RELIANCE.NS', name: 'Reliance Industries', sector: 'Oil & Gas', market: 'India' },
+  { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', sector: 'Banking', market: 'India' },
+  { symbol: 'INFY.NS', name: 'Infosys Limited', sector: 'IT Services', market: 'India' },
+  { symbol: 'ICICIBANK.NS', name: 'ICICI Bank', sector: 'Banking', market: 'India' },
+  { symbol: 'HINDUNILVR.NS', name: 'Hindustan Unilever', sector: 'FMCG', market: 'India' },
+  { symbol: 'ITC.NS', name: 'ITC Limited', sector: 'FMCG', market: 'India' },
+  { symbol: 'KOTAKBANK.NS', name: 'Kotak Mahindra Bank', sector: 'Banking', market: 'India' }
+];
+
 function StockChartAnalyzer() {
   const [uploadedImage, setUploadedImage] = useState(null);
   const [stockSymbol, setStockSymbol] = useState('');
   const [stockData, setStockData] = useState(null);
-  // chartImage state removed - not needed as we use uploadedImage directly
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [patternDetected, setPatternDetected] = useState(null);
@@ -128,19 +149,26 @@ function StockChartAnalyzer() {
   const [recommendation, setRecommendation] = useState(null);
   const [entryExit, setEntryExit] = useState(null);
   const [error, setError] = useState(null);
+  
+  // Missing state variables for type-ahead functionality
+  const [filteredSuggestions, setFilteredSuggestions] = useState([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
+  const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  
   const canvasRef = useRef(null);
   const chartCanvasRef = useRef(null);
+  const inputRef = useRef(null);
 
   // Popular stock symbols for quick selection
   const popularStocks = [
-    { symbol: 'AAPL', name: 'Apple' },
-    { symbol: 'GOOGL', name: 'Google' },
-    { symbol: 'MSFT', name: 'Microsoft' },
-    { symbol: 'TSLA', name: 'Tesla' },
-    { symbol: 'AMZN', name: 'Amazon' },
-    { symbol: 'META', name: 'Meta' },
-    { symbol: 'NVDA', name: 'NVIDIA' },
-    { symbol: 'NFLX', name: 'Netflix' }
+    { symbol: 'AAPL', name: 'Apple', market: 'US' },
+    { symbol: 'GOOGL', name: 'Google', market: 'US' },
+    { symbol: 'MSFT', name: 'Microsoft', market: 'US' },
+    { symbol: 'TSLA', name: 'Tesla', market: 'US' },
+    { symbol: 'TCS.NS', name: 'TCS', market: 'India' },
+    { symbol: 'RELIANCE.NS', name: 'Reliance', market: 'India' },
+    { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', market: 'India' },
+    { symbol: 'INFY.NS', name: 'Infosys', market: 'India' }
   ];
 
   // Type-ahead functionality with market support
@@ -276,6 +304,7 @@ function StockChartAnalyzer() {
         part
     );
   };
+
   const fetchYahooFinanceData = async (symbol) => {
     try {
       // Using a CORS proxy service to bypass CORS restrictions
@@ -408,6 +437,10 @@ function StockChartAnalyzer() {
     // Scale functions
     const xScale = (index) => margin.left + (index / (prices.length - 1)) * chartWidth;
     const yScale = (price) => margin.top + ((maxPrice + padding - price) / (priceRange + 2 * padding)) * chartHeight;
+    
+    // Determine currency and market info
+    const isIndianStock = stockData.symbol.includes('.NS');
+    const currencySymbol = isIndianStock ? '₹' : '$';
     
     // Draw background grid
     ctx.strokeStyle = '#f0f0f0';
