@@ -1,20 +1,20 @@
 /* Enhanced Stock Chart Analyzer Styles */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* CSS Variables for consistent theming */
+/* CSS Variables for consistent theming - Dark Professional Theme */
 :root {
-  --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  --success-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
-  --danger-gradient: linear-gradient(135deg, #ff416c 0%, #ff4b2b 100%);
-  --warning-gradient: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-  --glass-bg: rgba(255, 255, 255, 0.25);
-  --glass-border: rgba(255, 255, 255, 0.18);
-  --dark-glass-bg: rgba(0, 0, 0, 0.1);
-  --shadow-soft: 0 8px 32px rgba(31, 38, 135, 0.37);
-  --shadow-hover: 0 15px 35px rgba(31, 38, 135, 0.4);
-  --text-primary: #2d3748;
-  --text-secondary: #4a5568;
-  --text-muted: #718096;
+  --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  --success-gradient: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+  --danger-gradient: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
+  --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
+  --glass-bg: rgba(255, 255, 255, 0.1);
+  --glass-border: rgba(255, 255, 255, 0.1);
+  --dark-glass-bg: rgba(0, 0, 0, 0.2);
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
+  --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.6);
+  --text-primary: #f9fafb;
+  --text-secondary: #e5e7eb;
+  --text-muted: #9ca3af;
   --border-radius: 20px;
   --border-radius-small: 12px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -29,7 +29,7 @@ body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.6;
   color: var(--text-primary);
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+  background: linear-gradient(135deg, #111827 0%, #1f2937 50%, #374151 100%);
   background-size: 400% 400%;
   animation: gradientShift 15s ease infinite;
   margin: 0;
@@ -131,7 +131,7 @@ body {
 
 .disclaimer-text {
   font-size: 14px;
-  color: #8b5a00;
+  color: #92400e;
   font-weight: 500;
 }
 
@@ -165,11 +165,11 @@ body {
 
 .file-input:hover,
 .file-input:focus {
-  border-color: #667eea;
-  background: rgba(102, 126, 234, 0.1);
+  border-color: #6366f1;
+  background: rgba(99, 102, 241, 0.1);
   outline: none;
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.2);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.2);
 }
 
 /* Enhanced image preview */
@@ -222,7 +222,7 @@ body {
   overflow: hidden;
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
 }
 
 .analyze-button::before {
@@ -238,7 +238,7 @@ body {
 
 .analyze-button:hover {
   transform: translateY(-3px);
-  box-shadow: 0 15px 35px rgba(102, 126, 234, 0.6);
+  box-shadow: 0 15px 35px rgba(99, 102, 241, 0.6);
 }
 
 .analyze-button:hover::before {
@@ -350,36 +350,36 @@ body {
   color: var(--text-primary);
 }
 
-/* Enhanced prediction backgrounds */
+/* Enhanced prediction backgrounds for dark theme */
 .prediction-section.bg-up {
-  background: linear-gradient(135deg, rgba(17, 153, 142, 0.1), rgba(56, 239, 125, 0.1));
-  border-left: 4px solid #11998e;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
+  border-left: 4px solid #10b981;
 }
 
 .prediction-section.bg-down {
-  background: linear-gradient(135deg, rgba(255, 65, 108, 0.1), rgba(255, 75, 43, 0.1));
-  border-left: 4px solid #ff416c;
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(248, 113, 113, 0.15));
+  border-left: 4px solid #ef4444;
 }
 
 .prediction-section.bg-neutral-varies {
-  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
-  border-left: 4px solid #667eea;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  border-left: 4px solid #6366f1;
 }
 
-/* Enhanced text colors */
+/* Enhanced text colors for dark theme */
 .text-up {
-  color: #11998e;
-  text-shadow: 0 2px 4px rgba(17, 153, 142, 0.2);
+  color: #34d399;
+  text-shadow: 0 2px 4px rgba(52, 211, 153, 0.2);
 }
 
 .text-down {
-  color: #ff416c;
-  text-shadow: 0 2px 4px rgba(255, 65, 108, 0.2);
+  color: #f87171;
+  text-shadow: 0 2px 4px rgba(248, 113, 113, 0.2);
 }
 
 .text-neutral {
-  color: #667eea;
-  text-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+  color: #8b5cf6;
+  text-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
 }
 
 .confidence-score {
@@ -473,7 +473,7 @@ body {
   content: '→';
   position: absolute;
   left: 0;
-  color: #667eea;
+  color: #8b5cf6;
   font-weight: bold;
   font-size: 16px;
 }
@@ -616,7 +616,7 @@ body {
 /* Focus states for accessibility */
 .analyze-button:focus,
 .file-input:focus {
-  outline: 2px solid #667eea;
+  outline: 2px solid #8b5cf6;
   outline-offset: 2px;
 }
 
