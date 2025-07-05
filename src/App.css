@@ -1,20 +1,20 @@
 /* Enhanced Stock Chart Analyzer Styles */
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
 
-/* CSS Variables for consistent theming - Dark Professional Theme */
+/* CSS Variables for consistent theming - Enhanced Dark Professional Theme */
 :root {
   --primary-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   --success-gradient: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   --danger-gradient: linear-gradient(135deg, #ef4444 0%, #f87171 100%);
   --warning-gradient: linear-gradient(135deg, #f59e0b 0%, #fbbf24 100%);
-  --glass-bg: rgba(255, 255, 255, 0.1);
-  --glass-border: rgba(255, 255, 255, 0.1);
-  --dark-glass-bg: rgba(0, 0, 0, 0.2);
-  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.5);
-  --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.6);
-  --text-primary: #f9fafb;
-  --text-secondary: #e5e7eb;
-  --text-muted: #9ca3af;
+  --glass-bg: rgba(255, 255, 255, 0.15);
+  --glass-border: rgba(255, 255, 255, 0.2);
+  --dark-glass-bg: rgba(0, 0, 0, 0.3);
+  --shadow-soft: 0 8px 32px rgba(0, 0, 0, 0.4);
+  --shadow-hover: 0 15px 35px rgba(0, 0, 0, 0.5);
+  --text-primary: #ffffff;
+  --text-secondary: #f1f5f9;
+  --text-muted: #cbd5e1;
   --border-radius: 20px;
   --border-radius-small: 12px;
   --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -337,12 +337,13 @@ body {
 
 .summary-detail {
   font-size: 16px;
-  color: var(--text-secondary);
+  color: var(--text-primary);
   margin-top: 12px;
   padding: 12px 16px;
-  background: var(--dark-glass-bg);
+  background: rgba(255, 255, 255, 0.2);
   border-radius: var(--border-radius-small);
   backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .duration-label {
@@ -350,67 +351,66 @@ body {
   color: var(--text-primary);
 }
 
-/* Enhanced prediction backgrounds for dark theme */
+/* Enhanced prediction backgrounds for better contrast */
 .prediction-section.bg-up {
-  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15));
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(52, 211, 153, 0.25));
   border-left: 4px solid #10b981;
+  border: 1px solid rgba(16, 185, 129, 0.3);
 }
 
 .prediction-section.bg-down {
-  background: linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(248, 113, 113, 0.15));
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.25), rgba(248, 113, 113, 0.25));
   border-left: 4px solid #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.3);
 }
 
 .prediction-section.bg-neutral-varies {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.25), rgba(139, 92, 246, 0.25));
   border-left: 4px solid #6366f1;
+  border: 1px solid rgba(99, 102, 241, 0.3);
 }
 
-/* Enhanced text colors for dark theme */
+/* Enhanced text colors for better visibility */
 .text-up {
-  color: #34d399;
-  text-shadow: 0 2px 4px rgba(52, 211, 153, 0.2);
+  color: #22d3ee;
+  text-shadow: 0 2px 4px rgba(34, 211, 238, 0.3);
+  font-weight: 700;
 }
 
 .text-down {
-  color: #f87171;
-  text-shadow: 0 2px 4px rgba(248, 113, 113, 0.2);
+  color: #fb7185;
+  text-shadow: 0 2px 4px rgba(251, 113, 133, 0.3);
+  font-weight: 700;
 }
 
 .text-neutral {
-  color: #8b5cf6;
-  text-shadow: 0 2px 4px rgba(139, 92, 246, 0.2);
+  color: #a78bfa;
+  text-shadow: 0 2px 4px rgba(167, 139, 250, 0.3);
+  font-weight: 700;
 }
 
 .confidence-score {
   font-size: 14px;
-  color: var(--text-muted);
+  color: var(--text-primary);
   margin-top: 16px;
   font-style: italic;
-  font-weight: 500;
+  font-weight: 600;
+  background: rgba(255, 255, 255, 0.1);
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
 /* Enhanced pattern description */
 .pattern-description {
-  background: var(--glass-bg);
-  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.15);
+  backdrop-filter: blur(15px);
   padding: 24px;
   border-radius: var(--border-radius);
   margin-bottom: 32px;
-  border: 1px solid var(--glass-border);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   box-shadow: var(--shadow-soft);
   animation: fadeInUp 0.8s ease-out 0.2s both;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
 }
 
 .pattern-description > h3 {
@@ -431,8 +431,8 @@ body {
 
 .pattern-specifics-box {
   padding: 20px;
-  border: 1px solid var(--glass-border);
-  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.2);
   backdrop-filter: blur(10px);
   border-radius: var(--border-radius-small);
   margin-top: 20px;
@@ -440,9 +440,9 @@ body {
 }
 
 .pattern-specifics-box:hover {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.2);
 }
 
 .pattern-specifics-box h4 {
@@ -467,13 +467,14 @@ body {
   padding-left: 24px;
   position: relative;
   line-height: 1.6;
+  font-weight: 500;
 }
 
 .pattern-list li::before {
   content: '→';
   position: absolute;
   left: 0;
-  color: #8b5cf6;
+  color: #22d3ee;
   font-weight: bold;
   font-size: 16px;
 }
