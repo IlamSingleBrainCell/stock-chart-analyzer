@@ -538,7 +538,6 @@ function StockChartAnalyzer() {
     ctx.font = '14px Inter, Arial, sans-serif';
     ctx.fillStyle = '#4b5563';
     const currentPrice = stockData.currentPrice || prices[prices.length - 1].close;
-   // const displaySymbol = stockData.symbol.replace('.NS', ''); // Clean display
     ctx.fillText(`Current: ${currencySymbol}${currentPrice.toFixed(2)} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
     
     if (stockData.isMockData) {
@@ -1229,6 +1228,16 @@ function StockChartAnalyzer() {
         <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides technical analysis for educational purposes only.</p>
         <p style={{ marginBottom: '12px' }}><strong>📊 Multi-Market Support:</strong> US stocks (USD) and Indian stocks (INR) data via Yahoo Finance API.</p>
         <p style={{ margin: '0' }}>Always conduct thorough research and consult financial advisors before making investment decisions.</p>
+      </div>
+
+      {/* Footer */}
+      <div style={{ borderTop: '2px solid rgba(0, 0, 0, 0.1)', paddingTop: '20px', marginTop: '32px', textAlign: 'center', fontSize: '14px', color: '#6b7280', background: 'rgba(255, 255, 255, 0.8)', padding: '20px', borderRadius: '12px' }}>
+        <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#4a5568' }}>
+          💻 Developed by <span style={{ color: '#6366f1', fontWeight: '700' }}>Ilam</span>
+        </p>
+        <p style={{ margin: '0', fontSize: '13px', color: '#9ca3af' }}>
+          © {new Date().getFullYear()} Stock Chart Analyzer. All rights reserved.
+        </p>
       </div>
 
       <style jsx>{`
