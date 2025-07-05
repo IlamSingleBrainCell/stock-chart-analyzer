@@ -373,16 +373,88 @@ function StockChartAnalyzer() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px', background: 'rgba(255, 255, 255, 0.1)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.1)' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px', background: 'rgba(255, 255, 255, 0.15)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '1px solid rgba(255, 255, 255, 0.2)' }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       
-      <h1 style={{ fontSize: '42px', fontWeight: '800', textAlign: 'center', marginBottom: '32px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em' }}>
-        Stock Chart Pattern Analyzer
+      {/* Header with Logo */}
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="180" height="54" style={{ filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))', transition: 'all 0.3s ease' }}>
+          <defs>
+            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" style={{stopColor:'#6366f1',stopOpacity:1}} />
+              <stop offset="50%" style={{stopColor:'#8b5cf6',stopOpacity:1}} />
+              <stop offset="100%" style={{stopColor:'#22d3ee',stopOpacity:1}} />
+            </linearGradient>
+            <linearGradient id="chartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" style={{stopColor:'#22d3ee',stopOpacity:1}} />
+              <stop offset="100%" style={{stopColor:'#10b981',stopOpacity:1}} />
+            </linearGradient>
+            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+              <feMerge> 
+                <feMergeNode in="coloredBlur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+          <rect x="5" y="5" width="50" height="50" rx="12" fill="url(#logoGradient)" opacity="0.1"/>
+          <g opacity="0.3">
+            <line x1="10" y1="45" x2="50" y2="45" stroke="#ffffff" strokeWidth="0.5"/>
+            <line x1="10" y1="35" x2="50" y2="35" stroke="#ffffff" strokeWidth="0.5"/>
+            <line x1="10" y1="25" x2="50" y2="25" stroke="#ffffff" strokeWidth="0.5"/>
+          </g>
+          <polyline points="12,42 18,38 24,40 30,28 36,25 42,20 48,15" 
+                    fill="none" 
+                    stroke="url(#chartGradient)" 
+                    strokeWidth="3" 
+                    strokeLinecap="round"
+                    filter="url(#glow)"/>
+          <circle cx="18" cy="38" r="2" fill="#22d3ee" opacity="0.8"/>
+          <circle cx="30" cy="28" r="2" fill="#22d3ee" opacity="0.8"/>
+          <circle cx="42" cy="20" r="2" fill="#10b981" opacity="0.8"/>
+          <rect x="20" y="35" width="2" height="8" fill="#ef4444" rx="1"/>
+          <rect x="26" y="32" width="2" height="6" fill="#10b981" rx="1"/>
+          <rect x="32" y="25" width="2" height="5" fill="#10b981" rx="1"/>
+          <rect x="38" y="18" width="2" height="4" fill="#10b981" rx="1"/>
+          <polygon points="45,12 50,17 47,17 47,22 43,22 43,17 40,17" 
+                   fill="#22d3ee" 
+                   filter="url(#glow)"/>
+          <text x="65" y="25" 
+                fontFamily="Inter, Arial, sans-serif" 
+                fontSize="18" 
+                fontWeight="800" 
+                fill="url(#logoGradient)"
+                letterSpacing="-0.5px">CHART</text>
+          <text x="65" y="43" 
+                fontFamily="Inter, Arial, sans-serif" 
+                fontSize="12" 
+                fontWeight="500" 
+                fill="#cbd5e1"
+                letterSpacing="1px">ANALYZER</text>
+          <circle cx="170" cy="15" r="8" fill="none" stroke="url(#chartGradient)" strokeWidth="2" opacity="0.6"/>
+          <circle cx="170" cy="15" r="3" fill="url(#chartGradient)"/>
+          <text x="165" y="35" 
+                fontFamily="Inter, Arial, sans-serif" 
+                fontSize="8" 
+                fontWeight="600" 
+                fill="#8b5cf6"
+                letterSpacing="0.5px">AI</text>
+          <g transform="translate(150, 42)">
+            <rect width="3" height="8" fill="#6366f1" opacity="0.7" rx="1"/>
+            <rect x="4" width="3" height="6" fill="#8b5cf6" opacity="0.7" rx="1"/>
+            <rect x="8" width="3" height="10" fill="#22d3ee" opacity="0.7" rx="1"/>
+            <rect x="12" width="3" height="4" fill="#10b981" opacity="0.7" rx="1"/>
+          </g>
+        </svg>
+      </div>
+      
+      <h1 style={{ fontSize: '36px', fontWeight: '800', textAlign: 'center', marginBottom: '32px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginTop: '-16px' }}>
+        AI-Powered Stock Pattern Recognition
       </h1>
       
       <div style={{ background: 'linear-gradient(135deg, rgba(255, 248, 230, 0.9), rgba(255, 248, 230, 0.7))', backdropFilter: 'blur(10px)', borderLeft: '4px solid #f0c040', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start' }}>
         <AlertTriangle size={20} style={{ color: '#f0c040', marginRight: '16px', flexShrink: 0 }} />
-        <div style={{ fontSize: '14px', color: '#92400e', fontWeight: '500' }}>
+        <div style={{ fontSize: '14px', color: '#92400e', fontWeight: '600' }}>
           <strong>Disclaimer:</strong> This tool uses advanced pattern recognition for educational purposes. Results are based on technical analysis and should not be used as sole investment advice.
         </div>
       </div>
