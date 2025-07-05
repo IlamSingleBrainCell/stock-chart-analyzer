@@ -143,7 +143,139 @@ function StockChartAnalyzer() {
     { symbol: 'NFLX', name: 'Netflix' }
   ];
 
-  // Fetch stock data from Yahoo Finance with CORS proxy
+  // Type-ahead functionality with market support
+  const filterSuggestions = (input) => {
+    if (!input || input.length < 1) return [];
+    
+    const query = input.toLowerCase();
+    const matches = stockDatabase.filter(stock => 
+      stock.symbol.toLowerCase().includes(query) || 
+      stock.name.toLowerCase().includes(query) ||
+      stock.sector.toLowerCase().includes(query) ||
+      stock.market.toLowerCase().includes(query)
+    );
+    
+    // Sort by relevance and market
+    return matches.sort((a, b) => {
+      const aSymbol = a.symbol.toLowerCase();
+      const bSymbol = b.symbol.toLowerCase();
+      const aName = a.name.toLowerCase();
+      const bName = b.name.toLowerCase();
+      
+      // Exact symbol match gets highest priority
+      if (aSymbol === query) return -1;
+      if (bSymbol === query) return 1;
+      
+      // Symbol starts with query gets second priority
+      if (aSymbol.startsWith(query) && !bSymbol.startsWith(query)) return -1;
+      if (bSymbol.startsWith(query) && !aSymbol.startsWith(query)) return 1;
+      
+      // Then by symbol length (shorter symbols first for same prefix)
+      if (aSymbol.startsWith(query) && bSymbol.startsWith(query)) {
+        return aSymbol.length - bSymbol.length;
+      }
+      
+      // Prefer US stocks if equal relevance (for common searches)
+      if (aName.includes(query) && bName.includes(query)) {
+        if (a.market === 'US' && b.market === 'India') return -1;
+        if (a.market === 'India' && b.market === 'US') return 1;
+      }
+      
+      // Finally by name match
+      if (aName.includes(query) && !bName.includes(query)) return -1;
+      if (bName.includes(query) && !aName.includes(query)) return 1;
+      
+      return 0;
+    }).slice(0, 12); // Increased to 12 suggestions to show both markets
+  };
+
+  const handleInputChange = (value) => {
+    setStockSymbol(value);
+    
+    if (value.length >= 1) {
+      const suggestions = filterSuggestions(value);
+      setFilteredSuggestions(suggestions);
+      setShowSuggestions(true); // Always show dropdown when typing
+      setSelectedSuggestionIndex(-1);
+    } else {
+      setShowSuggestions(false);
+      setFilteredSuggestions([]);
+      setSelectedSuggestionIndex(-1);
+    }
+  };
+
+  const handleKeyDown = (e) => {
+    if (!showSuggestions) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev < filteredSuggestions.length - 1 ? prev + 1 : 0
+        );
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedSuggestionIndex(prev => 
+          prev > 0 ? prev - 1 : filteredSuggestions.length - 1
+        );
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < filteredSuggestions.length) {
+          selectSuggestion(filteredSuggestions[selectedSuggestionIndex]);
+        } else if (stockSymbol.trim()) {
+          fetchStockData(stockSymbol.toUpperCase());
+          setShowSuggestions(false);
+        }
+        break;
+      case 'Escape':
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        inputRef.current?.blur();
+        break;
+      case 'Tab':
+        setShowSuggestions(false);
+        setSelectedSuggestionIndex(-1);
+        break;
+      default:
+        break;
+    }
+  };
+
+  const selectSuggestion = (stock) => {
+    setStockSymbol(stock.symbol);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
+    fetchStockData(stock.symbol);
+  };
+
+  const handleInputFocus = () => {
+    if (stockSymbol.length >= 1) {
+      const suggestions = filterSuggestions(stockSymbol);
+      setFilteredSuggestions(suggestions);
+      setShowSuggestions(true);
+    }
+  };
+
+  const handleInputBlur = () => {
+    // Delay hiding suggestions to allow clicking on them
+    setTimeout(() => {
+      setShowSuggestions(false);
+      setSelectedSuggestionIndex(-1);
+    }, 200);
+  };
+
+  const highlightMatch = (text, query) => {
+    if (!query) return text;
+    
+    const parts = text.split(new RegExp(`(${query})`, 'gi'));
+    return parts.map((part, index) => 
+      part.toLowerCase() === query.toLowerCase() ? 
+        <span key={index} style={{ backgroundColor: '#fef3c7', fontWeight: '600' }}>{part}</span> : 
+        part
+    );
+  };
   const fetchYahooFinanceData = async (symbol) => {
     try {
       // Using a CORS proxy service to bypass CORS restrictions
@@ -289,12 +421,12 @@ function StockChartAnalyzer() {
       ctx.lineTo(margin.left + chartWidth, y);
       ctx.stroke();
       
-      // Price labels
+      // Price labels with correct currency
       const price = maxPrice + padding - (i / 8) * (priceRange + 2 * padding);
       ctx.fillStyle = '#666666';
       ctx.font = '12px Inter, Arial, sans-serif';
       ctx.textAlign = 'right';
-      ctx.fillText('$' + price.toFixed(2), margin.left - 10, y + 4);
+      ctx.fillText(currencySymbol + price.toFixed(2), margin.left - 10, y + 4);
     }
     
     // Vertical grid lines
@@ -373,7 +505,8 @@ function StockChartAnalyzer() {
     ctx.font = '14px Inter, Arial, sans-serif';
     ctx.fillStyle = '#4b5563';
     const currentPrice = stockData.currentPrice || prices[prices.length - 1].close;
-    ctx.fillText(`Current: $${currentPrice.toFixed(2)} ${stockData.currency}`, margin.left, margin.top - 5);
+    const displaySymbol = stockData.symbol.replace('.NS', ''); // Clean display
+    ctx.fillText(`Current: ${currencySymbol}${currentPrice.toFixed(2)} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
     
     if (stockData.isMockData) {
       ctx.fillStyle = '#f59e0b';
@@ -414,6 +547,8 @@ function StockChartAnalyzer() {
   // Quick stock selection
   const selectStock = (symbol) => {
     setStockSymbol(symbol);
+    setShowSuggestions(false);
+    setSelectedSuggestionIndex(-1);
     fetchStockData(symbol);
   };
 
@@ -678,33 +813,142 @@ function StockChartAnalyzer() {
       <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1))', borderLeft: '4px solid #22d3ee', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
         <AlertTriangle size={20} style={{ color: '#22d3ee', marginRight: '16px', flexShrink: 0 }} />
         <div style={{ fontSize: '14px', color: '#0891b2', fontWeight: '600' }}>
-          <strong>Live Stock Data:</strong> Powered by Yahoo Finance API. Get real-time charts for any publicly traded stock symbol.
+          <strong>Multi-Market Support:</strong> Now supports both 🇺🇸 US stocks (NYSE/NASDAQ) and 🇮🇳 Indian stocks (NSE) via Yahoo Finance API. Search by symbol or company name from both markets!
         </div>
       </div>
 
-      {/* Stock Symbol Input */}
+      {/* Stock Symbol Input with Type-ahead */}
       <div style={{ marginBottom: '32px' }}>
         <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: '#1a202c', fontSize: '18px' }}>
           <Search size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
           Get Live Stock Chart
         </label>
         
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
-          <div style={{ display: 'flex', gap: '12px', flex: '1', minWidth: '300px' }}>
-            <input
-              type="text"
-              value={stockSymbol}
-              onChange={(e) => setStockSymbol(e.target.value.toUpperCase())}
-              onKeyPress={(e) => e.key === 'Enter' && stockSymbol.trim() && !loading && fetchStockData(stockSymbol.toUpperCase())}
-              placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)"
-              style={{ flex: '1', padding: '14px 16px', border: '2px solid rgba(99, 102, 241, 0.2)', borderRadius: '8px', fontSize: '16px', fontWeight: '500', outline: 'none', transition: 'border-color 0.2s' }}
-              onFocus={(e) => e.target.style.borderColor = '#6366f1'}
-              onBlur={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.2)'}
-            />
+        <div style={{ position: 'relative', marginBottom: '16px' }}>
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <div style={{ flex: '1', minWidth: '300px', position: 'relative' }}>
+              <input
+                ref={inputRef}
+                type="text"
+                value={stockSymbol}
+                onChange={(e) => handleInputChange(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onFocus={handleInputFocus}
+                onBlur={handleInputBlur}
+                placeholder="🔍 Search: AAPL, TCS.NS, Reliance, Microsoft, HDFC Bank..."
+                style={{ 
+                  width: '100%', 
+                  padding: '14px 16px', 
+                  border: showSuggestions ? '2px solid #6366f1' : '2px solid rgba(99, 102, 241, 0.2)', 
+                  borderRadius: showSuggestions ? '8px 8px 0 0' : '8px',
+                  fontSize: '16px', 
+                  fontWeight: '500', 
+                  outline: 'none', 
+                  transition: 'border-color 0.2s',
+                  borderBottom: showSuggestions ? '1px solid rgba(99, 102, 241, 0.2)' : '2px solid rgba(99, 102, 241, 0.2)'
+                }}
+              />
+              
+              {/* Suggestions Dropdown */}
+              {showSuggestions && (
+                <div style={{
+                  position: 'absolute',
+                  top: '100%',
+                  left: '0',
+                  right: '0',
+                  backgroundColor: 'white',
+                  border: '2px solid #6366f1',
+                  borderTop: 'none',
+                  borderRadius: '0 0 8px 8px',
+                  boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
+                  zIndex: 1000,
+                  maxHeight: '300px',
+                  overflowY: 'auto'
+                }}>
+                  {filteredSuggestions.length > 0 ? (
+                    filteredSuggestions.map((stock, index) => (
+                      <div
+                        key={stock.symbol}
+                        onClick={() => selectSuggestion(stock)}
+                        style={{
+                          padding: '12px 16px',
+                          cursor: 'pointer',
+                          backgroundColor: index === selectedSuggestionIndex ? '#f3f4f6' : 'white',
+                          borderBottom: index < filteredSuggestions.length - 1 ? '1px solid #e5e7eb' : 'none',
+                          transition: 'background-color 0.2s'
+                        }}
+                        onMouseEnter={() => setSelectedSuggestionIndex(index)}
+                      >
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                          <div>
+                            <div style={{ fontWeight: '600', fontSize: '15px', color: '#1f2937' }}>
+                              {highlightMatch(stock.symbol, stockSymbol)}
+                            </div>
+                            <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>
+                              {highlightMatch(stock.name, stockSymbol)}
+                            </div>
+                          </div>
+                          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
+                            <div style={{ 
+                              fontSize: '10px', 
+                              color: stock.market === 'India' ? '#dc2626' : '#2563eb', 
+                              backgroundColor: stock.market === 'India' ? '#fef2f2' : '#eff6ff', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px',
+                              fontWeight: '600',
+                              border: `1px solid ${stock.market === 'India' ? '#fecaca' : '#dbeafe'}`
+                            }}>
+                              {stock.market === 'India' ? '🇮🇳 NSE' : '🇺🇸 US'}
+                            </div>
+                            <div style={{ 
+                              fontSize: '11px', 
+                              color: '#9ca3af', 
+                              backgroundColor: '#f3f4f6', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px',
+                              fontWeight: '500'
+                            }}>
+                              {stock.sector}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : stockSymbol.length >= 1 ? (
+                    <div style={{ 
+                      padding: '16px', 
+                      textAlign: 'center', 
+                      color: '#6b7280', 
+                      fontSize: '14px' 
+                    }}>
+                      <div style={{ marginBottom: '8px' }}>🔍 No stocks found</div>
+                      <div style={{ fontSize: '12px' }}>
+                        Try searching by symbol (AAPL) or company name (Apple)
+                      </div>
+                    </div>
+                  ) : null}
+                </div>
+              )}
+            </div>
+            
             <button
               onClick={() => stockSymbol.trim() && fetchStockData(stockSymbol.toUpperCase())}
               disabled={loading || !stockSymbol.trim()}
-              style={{ padding: '14px 24px', background: loading ? '#9ca3af' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
+              style={{ 
+                padding: '14px 24px', 
+                background: loading ? '#9ca3af' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', 
+                color: 'white', 
+                border: 'none', 
+                borderRadius: '8px', 
+                fontWeight: '600', 
+                cursor: loading ? 'not-allowed' : 'pointer', 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '8px', 
+                transition: 'all 0.2s',
+                minWidth: '140px',
+                justifyContent: 'center'
+              }}
             >
               {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
               {loading ? 'Fetching...' : 'Get Chart'}
@@ -712,10 +956,10 @@ function StockChartAnalyzer() {
           </div>
         </div>
 
-        {/* Popular stocks */}
+        {/* Popular stocks with market indicators */}
         <div>
           <p style={{ fontSize: '14px', color: '#4a5568', marginBottom: '12px', fontWeight: '500' }}>
-            Popular Stocks:
+            Popular Stocks (🇺🇸 US + 🇮🇳 Indian Markets):
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {popularStocks.map(stock => (
@@ -723,21 +967,41 @@ function StockChartAnalyzer() {
                 key={stock.symbol}
                 onClick={() => selectStock(stock.symbol)}
                 disabled={loading}
-                style={{ padding: '8px 16px', background: stockSymbol === stock.symbol ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : 'rgba(99, 102, 241, 0.1)', color: stockSymbol === stock.symbol ? 'white' : '#4f46e5', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '20px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s' }}
+                style={{ 
+                  padding: '8px 12px', 
+                  background: stockSymbol === stock.symbol ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : 'rgba(99, 102, 241, 0.1)', 
+                  color: stockSymbol === stock.symbol ? 'white' : '#4f46e5', 
+                  border: '1px solid rgba(99, 102, 241, 0.3)', 
+                  borderRadius: '20px', 
+                  fontSize: '13px', 
+                  fontWeight: '500', 
+                  cursor: loading ? 'not-allowed' : 'pointer', 
+                  transition: 'all 0.2s',
+                  opacity: loading ? 0.6 : 1,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px'
+                }}
                 onMouseEnter={(e) => {
-                  if (stockSymbol !== stock.symbol) {
+                  if (stockSymbol !== stock.symbol && !loading) {
                     e.target.style.background = 'rgba(99, 102, 241, 0.2)';
                   }
                 }}
                 onMouseLeave={(e) => {
-                  if (stockSymbol !== stock.symbol) {
+                  if (stockSymbol !== stock.symbol && !loading) {
                     e.target.style.background = 'rgba(99, 102, 241, 0.1)';
                   }
                 }}
               >
-                {stock.symbol}
+                <span style={{ fontSize: '12px' }}>{stock.market === 'India' ? '🇮🇳' : '🇺🇸'}</span>
+                {stock.symbol.replace('.NS', '')}
               </button>
             ))}
+          </div>
+          
+          {/* Quick market examples */}
+          <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+            <strong>Examples:</strong> Try searching "TCS" (Indian IT), "Reliance" (Indian Oil), "AAPL" (US Tech), or "HDFC" (Indian Banking)
           </div>
         </div>
       </div>
@@ -930,13 +1194,38 @@ function StockChartAnalyzer() {
       
       <div style={{ fontSize: '15px', color: '#2d3748', background: 'rgba(255, 255, 255, 0.9)', padding: '24px', borderRadius: '16px', border: '2px solid rgba(0, 0, 0, 0.1)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
         <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides technical analysis for educational purposes only.</p>
-        <p style={{ margin: '0' }}>Stock data is fetched from Yahoo Finance API. Always conduct thorough research and consult financial advisors before making investment decisions.</p>
+        <p style={{ marginBottom: '12px' }}><strong>📊 Multi-Market Support:</strong> US stocks (USD) and Indian stocks (INR) data via Yahoo Finance API.</p>
+        <p style={{ margin: '0' }}>Always conduct thorough research and consult financial advisors before making investment decisions.</p>
       </div>
 
       <style jsx>{`
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        
+        /* Smooth scrolling for suggestions */
+        div[style*="overflowY: auto"] {
+          scrollbar-width: thin;
+          scrollbar-color: #d1d5db #f3f4f6;
+        }
+        
+        div[style*="overflowY: auto"]::-webkit-scrollbar {
+          width: 6px;
+        }
+        
+        div[style*="overflowY: auto"]::-webkit-scrollbar-track {
+          background: #f3f4f6;
+          border-radius: 3px;
+        }
+        
+        div[style*="overflowY: auto"]::-webkit-scrollbar-thumb {
+          background: #d1d5db;
+          border-radius: 3px;
+        }
+        
+        div[style*="overflowY: auto"]::-webkit-scrollbar-thumb:hover {
+          background: #9ca3af;
         }
       `}</style>
     </div>
