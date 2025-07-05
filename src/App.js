@@ -2,8 +2,6 @@ import React, { useState } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart } from 'lucide-react';
 import './App.css'; // Make sure you have this import
 
-// TODO: Replace with your actual backend API endpoint for chart analysis.
-const API_ENDPOINT = '/api/analyze-chart'; // Define API_ENDPOINT
 
 function App() {
   const [uploadedImage, setUploadedImage] = useState(null);
