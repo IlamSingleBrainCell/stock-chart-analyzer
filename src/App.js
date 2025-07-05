@@ -538,7 +538,7 @@ function StockChartAnalyzer() {
     ctx.font = '14px Inter, Arial, sans-serif';
     ctx.fillStyle = '#4b5563';
     const currentPrice = stockData.currentPrice || prices[prices.length - 1].close;
-    const displaySymbol = stockData.symbol.replace('.NS', ''); // Clean display
+   // const displaySymbol = stockData.symbol.replace('.NS', ''); // Clean display
     ctx.fillText(`Current: ${currencySymbol}${currentPrice.toFixed(2)} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
     
     if (stockData.isMockData) {
