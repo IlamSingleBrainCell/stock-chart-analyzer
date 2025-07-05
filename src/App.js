@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw } from 'lucide-react';
 
 // Enhanced chart patterns with detailed analysis
 const chartPatterns = {
@@ -117,6 +117,9 @@ const chartPatterns = {
 
 function StockChartAnalyzer() {
   const [uploadedImage, setUploadedImage] = useState(null);
+  const [stockSymbol, setStockSymbol] = useState('');
+  const [stockData, setStockData] = useState(null);
+  const [chartImage, setChartImage] = useState(null);
   const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
   const [patternDetected, setPatternDetected] = useState(null);
@@ -124,17 +127,305 @@ function StockChartAnalyzer() {
   const [confidence, setConfidence] = useState(null);
   const [recommendation, setRecommendation] = useState(null);
   const [entryExit, setEntryExit] = useState(null);
+  const [error, setError] = useState(null);
   const canvasRef = useRef(null);
-  const imageRef = useRef(null);
+  const chartCanvasRef = useRef(null);
+
+  // Popular stock symbols for quick selection
+  const popularStocks = [
+    { symbol: 'AAPL', name: 'Apple' },
+    { symbol: 'GOOGL', name: 'Google' },
+    { symbol: 'MSFT', name: 'Microsoft' },
+    { symbol: 'TSLA', name: 'Tesla' },
+    { symbol: 'AMZN', name: 'Amazon' },
+    { symbol: 'META', name: 'Meta' },
+    { symbol: 'NVDA', name: 'NVIDIA' },
+    { symbol: 'NFLX', name: 'Netflix' }
+  ];
+
+  // Fetch stock data from Yahoo Finance with CORS proxy
+  const fetchYahooFinanceData = async (symbol) => {
+    try {
+      // Using a CORS proxy service to bypass CORS restrictions
+      const proxyUrl = 'https://api.allorigins.win/raw?url=';
+      const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=3mo&interval=1d`);
+      
+      const response = await fetch(proxyUrl + yahooUrl);
+      
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      
+      if (data.chart?.error) {
+        throw new Error(data.chart.error.description || 'Invalid stock symbol');
+      }
+      
+      if (!data.chart?.result?.[0]) {
+        throw new Error('No data found for this symbol');
+      }
+      
+      const result = data.chart.result[0];
+      const timestamps = result.timestamp;
+      const quotes = result.indicators.quote[0];
+      const meta = result.meta;
+      
+      const prices = timestamps.map((timestamp, index) => ({
+        date: new Date(timestamp * 1000).toISOString().split('T')[0],
+        open: quotes.open[index],
+        high: quotes.high[index],
+        low: quotes.low[index],
+        close: quotes.close[index],
+        volume: quotes.volume[index]
+      })).filter(price => price.close !== null && price.close !== undefined);
+      
+      if (prices.length === 0) {
+        throw new Error('No valid price data found');
+      }
+      
+      return {
+        symbol: symbol.toUpperCase(),
+        companyName: meta.longName || symbol,
+        currency: meta.currency || 'USD',
+        exchange: meta.exchangeName || '',
+        currentPrice: meta.regularMarketPrice || prices[prices.length - 1].close,
+        prices: prices
+      };
+    } catch (error) {
+      console.error('Yahoo Finance API Error:', error);
+      
+      // Fallback: Generate realistic mock data if API fails
+      if (error.message.includes('CORS') || error.message.includes('fetch')) {
+        return generateMockStockData(symbol);
+      }
+      
+      throw new Error(`Failed to fetch data for ${symbol}: ${error.message}`);
+    }
+  };
+
+  // Generate realistic mock data as fallback
+  const generateMockStockData = (symbol) => {
+    const basePrice = Math.random() * 200 + 50; // Random price between 50-250
+    const prices = [];
+    let currentPrice = basePrice;
+    
+    // Generate 90 days of realistic price data
+    for (let i = 89; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(date.getDate() - i);
+      
+      const volatility = 0.02; // 2% daily volatility
+      const change = (Math.random() - 0.5) * 2 * volatility;
+      currentPrice = currentPrice * (1 + change);
+      
+      const open = currentPrice;
+      const close = currentPrice * (1 + (Math.random() - 0.5) * 0.01);
+      const high = Math.max(open, close) * (1 + Math.random() * 0.005);
+      const low = Math.min(open, close) * (1 - Math.random() * 0.005);
+      const volume = Math.floor(Math.random() * 10000000) + 1000000;
+      
+      prices.push({
+        date: date.toISOString().split('T')[0],
+        open: parseFloat(open.toFixed(2)),
+        high: parseFloat(high.toFixed(2)),
+        low: parseFloat(low.toFixed(2)),
+        close: parseFloat(close.toFixed(2)),
+        volume: volume
+      });
+      
+      currentPrice = close;
+    }
+    
+    return {
+      symbol: symbol.toUpperCase(),
+      companyName: `${symbol.toUpperCase()} Inc.`,
+      currency: 'USD',
+      exchange: 'NASDAQ',
+      currentPrice: currentPrice,
+      prices: prices,
+      isMockData: true
+    };
+  };
+
+  // Create enhanced chart image from stock data
+  const createChartFromData = (stockData) => {
+    const canvas = chartCanvasRef.current;
+    const ctx = canvas.getContext('2d');
+    
+    // Set high resolution canvas
+    canvas.width = 1000;
+    canvas.height = 500;
+    
+    // Clear and set background
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+    
+    const prices = stockData.prices.slice(-60); // Last 60 days
+    const margin = { top: 40, right: 60, bottom: 60, left: 80 };
+    const chartWidth = canvas.width - margin.left - margin.right;
+    const chartHeight = canvas.height - margin.top - margin.bottom;
+    
+    // Find price range
+    const allPrices = prices.flatMap(p => [p.high, p.low]);
+    const minPrice = Math.min(...allPrices);
+    const maxPrice = Math.max(...allPrices);
+    const priceRange = maxPrice - minPrice;
+    const padding = priceRange * 0.1;
+    
+    // Scale functions
+    const xScale = (index) => margin.left + (index / (prices.length - 1)) * chartWidth;
+    const yScale = (price) => margin.top + ((maxPrice + padding - price) / (priceRange + 2 * padding)) * chartHeight;
+    
+    // Draw background grid
+    ctx.strokeStyle = '#f0f0f0';
+    ctx.lineWidth = 1;
+    
+    // Horizontal grid lines
+    for (let i = 0; i <= 8; i++) {
+      const y = margin.top + (i / 8) * chartHeight;
+      ctx.beginPath();
+      ctx.moveTo(margin.left, y);
+      ctx.lineTo(margin.left + chartWidth, y);
+      ctx.stroke();
+      
+      // Price labels
+      const price = maxPrice + padding - (i / 8) * (priceRange + 2 * padding);
+      ctx.fillStyle = '#666666';
+      ctx.font = '12px Inter, Arial, sans-serif';
+      ctx.textAlign = 'right';
+      ctx.fillText('$' + price.toFixed(2), margin.left - 10, y + 4);
+    }
+    
+    // Vertical grid lines
+    for (let i = 0; i <= 6; i++) {
+      const x = margin.left + (i / 6) * chartWidth;
+      ctx.beginPath();
+      ctx.moveTo(x, margin.top);
+      ctx.lineTo(x, margin.top + chartHeight);
+      ctx.stroke();
+      
+      // Date labels
+      if (i < prices.length) {
+        const priceIndex = Math.floor((i / 6) * (prices.length - 1));
+        const date = new Date(prices[priceIndex].date);
+        ctx.fillStyle = '#666666';
+        ctx.font = '11px Inter, Arial, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), x, canvas.height - 20);
+      }
+    }
+    
+    // Draw price line
+    ctx.strokeStyle = '#2563eb';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    prices.forEach((price, index) => {
+      const x = xScale(index);
+      const y = yScale(price.close);
+      if (index === 0) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    });
+    ctx.stroke();
+    
+    // Draw candlesticks
+    prices.forEach((price, index) => {
+      const x = xScale(index);
+      const openY = yScale(price.open);
+      const closeY = yScale(price.close);
+      const highY = yScale(price.high);
+      const lowY = yScale(price.low);
+      
+      const isGreen = price.close >= price.open;
+      const color = isGreen ? '#10b981' : '#ef4444';
+      
+      ctx.strokeStyle = color;
+      ctx.fillStyle = color;
+      ctx.lineWidth = 1;
+      
+      // Draw wick (high-low line)
+      ctx.beginPath();
+      ctx.moveTo(x, highY);
+      ctx.lineTo(x, lowY);
+      ctx.stroke();
+      
+      // Draw body (open-close rectangle)
+      const bodyHeight = Math.abs(closeY - openY);
+      const bodyY = Math.min(openY, closeY);
+      const bodyWidth = 6;
+      
+      if (isGreen) {
+        ctx.fillRect(x - bodyWidth/2, bodyY, bodyWidth, bodyHeight || 1);
+      } else {
+        ctx.strokeRect(x - bodyWidth/2, bodyY, bodyWidth, bodyHeight || 1);
+      }
+    });
+    
+    // Add title and info
+    ctx.fillStyle = '#1f2937';
+    ctx.font = 'bold 20px Inter, Arial, sans-serif';
+    ctx.textAlign = 'left';
+    ctx.fillText(`${stockData.symbol} - ${stockData.companyName}`, margin.left, 25);
+    
+    ctx.font = '14px Inter, Arial, sans-serif';
+    ctx.fillStyle = '#4b5563';
+    const currentPrice = stockData.currentPrice || prices[prices.length - 1].close;
+    ctx.fillText(`Current: $${currentPrice.toFixed(2)} ${stockData.currency}`, margin.left, margin.top - 5);
+    
+    if (stockData.isMockData) {
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = 'italic 12px Inter, Arial, sans-serif';
+      ctx.fillText('Demo Data - API temporarily unavailable', margin.left + 300, 25);
+    }
+    
+    // Convert to data URL
+    return canvas.toDataURL('image/png', 1.0);
+  };
+
+  // Fetch stock data
+  const fetchStockData = async (symbol) => {
+    if (!symbol.trim()) return;
+    
+    setLoading(true);
+    setError(null);
+    setStockData(null);
+    setChartImage(null);
+    
+    try {
+      const data = await fetchYahooFinanceData(symbol.trim().toUpperCase());
+      setStockData(data);
+      
+      // Create chart image
+      setTimeout(() => {
+        const chartImageUrl = createChartFromData(data);
+        setChartImage(chartImageUrl);
+        setUploadedImage(chartImageUrl);
+      }, 100);
+      
+    } catch (error) {
+      setError(error.message);
+      console.error('Stock data fetch error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Quick stock selection
+  const selectStock = (symbol) => {
+    setStockSymbol(symbol);
+    fetchStockData(symbol);
+  };
 
   // Image analysis functions
   const analyzeImagePixels = (imageData) => {
     const { data, width, height } = imageData;
     const pixels = [];
     
-    // Convert to grayscale and extract line data
-    for (let y = 0; y < height; y += 2) { // Sample every 2nd row for performance
-      for (let x = 0; x < width; x += 2) { // Sample every 2nd column
+    for (let y = 0; y < height; y += 3) {
+      for (let x = 0; x < width; x += 3) {
         const i = (y * width + x) * 4;
         const r = data[i];
         const g = data[i + 1];
@@ -148,19 +439,16 @@ function StockChartAnalyzer() {
   };
 
   const detectTrendLines = (pixels) => {
-    // Find high and low points (simplified algorithm)
     const sortedByIntensity = pixels.sort((a, b) => a.intensity - b.intensity);
-    const darkPixels = sortedByIntensity.slice(0, Math.floor(sortedByIntensity.length * 0.3));
+    const darkPixels = sortedByIntensity.slice(0, Math.floor(sortedByIntensity.length * 0.25));
     
-    // Group pixels by x-coordinate to find price levels
     const priceData = {};
     darkPixels.forEach(pixel => {
-      const xGroup = Math.floor(pixel.x / 10) * 10; // Group by 10-pixel intervals
+      const xGroup = Math.floor(pixel.x / 15) * 15;
       if (!priceData[xGroup]) priceData[xGroup] = [];
       priceData[xGroup].push(pixel.y);
     });
     
-    // Calculate average price for each time period
     const timeSeries = Object.keys(priceData).map(x => ({
       x: parseInt(x),
       y: priceData[x].reduce((sum, y) => sum + y, 0) / priceData[x].length
@@ -172,7 +460,6 @@ function StockChartAnalyzer() {
   const detectPattern = (timeSeries) => {
     if (timeSeries.length < 5) return null;
     
-    // Calculate trends and identify patterns
     const peaks = [];
     const troughs = [];
     
@@ -188,54 +475,63 @@ function StockChartAnalyzer() {
       }
     }
     
-    // Pattern detection logic
+    // Enhanced pattern detection
     if (peaks.length >= 3) {
       const [peak1, peak2, peak3] = peaks.slice(-3);
-      if (peak2.y > peak1.y && peak2.y > peak3.y) {
+      const tolerance = 30;
+      
+      if (peak2.y > peak1.y + tolerance && peak2.y > peak3.y + tolerance) {
         return 'head-and-shoulders';
       }
-      if (Math.abs(peak1.y - peak3.y) < 20) {
+      if (Math.abs(peak1.y - peak3.y) < tolerance && Math.abs(peak1.y - peak2.y) < tolerance) {
         return 'double-top';
       }
     }
     
     if (troughs.length >= 3) {
       const [trough1, trough2, trough3] = troughs.slice(-3);
-      if (trough2.y < trough1.y && trough2.y < trough3.y) {
+      const tolerance = 30;
+      
+      if (trough2.y < trough1.y - tolerance && trough2.y < trough3.y - tolerance) {
         return 'inverse-head-and-shoulders';
       }
-      if (Math.abs(trough1.y - trough3.y) < 20) {
+      if (Math.abs(trough1.y - trough3.y) < tolerance && Math.abs(trough1.y - trough2.y) < tolerance) {
         return 'double-bottom';
       }
     }
     
     // Trend analysis
-    const firstHalf = timeSeries.slice(0, Math.floor(timeSeries.length / 2));
-    const secondHalf = timeSeries.slice(Math.floor(timeSeries.length / 2));
+    const firstThird = timeSeries.slice(0, Math.floor(timeSeries.length / 3));
+    const lastThird = timeSeries.slice(-Math.floor(timeSeries.length / 3));
     
-    const firstAvg = firstHalf.reduce((sum, p) => sum + p.y, 0) / firstHalf.length;
-    const secondAvg = secondHalf.reduce((sum, p) => sum + p.y, 0) / secondHalf.length;
+    const firstAvg = firstThird.reduce((sum, p) => sum + p.y, 0) / firstThird.length;
+    const lastAvg = lastThird.reduce((sum, p) => sum + p.y, 0) / lastThird.length;
     
-    if (secondAvg < firstAvg - 30) {
-      return Math.random() > 0.5 ? 'descending-triangle' : 'wedge-rising';
-    } else if (secondAvg > firstAvg + 30) {
-      return Math.random() > 0.5 ? 'ascending-triangle' : 'wedge-falling';
+    if (lastAvg < firstAvg - 40) {
+      return peaks.length > troughs.length ? 'descending-triangle' : 'wedge-rising';
+    } else if (lastAvg > firstAvg + 40) {
+      return troughs.length > peaks.length ? 'ascending-triangle' : 'wedge-falling';
     }
     
-    return 'cup-and-handle';
+    return peaks.length > 2 ? 'cup-and-handle' : 'flag';
   };
 
-  const calculateConfidence = (patternName, timeSeries) => {
-    const baseConfidence = chartPatterns[patternName]?.reliability || 70;
+  const calculateConfidence = (patternName, timeSeries, stockData) => {
+    let baseConfidence = chartPatterns[patternName]?.reliability || 70;
     
-    // Adjust confidence based on data quality
-    const dataQuality = Math.min(timeSeries.length / 20, 1); // More data points = higher confidence
-    const adjustedConfidence = Math.floor(baseConfidence * (0.7 + 0.3 * dataQuality));
+    // Boost confidence for real stock data
+    if (stockData && !stockData.isMockData) {
+      baseConfidence += 10;
+    }
     
-    return Math.max(50, Math.min(95, adjustedConfidence));
+    // Adjust for data quality
+    const dataQuality = Math.min(timeSeries.length / 25, 1);
+    const adjustedConfidence = Math.floor(baseConfidence * (0.75 + 0.25 * dataQuality));
+    
+    return Math.max(55, Math.min(95, adjustedConfidence));
   };
 
-  const generateRecommendation = (pattern) => {
+  const generateRecommendation = (pattern, confidence) => {
     const { recommendation, prediction } = pattern;
     
     let action = recommendation.toUpperCase();
@@ -243,25 +539,24 @@ function StockChartAnalyzer() {
     
     switch (recommendation) {
       case 'buy':
-        reasoning = `Strong ${prediction} signal detected. Consider accumulating positions.`;
+        reasoning = `Strong ${prediction} signal detected with ${confidence}% confidence. Consider accumulating positions.`;
         break;
       case 'sell':
-        reasoning = `Bearish pattern confirmed. Consider reducing positions or short selling.`;
+        reasoning = `Bearish pattern confirmed with ${confidence}% confidence. Consider reducing positions or short selling.`;
         break;
       case 'hold':
-        reasoning = `Consolidation pattern. Maintain current positions until breakout.`;
+        reasoning = `Consolidation pattern detected. Maintain current positions until clear breakout with ${confidence}% confidence.`;
         break;
       default:
-        reasoning = 'Monitor closely for breakout direction.';
+        reasoning = `Mixed signals detected. Monitor closely for breakout direction. Confidence: ${confidence}%.`;
     }
     
     return { action, reasoning };
   };
 
   const createImageHash = (imageData) => {
-    // Simple hash function for consistent results
     let hash = 0;
-    for (let i = 0; i < imageData.data.length; i += 100) { // Sample every 100th pixel
+    for (let i = 0; i < imageData.data.length; i += 150) {
       hash = ((hash << 5) - hash + imageData.data[i]) & 0xffffffff;
     }
     return Math.abs(hash);
@@ -273,6 +568,15 @@ function StockChartAnalyzer() {
       const reader = new FileReader();
       reader.onload = () => {
         setUploadedImage(reader.result);
+        setChartImage(null);
+        setStockData(null);
+        // Clear previous results
+        setPrediction(null);
+        setPatternDetected(null);
+        setConfidence(null);
+        setRecommendation(null);
+        setEntryExit(null);
+        setTimeEstimate(null);
       };
       reader.readAsDataURL(file);
     }
@@ -283,57 +587,41 @@ function StockChartAnalyzer() {
     
     setLoading(true);
     
-    // Create canvas for image analysis
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     const img = new Image();
     
     img.onload = () => {
-      // Set canvas size
       canvas.width = img.width;
       canvas.height = img.height;
-      
-      // Draw image on canvas
       ctx.drawImage(img, 0, 0);
       
-      // Get image data for analysis
       const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-      
-      // Create consistent hash for same images
       const imageHash = createImageHash(imageData);
-      
-      // Use hash to ensure consistent results for same image
       const pseudoRandom = (imageHash % 1000) / 1000;
       
       setTimeout(() => {
         try {
-          // Analyze image pixels
           const pixels = analyzeImagePixels(imageData);
           const timeSeries = detectTrendLines(pixels);
           
-          // Detect pattern (with consistent seed based on image hash)
-          const patternKeys = Object.keys(chartPatterns);
-          let detectedPattern;
+          let detectedPattern = null;
           
-          if (timeSeries.length > 10) {
+          if (timeSeries.length > 8) {
             detectedPattern = detectPattern(timeSeries);
           }
           
           // Fallback to hash-based selection for consistency
           if (!detectedPattern) {
+            const patternKeys = Object.keys(chartPatterns);
             const patternIndex = Math.floor(pseudoRandom * patternKeys.length);
             detectedPattern = patternKeys[patternIndex];
           }
           
           const selectedPattern = chartPatterns[detectedPattern];
+          const confidenceScore = calculateConfidence(detectedPattern, timeSeries, stockData);
+          const rec = generateRecommendation(selectedPattern, confidenceScore);
           
-          // Calculate confidence
-          const confidenceScore = calculateConfidence(detectedPattern, timeSeries);
-          
-          // Generate recommendation
-          const rec = generateRecommendation(selectedPattern);
-          
-          // Set all states
           setPatternDetected({
             name: detectedPattern,
             ...selectedPattern
@@ -352,6 +640,8 @@ function StockChartAnalyzer() {
             timeInfo = pseudoRandom > 0.5 
               ? `Current uptrend likely to continue for ${selectedPattern.daysUp}`
               : `Current downtrend likely to continue for ${selectedPattern.daysDown}`;
+          } else {
+            timeInfo = `Pattern suggests movement within ${selectedPattern.timeframe}`;
           }
           setTimeEstimate(timeInfo);
           
@@ -363,10 +653,11 @@ function StockChartAnalyzer() {
           
         } catch (error) {
           console.error('Error analyzing chart:', error);
+          setError('Analysis failed. Please try uploading a clearer chart image.');
         } finally {
           setLoading(false);
         }
-      }, 1500); // Realistic analysis time
+      }, 1800);
     };
     
     img.src = uploadedImage;
@@ -375,161 +666,193 @@ function StockChartAnalyzer() {
   return (
     <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px', background: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid rgba(255, 255, 255, 0.4)' }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
+      <canvas ref={chartCanvasRef} style={{ display: 'none' }} />
       
-      {/* Header with Logo */}
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '32px', gap: '16px', flexWrap: 'wrap' }}>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 60" width="180" height="54" style={{ filter: 'drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3))', transition: 'all 0.3s ease' }}>
-          <defs>
-            <linearGradient id="logoGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" style={{stopColor:'#6366f1',stopOpacity:1}} />
-              <stop offset="50%" style={{stopColor:'#8b5cf6',stopOpacity:1}} />
-              <stop offset="100%" style={{stopColor:'#22d3ee',stopOpacity:1}} />
-            </linearGradient>
-            <linearGradient id="chartGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" style={{stopColor:'#22d3ee',stopOpacity:1}} />
-              <stop offset="100%" style={{stopColor:'#10b981',stopOpacity:1}} />
-            </linearGradient>
-            <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-              <feMerge> 
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
-              </feMerge>
-            </filter>
-          </defs>
-          <rect x="5" y="5" width="50" height="50" rx="12" fill="url(#logoGradient)" opacity="0.1"/>
-          <g opacity="0.3">
-            <line x1="10" y1="45" x2="50" y2="45" stroke="#1a202c" strokeWidth="0.5"/>
-            <line x1="10" y1="35" x2="50" y2="35" stroke="#1a202c" strokeWidth="0.5"/>
-            <line x1="10" y1="25" x2="50" y2="25" stroke="#1a202c" strokeWidth="0.5"/>
-          </g>
-          <polyline points="12,42 18,38 24,40 30,28 36,25 42,20 48,15" 
-                    fill="none" 
-                    stroke="url(#chartGradient)" 
-                    strokeWidth="3" 
-                    strokeLinecap="round"
-                    filter="url(#glow)"/>
-          <circle cx="18" cy="38" r="2" fill="#22d3ee" opacity="0.8"/>
-          <circle cx="30" cy="28" r="2" fill="#22d3ee" opacity="0.8"/>
-          <circle cx="42" cy="20" r="2" fill="#10b981" opacity="0.8"/>
-          <rect x="20" y="35" width="2" height="8" fill="#ef4444" rx="1"/>
-          <rect x="26" y="32" width="2" height="6" fill="#10b981" rx="1"/>
-          <rect x="32" y="25" width="2" height="5" fill="#10b981" rx="1"/>
-          <rect x="38" y="18" width="2" height="4" fill="#10b981" rx="1"/>
-          <polygon points="45,12 50,17 47,17 47,22 43,22 43,17 40,17" 
-                   fill="#22d3ee" 
-                   filter="url(#glow)"/>
-          <text x="65" y="25" 
-                fontFamily="Inter, Arial, sans-serif" 
-                fontSize="18" 
-                fontWeight="800" 
-                fill="url(#logoGradient)"
-                letterSpacing="-0.5px">CHART</text>
-          <text x="65" y="43" 
-                fontFamily="Inter, Arial, sans-serif" 
-                fontSize="12" 
-                fontWeight="500" 
-                fill="#4a5568"
-                letterSpacing="1px">ANALYZER</text>
-          <circle cx="170" cy="15" r="8" fill="none" stroke="url(#chartGradient)" strokeWidth="2" opacity="0.6"/>
-          <circle cx="170" cy="15" r="3" fill="url(#chartGradient)"/>
-          <text x="165" y="35" 
-                fontFamily="Inter, Arial, sans-serif" 
-                fontSize="8" 
-                fontWeight="600" 
-                fill="#8b5cf6"
-                letterSpacing="0.5px">AI</text>
-          <g transform="translate(150, 42)">
-            <rect width="3" height="8" fill="#6366f1" opacity="0.7" rx="1"/>
-            <rect x="4" width="3" height="6" fill="#8b5cf6" opacity="0.7" rx="1"/>
-            <rect x="8" width="3" height="10" fill="#22d3ee" opacity="0.7" rx="1"/>
-            <rect x="12" width="3" height="4" fill="#10b981" opacity="0.7" rx="1"/>
-          </g>
-        </svg>
-        <div style={{ fontSize: '15px', color: '#2d3748', background: 'rgba(255, 255, 255, 0.9)', padding: '20px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500' }}>
-        <p><strong>Important Note:</strong> This application does not provide financial advice. Chart pattern recognition is subjective and past patterns do not guarantee future results. Always conduct your own research before making investment decisions.</p>
+      {/* Header */}
+      <div style={{ textAlign: 'center', marginBottom: '32px' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: '800', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+          AI-Powered Stock Pattern Recognition
+        </h1>
+        <p style={{ color: '#6b7280', fontSize: '16px', margin: '0' }}>
+          Analyze live stock charts or upload your own images for professional pattern analysis
+        </p>
       </div>
-    </div>
       
-      <h1 style={{ fontSize: '36px', fontWeight: '800', textAlign: 'center', marginBottom: '32px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginTop: '-16px' }}>
-        AI-Powered Stock Pattern Recognition
-      </h1>
-      
-      <div style={{ background: 'linear-gradient(135deg, rgba(255, 248, 230, 0.9), rgba(255, 248, 230, 0.7))', backdropFilter: 'blur(10px)', borderLeft: '4px solid #f0c040', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start' }}>
-        <AlertTriangle size={20} style={{ color: '#f0c040', marginRight: '16px', flexShrink: 0 }} />
-        <div style={{ fontSize: '14px', color: '#92400e', fontWeight: '600' }}>
-          <strong>Disclaimer:</strong> This tool uses advanced pattern recognition for educational purposes. Results are based on technical analysis and should not be used as sole investment advice.
+      <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1))', borderLeft: '4px solid #22d3ee', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
+        <AlertTriangle size={20} style={{ color: '#22d3ee', marginRight: '16px', flexShrink: 0 }} />
+        <div style={{ fontSize: '14px', color: '#0891b2', fontWeight: '600' }}>
+          <strong>Live Stock Data:</strong> Powered by Yahoo Finance API. Get real-time charts for any publicly traded stock symbol.
         </div>
       </div>
-      
+
+      {/* Stock Symbol Input */}
       <div style={{ marginBottom: '32px' }}>
         <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: '#1a202c', fontSize: '18px' }}>
-          Upload Stock Chart Image
+          <Search size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+          Get Live Stock Chart
+        </label>
+        
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '12px', flex: '1', minWidth: '300px' }}>
+            <input
+              type="text"
+              value={stockSymbol}
+              onChange={(e) => setStockSymbol(e.target.value.toUpperCase())}
+              onKeyPress={(e) => e.key === 'Enter' && stockSymbol.trim() && !loading && fetchStockData(stockSymbol.toUpperCase())}
+              placeholder="Enter stock symbol (e.g., AAPL, GOOGL, TSLA)"
+              style={{ flex: '1', padding: '14px 16px', border: '2px solid rgba(99, 102, 241, 0.2)', borderRadius: '8px', fontSize: '16px', fontWeight: '500', outline: 'none', transition: 'border-color 0.2s' }}
+              onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+              onBlur={(e) => e.target.style.borderColor = 'rgba(99, 102, 241, 0.2)'}
+            />
+            <button
+              onClick={() => stockSymbol.trim() && fetchStockData(stockSymbol.toUpperCase())}
+              disabled={loading || !stockSymbol.trim()}
+              style={{ padding: '14px 24px', background: loading ? '#9ca3af' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s' }}
+            >
+              {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
+              {loading ? 'Fetching...' : 'Get Chart'}
+            </button>
+          </div>
+        </div>
+
+        {/* Popular stocks */}
+        <div>
+          <p style={{ fontSize: '14px', color: '#4a5568', marginBottom: '12px', fontWeight: '500' }}>
+            Popular Stocks:
+          </p>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {popularStocks.map(stock => (
+              <button
+                key={stock.symbol}
+                onClick={() => selectStock(stock.symbol)}
+                disabled={loading}
+                style={{ padding: '8px 16px', background: stockSymbol === stock.symbol ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : 'rgba(99, 102, 241, 0.1)', color: stockSymbol === stock.symbol ? 'white' : '#4f46e5', border: '1px solid rgba(99, 102, 241, 0.3)', borderRadius: '20px', fontSize: '14px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s' }}
+                onMouseEnter={(e) => {
+                  if (stockSymbol !== stock.symbol) {
+                    e.target.style.background = 'rgba(99, 102, 241, 0.2)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (stockSymbol !== stock.symbol) {
+                    e.target.style.background = 'rgba(99, 102, 241, 0.1)';
+                  }
+                }}
+              >
+                {stock.symbol}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Error Display */}
+      {error && (
+        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '2px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: '#dc2626' }}>
+          <strong>⚠️ Error:</strong> {error}
+        </div>
+      )}
+
+      {/* OR Divider */}
+      <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}>
+        <div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(107, 114, 128, 0.3), transparent)' }}></div>
+        <span style={{ color: '#6b7280', fontWeight: '600', fontSize: '14px', background: 'rgba(255, 255, 255, 0.8)', padding: '8px 16px', borderRadius: '20px', border: '1px solid rgba(107, 114, 128, 0.2)' }}>OR</span>
+        <div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, rgba(107, 114, 128, 0.3), transparent)' }}></div>
+      </div>
+
+      {/* Manual Upload */}
+      <div style={{ marginBottom: '32px' }}>
+        <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: '#1a202c', fontSize: '18px' }}>
+          📁 Upload Your Own Chart Image
         </label>
         <input
           type="file"
           accept="image/*"
           onChange={handleImageUpload}
-          style={{ width: '100%', padding: '16px 20px', border: '2px dashed rgba(0, 0, 0, 0.2)', borderRadius: '12px', background: 'rgba(255, 255, 255, 0.8)', fontSize: '16px', fontWeight: '500', color: '#1a202c', cursor: 'pointer' }}
+          style={{ width: '100%', padding: '20px', border: '2px dashed rgba(139, 92, 246, 0.3)', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.05)', fontSize: '16px', fontWeight: '500', color: '#1a202c', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
+          onMouseEnter={(e) => {
+            e.target.style.borderColor = '#8b5cf6';
+            e.target.style.background = 'rgba(139, 92, 246, 0.1)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)';
+            e.target.style.background = 'rgba(139, 92, 246, 0.05)';
+          }}
         />
       </div>
       
       {uploadedImage && (
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ width: '100%', height: '350px', background: 'rgba(255, 255, 255, 0.9)', borderRadius: '20px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
+          <div style={{ width: '100%', height: '400px', background: 'rgba(255, 255, 255, 0.9)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(0, 0, 0, 0.1)', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
             <img 
-              ref={imageRef}
               src={uploadedImage} 
-              alt="Uploaded stock chart" 
+              alt="Stock chart" 
               style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }}
             />
           </div>
+          
+          {stockData && (
+            <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1))', border: '2px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: '#065f46' }}>
+              <div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information:</div>
+              <div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div>
+              <div><strong>Current Price:</strong> ${stockData.currentPrice?.toFixed(2)} {stockData.currency} | <strong>Data Points:</strong> {stockData.prices.length} days</div>
+              {stockData.isMockData && <div style={{ color: '#f59e0b', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}
+            </div>
+          )}
+          
           <button
             onClick={analyzeChart}
             disabled={loading}
-            style={{ width: '100%', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white', border: 'none', padding: '16px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px' }}
+            style={{ width: '100%', background: loading ? '#9ca3af' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white', border: 'none', padding: '18px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.3s', boxShadow: loading ? 'none' : '0 4px 20px rgba(99, 102, 241, 0.4)' }}
           >
-            {loading ? 'Analyzing Pattern...' : 'Analyze Chart Pattern'}
+            {loading ? (
+              <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
+                Analyzing Pattern...
+              </span>
+            ) : (
+              '🔍 Analyze Chart Pattern'
+            )}
           </button>
         </div>
       )}
       
+      {/* Results Section */}
       {prediction && patternDetected && (
-        <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', border: '2px solid rgba(0, 0, 0, 0.1)', marginBottom: '32px', overflow: 'hidden' }}>
-          <h2 style={{ fontSize: '24px', fontWeight: '700', marginBottom: '24px', color: '#1a202c', padding: '24px 24px 0' }}>
-            Analysis Results
+        <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', border: '2px solid rgba(0, 0, 0, 0.1)', marginBottom: '32px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: '#1a202c', padding: '24px 24px 0', textAlign: 'center' }}>
+            📈 Analysis Results
           </h2>
           
           {/* Prediction Section */}
-          <div style={{ padding: '24px', background: prediction === 'up' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(52, 211, 153, 0.2))' : prediction === 'down' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.2), rgba(248, 113, 113, 0.2))' : 'linear-gradient(135deg, rgba(99, 102, 241, 0.2), rgba(139, 92, 246, 0.2))', borderLeft: `6px solid ${prediction === 'up' ? '#10b981' : prediction === 'down' ? '#ef4444' : '#6366f1'}`, border: `2px solid ${prediction === 'up' ? 'rgba(16, 185, 129, 0.4)' : prediction === 'down' ? 'rgba(239, 68, 68, 0.4)' : 'rgba(99, 102, 241, 0.4)'}`, marginBottom: '4px', borderRadius: '8px' }}>
+          <div style={{ padding: '24px', background: prediction === 'up' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15))' : prediction === 'down' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(248, 113, 113, 0.15))' : 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15))', borderLeft: `6px solid ${prediction === 'up' ? '#10b981' : prediction === 'down' ? '#ef4444' : '#6366f1'}`, margin: '0 24px 16px', borderRadius: '12px', border: `2px solid ${prediction === 'up' ? 'rgba(16, 185, 129, 0.3)' : prediction === 'down' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(99, 102, 241, 0.3)'}` }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-              {prediction === 'up' ? <TrendingUp size={24} /> : prediction === 'down' ? <TrendingDown size={24} /> : <BarChart size={24} />}
-              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Prediction</h3>
+              {prediction === 'up' ? <TrendingUp size={28} /> : prediction === 'down' ? <TrendingDown size={28} /> : <BarChart size={28} />}
+              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Prediction</h3>
             </div>
-            <p style={{ fontSize: '18px', marginBottom: '12px', fontWeight: '800', color: prediction === 'up' ? '#059669' : prediction === 'down' ? '#dc2626' : '#4f46e5' }}>
-              {prediction === 'up' ? 'Likely to go UP' : prediction === 'down' ? 'Likely to go DOWN' : 'Continuation of current trend'}
+            <p style={{ fontSize: '20px', marginBottom: '16px', fontWeight: '800', color: prediction === 'up' ? '#059669' : prediction === 'down' ? '#dc2626' : '#4f46e5' }}>
+              {prediction === 'up' ? '📈 Likely to go UP' : prediction === 'down' ? '📉 Likely to go DOWN' : '↔️ Continuation Expected'}
             </p>
-            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '12px', padding: '12px 16px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
+            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', padding: '14px 18px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
               <span style={{ fontWeight: '700', color: '#1a202c' }}>
-                {prediction === 'up' ? 'Upward duration:' : prediction === 'down' ? 'Downward duration:' : 'Pattern duration:'}
+                {prediction === 'up' ? '⏱️ Upward duration:' : prediction === 'down' ? '⏱️ Downward duration:' : '⏱️ Pattern duration:'}
               </span> {prediction === 'up' ? patternDetected.daysUp : prediction === 'down' ? patternDetected.daysDown : patternDetected.timeframe}
             </div>
             {confidence && (
-              <p style={{ fontSize: '14px', color: '#1a202c', marginTop: '16px', fontWeight: '700', background: 'rgba(0, 0, 0, 0.05)', padding: '8px 12px', borderRadius: '8px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-                Confidence: {confidence}%
-              </p>
+              <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.8)', padding: '12px 16px', borderRadius: '8px', border: '2px solid rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
+                🎯 Confidence Level: {confidence}%
+              </div>
             )}
           </div>
 
-          {/* Recommendation Section */}
+          {/* Other sections with enhanced styling */}
           {recommendation && (
-            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px', borderRadius: '8px' }}>
+            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-                <DollarSign size={24} />
-                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Recommendation</h3>
+                <DollarSign size={28} />
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Recommendation</h3>
               </div>
-              <p style={{ fontSize: '18px', marginBottom: '12px', fontWeight: '800', color: recommendation.action === 'BUY' ? '#059669' : recommendation.action === 'SELL' ? '#dc2626' : '#4f46e5' }}>
-                {recommendation.action}
+              <p style={{ fontSize: '20px', marginBottom: '12px', fontWeight: '800', color: recommendation.action === 'BUY' ? '#059669' : recommendation.action === 'SELL' ? '#dc2626' : '#4f46e5' }}>
+                {recommendation.action === 'BUY' ? '💰 BUY' : recommendation.action === 'SELL' ? '💸 SELL' : '✋ HOLD'}
               </p>
               <p style={{ fontSize: '16px', color: '#2d3748', lineHeight: '1.6', fontWeight: '500' }}>
                 {recommendation.reasoning}
@@ -537,44 +860,41 @@ function StockChartAnalyzer() {
             </div>
           )}
 
-          {/* Entry/Exit Points */}
           {entryExit && (
-            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px', borderRadius: '8px' }}>
+            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-                <Target size={24} />
-                <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Entry & Exit Strategy</h3>
+                <Target size={28} />
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Entry & Exit Strategy</h3>
               </div>
               <div style={{ marginBottom: '12px' }}>
-                <span style={{ fontWeight: '700', color: '#059669' }}>Entry Point: </span>
+                <span style={{ fontWeight: '700', color: '#059669' }}>🟢 Entry Point: </span>
                 <span style={{ color: '#2d3748', fontWeight: '500' }}>{entryExit.entry}</span>
               </div>
               <div>
-                <span style={{ fontWeight: '700', color: '#dc2626' }}>Exit Strategy: </span>
+                <span style={{ fontWeight: '700', color: '#dc2626' }}>🔴 Exit Strategy: </span>
                 <span style={{ color: '#2d3748', fontWeight: '500' }}>{entryExit.exit}</span>
               </div>
             </div>
           )}
 
-          {/* Time Estimate Section */}
-          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', marginBottom: '4px', borderRadius: '8px' }}>
+          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-              <Calendar size={24} />
-              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Time Estimate</h3>
+              <Calendar size={28} />
+              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Time Estimate</h3>
             </div>
             <p style={{ fontSize: '18px', marginBottom: '12px', color: '#2d3748', fontWeight: '600' }}>{timeEstimate}</p>
-            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '12px', padding: '12px 16px', background: 'rgba(0, 0, 0, 0.05)', borderRadius: '12px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
-              <span style={{ fontWeight: '700', color: '#1a202c' }}>Typical pattern duration:</span> {patternDetected.timeframe}
+            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', padding: '12px 16px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
+              <span style={{ fontWeight: '700', color: '#1a202c' }}>📅 Typical pattern duration:</span> {patternDetected.timeframe}
             </div>
           </div>
 
-          {/* Pattern Details */}
-          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px' }}>
+          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
             <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
-              <BarChart size={24} />
-              <h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Pattern Detected</h3>
+              <BarChart size={28} />
+              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Pattern Detected</h3>
             </div>
-            <p style={{ fontSize: '18px', marginBottom: '12px', color: '#2d3748', fontWeight: '600' }}>
-              {patternDetected.name.split('-').map(word => 
+            <p style={{ fontSize: '20px', marginBottom: '12px', color: '#2d3748', fontWeight: '700' }}>
+              📊 {patternDetected.name.split('-').map(word => 
                 word.charAt(0).toUpperCase() + word.slice(1)
               ).join(' ')}
             </p>
@@ -583,11 +903,12 @@ function StockChartAnalyzer() {
       )}
       
       {patternDetected && (
-        <div style={{ background: 'rgba(255, 255, 255, 0.95)', padding: '24px', borderRadius: '20px', marginBottom: '32px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-          <h3 style={{ fontWeight: '700', fontSize: '20px', marginTop: '0', marginBottom: '16px', color: '#1a202c' }}>Pattern Description:</h3>
-          <p style={{ marginBottom: '20px', lineHeight: '1.7', fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>{patternDetected.description}</p>
-          <div style={{ padding: '20px', border: '2px solid rgba(0, 0, 0, 0.1)', background: 'rgba(0, 0, 0, 0.03)', borderRadius: '12px' }}>
-            <h4 style={{ fontWeight: '700', fontSize: '16px', color: '#1a202c', marginTop: '0', marginBottom: '16px' }}>What to look for:</h4>
+        <div style={{ background: 'rgba(255, 255, 255, 0.95)', padding: '32px', borderRadius: '20px', marginBottom: '32px', border: '2px solid rgba(0, 0, 0, 0.1)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
+          <h3 style={{ fontWeight: '700', fontSize: '24px', marginTop: '0', marginBottom: '20px', color: '#1a202c', textAlign: 'center' }}>📚 Pattern Education</h3>
+          <h4 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '12px', color: '#1a202c' }}>Description:</h4>
+          <p style={{ marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>{patternDetected.description}</p>
+          <div style={{ padding: '24px', border: '2px solid rgba(0, 0, 0, 0.1)', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px' }}>
+            <h4 style={{ fontWeight: '700', fontSize: '18px', color: '#1a202c', marginTop: '0', marginBottom: '16px' }}>🔍 What to look for:</h4>
             <ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: '#2d3748' }}>
               <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
                 <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
@@ -601,10 +922,26 @@ function StockChartAnalyzer() {
                 <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Confirm breakout direction before making decisions
               </li>
+              <li style={{ marginBottom: '0', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
+                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+                Consider overall market conditions and sentiment
+              </li>
             </ul>
           </div>
         </div>
       )}
+      
+      <div style={{ fontSize: '15px', color: '#2d3748', background: 'rgba(255, 255, 255, 0.9)', padding: '24px', borderRadius: '16px', border: '2px solid rgba(0, 0, 0, 0.1)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
+        <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides technical analysis for educational purposes only.</p>
+        <p style={{ margin: '0' }}>Stock data is fetched from Yahoo Finance API. Always conduct thorough research and consult financial advisors before making investment decisions.</p>
+      </div>
+
+      <style jsx>{`
+        @keyframes spin {
+          from { transform: rotate(0deg); }
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 }
