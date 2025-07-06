@@ -2,6 +2,79 @@ import React, { useState, useRef } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock } from 'lucide-react';
 import stocksData from './stocks.json';
 
+// Cross-platform flag component (most reliable solution)
+const FlagIcon = ({ country, size = 16 }) => {
+  const height = Math.round(size * 0.75); // 4:3 aspect ratio
+  
+  if (country === 'India') {
+    return (
+      <svg width={size} height={height} viewBox="0 0 16 12" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+        <rect width="16" height="4" fill="#ff9933"/>
+        <rect y="4" width="16" height="4" fill="white"/>
+        <rect y="8" width="16" height="4" fill="#138808"/>
+        <circle cx="8" cy="6" r="1.5" stroke="#000080" strokeWidth="0.3" fill="none"/>
+        <g stroke="#000080" strokeWidth="0.2">
+          <line x1="6.5" y1="6" x2="9.5" y2="6"/>
+          <line x1="8" y1="4.5" x2="8" y2="7.5"/>
+          <line x1="6.8" y1="5.2" x2="9.2" y2="6.8"/>
+          <line x1="9.2" y1="5.2" x2="6.8" y2="6.8"/>
+        </g>
+      </svg>
+    );
+  } else {
+    return (
+      <svg width={size} height={height} viewBox="0 0 16 12" style={{ marginRight: '4px', verticalAlign: 'middle' }}>
+        <rect width="16" height="12" fill="#bf0a30"/>
+        <rect y="1" width="16" height="1" fill="white"/>
+        <rect y="3" width="16" height="1" fill="white"/>
+        <rect y="5" width="16" height="1" fill="white"/>
+        <rect y="7" width="16" height="1" fill="white"/>
+        <rect y="9" width="16" height="1" fill="white"/>
+        <rect y="11" width="16" height="1" fill="white"/>
+        <rect width="6" height="6" fill="#002868"/>
+      </svg>
+    );
+  }
+};
+
+// Alternative text-based badge (fallback option)
+const MarketBadge = ({ market, style = {} }) => {
+  const baseStyle = {
+    display: 'inline-flex',
+    alignItems: 'center',
+    gap: '2px',
+    padding: '2px 4px',
+    borderRadius: '3px',
+    fontSize: '9px',
+    fontWeight: '700',
+    ...style
+  };
+
+  if (market === 'India') {
+    return (
+      <span style={{
+        ...baseStyle,
+        backgroundColor: '#ff6b35',
+        color: 'white',
+        border: '1px solid #138808'
+      }}>
+        IN
+      </span>
+    );
+  } else {
+    return (
+      <span style={{
+        ...baseStyle,
+        backgroundColor: '#1e40af',
+        color: 'white',
+        border: '1px solid #dc2626'
+      }}>
+        US
+      </span>
+    );
+  }
+};
+
 // Enhanced chart patterns with detailed analysis
 const chartPatterns = {
   'head-and-shoulders': {
@@ -1051,7 +1124,7 @@ function StockChartAnalyzer() {
       <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1))', borderLeft: '4px solid #22d3ee', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
         <AlertTriangle size={20} style={{ color: '#22d3ee', marginRight: '16px', flexShrink: 0 }} />
         <div style={{ fontSize: '14px', color: '#0891b2', fontWeight: '600' }}>
-          <strong>🚀 Enhanced Analysis:</strong> Now featuring accurate pattern detection using 3-month price data, dynamic confidence scoring, and breakout timing predictions. Comprehensive database with {stockDatabase.length}+ stocks from both 🇺🇸 US and 🇮🇳 Indian markets!
+          <strong>🚀 Enhanced Analysis:</strong> Now featuring accurate pattern detection using 3-month price data, dynamic confidence scoring, and breakout timing predictions. Comprehensive database with {stockDatabase.length}+ stocks from both <FlagIcon country="US" size={12} />US and <FlagIcon country="India" size={12} />Indian markets!
         </div>
       </div>
 
@@ -1134,9 +1207,13 @@ function StockChartAnalyzer() {
                               padding: '2px 6px', 
                               borderRadius: '4px',
                               fontWeight: '600',
-                              border: `1px solid ${stock.market === 'India' ? '#fecaca' : '#dbeafe'}`
+                              border: `1px solid ${stock.market === 'India' ? '#fecaca' : '#dbeafe'}`,
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '2px'
                             }}>
-                              {stock.market === 'India' ? '🇮🇳 NSE' : '🇺🇸 US'}
+                              <FlagIcon country={stock.market} size={12} />
+                              {stock.market === 'India' ? 'NSE' : 'US'}
                             </div>
                             <div style={{ 
                               fontSize: '11px', 
@@ -1197,7 +1274,7 @@ function StockChartAnalyzer() {
         {/* Popular stocks with market indicators */}
         <div>
           <p style={{ fontSize: '14px', color: '#4a5568', marginBottom: '12px', fontWeight: '500' }}>
-            Popular Stocks from {stockDatabase.length}+ available (🇺🇸 US + 🇮🇳 Indian Markets):
+            Popular Stocks from {stockDatabase.length}+ available (<FlagIcon country="US" size={12} />US + <FlagIcon country="India" size={12} />Indian Markets):
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             {popularStocksData.map(stock => (
@@ -1231,7 +1308,7 @@ function StockChartAnalyzer() {
                   }
                 }}
               >
-                <span style={{ fontSize: '12px' }}>{stock.market === 'India' ? '🇮🇳' : '🇺🇸'}</span>
+                <FlagIcon country={stock.market} size={12} />
                 {stock.symbol.replace('.NS', '')}
               </button>
             ))}
