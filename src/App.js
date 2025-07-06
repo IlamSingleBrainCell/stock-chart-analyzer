@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp } from 'lucide-react';
 import stocksData from './stocks.json';
 
 // Pattern drawing utility functions
@@ -943,30 +943,6 @@ function StockChartAnalyzer() {
     return hasCup && hasHandle;
   };
 
-  // Detect flag pattern (improved)
-  const detectFlagPattern = (closes) => {
-    if (closes.length < 20) return null;
-
-    const recent20 = closes.slice(-20);
-    const first10 = recent20.slice(0, 10);
-    const last10 = recent20.slice(10);
-    
-    const range = Math.max(...recent20) - Math.min(...recent20);
-    const avgPrice = recent20.reduce((a, b) => a + b) / recent20.length;
-    const priceVariation = range / avgPrice;
-
-    // Flag: tight consolidation after strong move
-    const firstAvg = first10.reduce((a, b) => a + b) / first10.length;
-    const lastAvg = last10.reduce((a, b) => a + b) / last10.length;
-    const strongMoveBefore = Math.abs((firstAvg - closes[closes.length - 30]) / closes[closes.length - 30]) > 0.08;
-
-    if (priceVariation < 0.06 && strongMoveBefore) { // Less than 6% range and previous strong move
-      return { pattern: 'flag', strength: 0.6 };
-    }
-
-    return null;
-  };
-
   // Detect wedge patterns (improved)
   const detectWedgePatterns = (peaks, troughs, closes) => {
     if (peaks.length < 2 || troughs.length < 2) return null;
@@ -1557,8 +1533,6 @@ function StockChartAnalyzer() {
         
         // Fallback to basic pattern detection for uploaded images
         if (!detectedPattern) {
-          const patternKeys = Object.keys(chartPatterns);
-          
           // Create a weighted distribution instead of pure random
           const patternWeights = {
             'head-and-shoulders': 12,
