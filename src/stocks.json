@@ -1,0 +1,910 @@
+{
+  "stocks": [
+    {
+      "symbol": "AAPL",
+      "name": "Apple Inc.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Technology hardware and software company"
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Alphabet Inc.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Internet search and online advertising"
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft Corporation",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Software and cloud computing services"
+    },
+    {
+      "symbol": "AMZN",
+      "name": "Amazon.com Inc.",
+      "sector": "E-commerce",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "E-commerce and cloud computing"
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Tesla Inc.",
+      "sector": "Automotive",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Electric vehicles and clean energy"
+    },
+    {
+      "symbol": "META",
+      "name": "Meta Platforms Inc.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Social media and metaverse technology"
+    },
+    {
+      "symbol": "NVDA",
+      "name": "NVIDIA Corporation",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Graphics processing units and AI chips"
+    },
+    {
+      "symbol": "NFLX",
+      "name": "Netflix Inc.",
+      "sector": "Entertainment",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Streaming entertainment services"
+    },
+    {
+      "symbol": "JPM",
+      "name": "JPMorgan Chase & Co.",
+      "sector": "Banking",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Investment banking and financial services"
+    },
+    {
+      "symbol": "JNJ",
+      "name": "Johnson & Johnson",
+      "sector": "Healthcare",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Pharmaceuticals and medical devices"
+    },
+    {
+      "symbol": "V",
+      "name": "Visa Inc.",
+      "sector": "Financial Services",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Payment processing services"
+    },
+    {
+      "symbol": "PG",
+      "name": "Procter & Gamble Co.",
+      "sector": "Consumer Goods",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Consumer products and household goods"
+    },
+    {
+      "symbol": "HD",
+      "name": "Home Depot Inc.",
+      "sector": "Retail",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Home improvement retail"
+    },
+    {
+      "symbol": "MA",
+      "name": "Mastercard Inc.",
+      "sector": "Financial Services",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Payment processing services"
+    },
+    {
+      "symbol": "BAC",
+      "name": "Bank of America Corp.",
+      "sector": "Banking",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Commercial and investment banking"
+    },
+    {
+      "symbol": "XOM",
+      "name": "Exxon Mobil Corp.",
+      "sector": "Energy",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Oil and gas exploration and production"
+    },
+    {
+      "symbol": "KO",
+      "name": "Coca-Cola Co.",
+      "sector": "Beverages",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Non-alcoholic beverages"
+    },
+    {
+      "symbol": "WMT",
+      "name": "Walmart Inc.",
+      "sector": "Retail",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Retail and e-commerce"
+    },
+    {
+      "symbol": "DIS",
+      "name": "Walt Disney Co.",
+      "sector": "Entertainment",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Entertainment and media"
+    },
+    {
+      "symbol": "ADBE",
+      "name": "Adobe Inc.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Digital media and marketing software"
+    },
+    {
+      "symbol": "CRM",
+      "name": "Salesforce Inc.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Cloud-based customer relationship management"
+    },
+    {
+      "symbol": "PYPL",
+      "name": "PayPal Holdings Inc.",
+      "sector": "Financial Services",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Digital payments platform"
+    },
+    {
+      "symbol": "INTC",
+      "name": "Intel Corporation",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Semiconductor manufacturing"
+    },
+    {
+      "symbol": "AMD",
+      "name": "Advanced Micro Devices Inc.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Semiconductor design and manufacturing"
+    },
+    {
+      "symbol": "ORCL",
+      "name": "Oracle Corporation",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Database software and cloud computing"
+    },
+    {
+      "symbol": "IBM",
+      "name": "International Business Machines Corp.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Technology services and consulting"
+    },
+    {
+      "symbol": "CSCO",
+      "name": "Cisco Systems Inc.",
+      "sector": "Technology",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Networking equipment and software"
+    },
+    {
+      "symbol": "PFE",
+      "name": "Pfizer Inc.",
+      "sector": "Healthcare",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Pharmaceutical manufacturing"
+    },
+    {
+      "symbol": "MRK",
+      "name": "Merck & Co. Inc.",
+      "sector": "Healthcare",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Pharmaceutical manufacturing"
+    },
+    {
+      "symbol": "ABBV",
+      "name": "AbbVie Inc.",
+      "sector": "Healthcare",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Biopharmaceutical company"
+    },
+    {
+      "symbol": "T",
+      "name": "AT&T Inc.",
+      "sector": "Telecommunications",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Telecommunications services"
+    },
+    {
+      "symbol": "VZ",
+      "name": "Verizon Communications Inc.",
+      "sector": "Telecommunications",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Wireless telecommunications"
+    },
+    {
+      "symbol": "CMCSA",
+      "name": "Comcast Corporation",
+      "sector": "Telecommunications",
+      "market": "US",
+      "exchange": "NASDAQ",
+      "currency": "USD",
+      "description": "Cable television and internet services"
+    },
+    {
+      "symbol": "UNH",
+      "name": "UnitedHealth Group Inc.",
+      "sector": "Healthcare",
+      "market": "US",
+      "exchange": "NYSE",
+      "currency": "USD",
+      "description": "Health insurance and healthcare services"
+    },
+    {
+      "symbol": "TCS.NS",
+      "name": "Tata Consultancy Services Ltd.",
+      "sector": "IT Services",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Information technology services and consulting"
+    },
+    {
+      "symbol": "RELIANCE.NS",
+      "name": "Reliance Industries Ltd.",
+      "sector": "Oil & Gas",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Oil refining and petrochemicals"
+    },
+    {
+      "symbol": "HDFCBANK.NS",
+      "name": "HDFC Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking and financial services"
+    },
+    {
+      "symbol": "INFY.NS",
+      "name": "Infosys Ltd.",
+      "sector": "IT Services",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Information technology and business consulting"
+    },
+    {
+      "symbol": "ICICIBANK.NS",
+      "name": "ICICI Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking and financial services"
+    },
+    {
+      "symbol": "HINDUNILVR.NS",
+      "name": "Hindustan Unilever Ltd.",
+      "sector": "FMCG",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Fast-moving consumer goods"
+    },
+    {
+      "symbol": "ITC.NS",
+      "name": "ITC Ltd.",
+      "sector": "FMCG",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Consumer goods and tobacco products"
+    },
+    {
+      "symbol": "KOTAKBANK.NS",
+      "name": "Kotak Mahindra Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking and financial services"
+    },
+    {
+      "symbol": "BHARTIARTL.NS",
+      "name": "Bharti Airtel Ltd.",
+      "sector": "Telecommunications",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Telecommunications services"
+    },
+    {
+      "symbol": "SBIN.NS",
+      "name": "State Bank of India",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Public sector banking"
+    },
+    {
+      "symbol": "ASIANPAINT.NS",
+      "name": "Asian Paints Ltd.",
+      "sector": "Paints & Chemicals",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Paints and coatings manufacturer"
+    },
+    {
+      "symbol": "MARUTI.NS",
+      "name": "Maruti Suzuki India Ltd.",
+      "sector": "Automotive",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Automobile manufacturing"
+    },
+    {
+      "symbol": "BAJFINANCE.NS",
+      "name": "Bajaj Finance Ltd.",
+      "sector": "Financial Services",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Non-banking financial services"
+    },
+    {
+      "symbol": "LT.NS",
+      "name": "Larsen & Toubro Ltd.",
+      "sector": "Engineering",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Engineering and construction"
+    },
+    {
+      "symbol": "HCLTECH.NS",
+      "name": "HCL Technologies Ltd.",
+      "sector": "IT Services",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Information technology services"
+    },
+    {
+      "symbol": "AXISBANK.NS",
+      "name": "Axis Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking"
+    },
+    {
+      "symbol": "ONGC.NS",
+      "name": "Oil & Natural Gas Corp. Ltd.",
+      "sector": "Oil & Gas",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Oil and gas exploration and production"
+    },
+    {
+      "symbol": "WIPRO.NS",
+      "name": "Wipro Ltd.",
+      "sector": "IT Services",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Information technology services"
+    },
+    {
+      "symbol": "SUNPHARMA.NS",
+      "name": "Sun Pharmaceutical Industries Ltd.",
+      "sector": "Pharmaceuticals",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Pharmaceutical manufacturing"
+    },
+    {
+      "symbol": "ULTRACEMCO.NS",
+      "name": "UltraTech Cement Ltd.",
+      "sector": "Cement",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Cement manufacturing"
+    },
+    {
+      "symbol": "TITAN.NS",
+      "name": "Titan Co. Ltd.",
+      "sector": "Consumer Goods",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Jewelry and watches"
+    },
+    {
+      "symbol": "POWERGRID.NS",
+      "name": "Power Grid Corp. of India Ltd.",
+      "sector": "Power",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Power transmission infrastructure"
+    },
+    {
+      "symbol": "NTPC.NS",
+      "name": "NTPC Ltd.",
+      "sector": "Power",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Power generation"
+    },
+    {
+      "symbol": "TECHM.NS",
+      "name": "Tech Mahindra Ltd.",
+      "sector": "IT Services",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Information technology services"
+    },
+    {
+      "symbol": "NESTLEIND.NS",
+      "name": "Nestle India Ltd.",
+      "sector": "FMCG",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Food and beverage products"
+    },
+    {
+      "symbol": "DRREDDY.NS",
+      "name": "Dr. Reddy's Laboratories Ltd.",
+      "sector": "Pharmaceuticals",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Pharmaceutical manufacturing"
+    },
+    {
+      "symbol": "JSWSTEEL.NS",
+      "name": "JSW Steel Ltd.",
+      "sector": "Steel",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Steel manufacturing"
+    },
+    {
+      "symbol": "INDUSINDBK.NS",
+      "name": "IndusInd Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking"
+    },
+    {
+      "symbol": "TATACONSUM.NS",
+      "name": "Tata Consumer Products Ltd.",
+      "sector": "FMCG",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Consumer food and beverage products"
+    },
+    {
+      "symbol": "TATAMOTORS.NS",
+      "name": "Tata Motors Ltd.",
+      "sector": "Automotive",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Automobile manufacturing"
+    },
+    {
+      "symbol": "COALINDIA.NS",
+      "name": "Coal India Ltd.",
+      "sector": "Mining",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Coal mining and production"
+    },
+    {
+      "symbol": "ADANIPORTS.NS",
+      "name": "Adani Ports & Special Economic Zone Ltd.",
+      "sector": "Infrastructure",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Port operations and logistics"
+    },
+    {
+      "symbol": "GRASIM.NS",
+      "name": "Grasim Industries Ltd.",
+      "sector": "Chemicals",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Cement and chemicals manufacturing"
+    },
+    {
+      "symbol": "BRITANNIA.NS",
+      "name": "Britannia Industries Ltd.",
+      "sector": "FMCG",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Food products manufacturing"
+    },
+    {
+      "symbol": "HEROMOTOCO.NS",
+      "name": "Hero MotoCorp Ltd.",
+      "sector": "Automotive",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Two-wheeler manufacturing"
+    },
+    {
+      "symbol": "EICHERMOT.NS",
+      "name": "Eicher Motors Ltd.",
+      "sector": "Automotive",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Automobile manufacturing"
+    },
+    {
+      "symbol": "CIPLA.NS",
+      "name": "Cipla Ltd.",
+      "sector": "Pharmaceuticals",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Pharmaceutical manufacturing"
+    },
+    {
+      "symbol": "DIVISLAB.NS",
+      "name": "Divi's Laboratories Ltd.",
+      "sector": "Pharmaceuticals",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Active pharmaceutical ingredients"
+    },
+    {
+      "symbol": "BAJAJFINSV.NS",
+      "name": "Bajaj Finserv Ltd.",
+      "sector": "Financial Services",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Financial services holding company"
+    },
+    {
+      "symbol": "SHREECEM.NS",
+      "name": "Shree Cement Ltd.",
+      "sector": "Cement",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Cement manufacturing"
+    },
+    {
+      "symbol": "APOLLOHOSP.NS",
+      "name": "Apollo Hospitals Enterprise Ltd.",
+      "sector": "Healthcare",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Healthcare services"
+    },
+    {
+      "symbol": "BPCL.NS",
+      "name": "Bharat Petroleum Corp. Ltd.",
+      "sector": "Oil & Gas",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Oil refining and marketing"
+    },
+    {
+      "symbol": "HINDALCO.NS",
+      "name": "Hindalco Industries Ltd.",
+      "sector": "Metals",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Aluminum and copper manufacturing"
+    },
+    {
+      "symbol": "GODREJCP.NS",
+      "name": "Godrej Consumer Products Ltd.",
+      "sector": "FMCG",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Consumer products manufacturing"
+    },
+    {
+      "symbol": "VEDL.NS",
+      "name": "Vedanta Ltd.",
+      "sector": "Metals & Mining",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Natural resources and mining"
+    },
+    {
+      "symbol": "TATASTEEL.NS",
+      "name": "Tata Steel Ltd.",
+      "sector": "Steel",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Steel manufacturing"
+    },
+    {
+      "symbol": "SAIL.NS",
+      "name": "Steel Authority of India Ltd.",
+      "sector": "Steel",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Steel manufacturing"
+    },
+    {
+      "symbol": "IOCL.NS",
+      "name": "Indian Oil Corp. Ltd.",
+      "sector": "Oil & Gas",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Oil refining and marketing"
+    },
+    {
+      "symbol": "HPCL.NS",
+      "name": "Hindustan Petroleum Corp. Ltd.",
+      "sector": "Oil & Gas",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Oil refining and marketing"
+    },
+    {
+      "symbol": "GAIL.NS",
+      "name": "GAIL (India) Ltd.",
+      "sector": "Oil & Gas",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Natural gas processing and distribution"
+    },
+    {
+      "symbol": "BANKBARODA.NS",
+      "name": "Bank of Baroda",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Public sector banking"
+    },
+    {
+      "symbol": "PNB.NS",
+      "name": "Punjab National Bank",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Public sector banking"
+    },
+    {
+      "symbol": "CANBK.NS",
+      "name": "Canara Bank",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Public sector banking"
+    },
+    {
+      "symbol": "FEDERALBNK.NS",
+      "name": "Federal Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking"
+    },
+    {
+      "symbol": "YESBANK.NS",
+      "name": "Yes Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking"
+    },
+    {
+      "symbol": "BANDHANBNK.NS",
+      "name": "Bandhan Bank Ltd.",
+      "sector": "Banking",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Private sector banking"
+    },
+    {
+      "symbol": "BAJAJ-AUTO.NS",
+      "name": "Bajaj Auto Ltd.",
+      "sector": "Automotive",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Two and three-wheeler manufacturing"
+    },
+    {
+      "symbol": "MAHINDRA.NS",
+      "name": "Mahindra & Mahindra Ltd.",
+      "sector": "Automotive",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Automobile manufacturing"
+    },
+    {
+      "symbol": "ZOMATO.NS",
+      "name": "Zomato Ltd.",
+      "sector": "Technology",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Food delivery and restaurant discovery"
+    },
+    {
+      "symbol": "PAYTM.NS",
+      "name": "One 97 Communications Ltd.",
+      "sector": "Financial Technology",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Digital payments and financial services"
+    },
+    {
+      "symbol": "NYKAA.NS",
+      "name": "FSN E-Commerce Ventures Ltd.",
+      "sector": "E-commerce",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Beauty and fashion e-commerce"
+    },
+    {
+      "symbol": "POLICYBZR.NS",
+      "name": "PB Fintech Ltd.",
+      "sector": "Financial Technology",
+      "market": "India",
+      "exchange": "NSE",
+      "currency": "INR",
+      "description": "Insurance and lending marketplace"
+    }
+  ],
+  "popularStocks": [
+    {
+      "symbol": "AAPL",
+      "name": "Apple",
+      "market": "US"
+    },
+    {
+      "symbol": "GOOGL",
+      "name": "Google",
+      "market": "US"
+    },
+    {
+      "symbol": "MSFT",
+      "name": "Microsoft",
+      "market": "US"
+    },
+    {
+      "symbol": "TSLA",
+      "name": "Tesla",
+      "market": "US"
+    },
+    {
+      "symbol": "TCS.NS",
+      "name": "TCS",
+      "market": "India"
+    },
+    {
+      "symbol": "RELIANCE.NS",
+      "name": "Reliance",
+      "market": "India"
+    },
+    {
+      "symbol": "HDFCBANK.NS",
+      "name": "HDFC Bank",
+      "market": "India"
+    },
+    {
+      "symbol": "INFY.NS",
+      "name": "Infosys",
+      "market": "India"
+    }
+  ]
+}
