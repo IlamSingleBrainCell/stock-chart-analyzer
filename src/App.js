@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronDown, ChevronUp } from 'lucide-react';
 import stocksData from './stocks.json';
 
 // Pattern drawing utility functions
@@ -574,6 +574,9 @@ function StockChartAnalyzer() {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
+  
+  // State for confidence level help
+  const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
   
   const canvasRef = useRef(null);
   const chartCanvasRef = useRef(null);
@@ -1768,8 +1771,142 @@ function StockChartAnalyzer() {
               </span> {prediction === 'up' ? patternDetected.daysUp : prediction === 'down' ? patternDetected.daysDown : patternDetected.timeframe}
             </div>
             {confidence && (
-              <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.8)', padding: '12px 16px', borderRadius: '8px', border: '2px solid rgba(0, 0, 0, 0.1)', textAlign: 'center' }}>
-                🎯 Confidence Level: {confidence}%
+              <div>
+                <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.8)', padding: '12px 16px', borderRadius: '8px', border: '2px solid rgba(0, 0, 0, 0.1)', textAlign: 'center', position: 'relative' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                    🎯 Confidence Level: {confidence}%
+                    <button
+                      onClick={() => setShowConfidenceHelp(!showConfidenceHelp)}
+                      style={{
+                        background: 'rgba(99, 102, 241, 0.1)',
+                        border: '1px solid rgba(99, 102, 241, 0.3)',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s',
+                        padding: '0'
+                      }}
+                      onMouseEnter={(e) => {
+                        e.target.style.background = 'rgba(99, 102, 241, 0.2)';
+                        e.target.style.transform = 'scale(1.1)';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.target.style.background = 'rgba(99, 102, 241, 0.1)';
+                        e.target.style.transform = 'scale(1)';
+                      }}
+                      title="Click to understand confidence levels"
+                    >
+                      <Info size={12} color="#4f46e5" />
+                    </button>
+                  </div>
+                  
+                  {/* Confidence Level Indicator */}
+                  <div style={{ marginTop: '8px', fontSize: '14px', fontWeight: '600' }}>
+                    {confidence >= 80 ? (
+                      <span style={{ color: '#059669', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                        🟢 High Confidence - Strong Signal
+                      </span>
+                    ) : confidence >= 60 ? (
+                      <span style={{ color: '#d97706', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 8px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                        🟡 Medium Confidence - Proceed with Caution
+                      </span>
+                    ) : (
+                      <span style={{ color: '#dc2626', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 8px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                        🟠 Low Confidence - High Risk
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Expandable Confidence Help Section */}
+                {showConfidenceHelp && (
+                  <div style={{ 
+                    marginTop: '12px', 
+                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05))', 
+                    border: '2px solid rgba(99, 102, 241, 0.2)', 
+                    borderRadius: '12px', 
+                    padding: '20px',
+                    animation: 'slideInUp 0.3s ease-out'
+                  }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                      <h4 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: '#4f46e5' }}>
+                        📊 Understanding Confidence Levels
+                      </h4>
+                      <button
+                        onClick={() => setShowConfidenceHelp(false)}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          cursor: 'pointer',
+                          padding: '4px',
+                          borderRadius: '4px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center'
+                        }}
+                      >
+                        <ChevronUp size={20} color="#6b7280" />
+                      </button>
+                    </div>
+
+                    <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151' }}>
+                      <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
+                        <strong style={{ color: '#1f2937' }}>What is Confidence Level?</strong>
+                        <p style={{ margin: '4px 0 0 0', fontWeight: '500' }}>
+                          A percentage (45-92%) indicating how reliable the pattern detection and prediction are. Higher = more trustworthy.
+                        </p>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                        <div style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                          <div style={{ fontWeight: '700', color: '#059669', marginBottom: '4px' }}>🟢 High (80-92%)</div>
+                          <div style={{ fontSize: '13px', fontWeight: '500' }}>
+                            Very reliable • Strong signal • Clear pattern • Normal position sizes
+                          </div>
+                        </div>
+                        <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                          <div style={{ fontWeight: '700', color: '#d97706', marginBottom: '4px' }}>🟡 Medium (60-79%)</div>
+                          <div style={{ fontSize: '13px', fontWeight: '500' }}>
+                            Moderately reliable • Use caution • Smaller positions • Wait for confirmation
+                          </div>
+                        </div>
+                        <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                          <div style={{ fontWeight: '700', color: '#dc2626', marginBottom: '4px' }}>🟠 Low (45-59%)</div>
+                          <div style={{ fontSize: '13px', fontWeight: '500' }}>
+                            High risk • Avoid trading • Wait for better setup • Educational only
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
+                        <div style={{ fontWeight: '700', color: '#4f46e5', marginBottom: '8px' }}>How is it calculated?</div>
+                        <ul style={{ margin: '0', paddingLeft: '16px', fontSize: '13px', fontWeight: '500' }}>
+                          <li>Base pattern reliability (each pattern has historical success rates)</li>
+                          <li>Pattern clarity and shape matching quality</li>
+                          <li>Technical indicator alignment (RSI, moving averages)</li>
+                          <li>Market conditions and data quality factors</li>
+                        </ul>
+                      </div>
+
+                      {confidence < 60 && (
+                        <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                          <div style={{ fontWeight: '700', color: '#dc2626', marginBottom: '4px' }}>⚠️ Your Current Score: {confidence}%</div>
+                          <div style={{ fontSize: '13px', fontWeight: '500', color: '#991b1b' }}>
+                            This is a <strong>low confidence</strong> signal. Consider waiting for a clearer pattern with 70%+ confidence before making trading decisions.
+                          </div>
+                        </div>
+                      )}
+
+                      <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280', fontStyle: 'italic', textAlign: 'center' }}>
+                        💡 Remember: Even high confidence doesn't guarantee success. Always use proper risk management and do your own research.
+                      </div>
+                    </div>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -1925,6 +2062,17 @@ function StockChartAnalyzer() {
         @keyframes spin {
           from { transform: rotate(0deg); }
           to { transform: rotate(360deg); }
+        }
+        
+        @keyframes slideInUp {
+          from {
+            opacity: 0;
+            transform: translateY(10px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
         }
         
         /* Smooth scrolling for suggestions */
