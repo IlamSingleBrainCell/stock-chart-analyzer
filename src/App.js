@@ -37,44 +37,6 @@ const FlagIcon = ({ country, size = 16 }) => {
   }
 };
 
-// Alternative text-based badge (fallback option)
-const MarketBadge = ({ market, style = {} }) => {
-  const baseStyle = {
-    display: 'inline-flex',
-    alignItems: 'center',
-    gap: '2px',
-    padding: '2px 4px',
-    borderRadius: '3px',
-    fontSize: '9px',
-    fontWeight: '700',
-    ...style
-  };
-
-  if (market === 'India') {
-    return (
-      <span style={{
-        ...baseStyle,
-        backgroundColor: '#ff6b35',
-        color: 'white',
-        border: '1px solid #138808'
-      }}>
-        IN
-      </span>
-    );
-  } else {
-    return (
-      <span style={{
-        ...baseStyle,
-        backgroundColor: '#1e40af',
-        color: 'white',
-        border: '1px solid #dc2626'
-      }}>
-        US
-      </span>
-    );
-  }
-};
-
 // Enhanced chart patterns with detailed analysis
 const chartPatterns = {
   'head-and-shoulders': {
