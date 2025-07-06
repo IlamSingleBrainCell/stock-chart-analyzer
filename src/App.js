@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock } from 'lucide-react';
+import stocksData from './stocks.json';
 
 // Enhanced chart patterns with detailed analysis
 const chartPatterns = {
@@ -125,29 +126,11 @@ const chartPatterns = {
   }
 };
 
-// Stock database for type-ahead functionality
-const stockDatabase = [
-  // US Stocks
-  { symbol: 'AAPL', name: 'Apple Inc.', sector: 'Technology', market: 'US' },
-  { symbol: 'GOOGL', name: 'Alphabet Inc.', sector: 'Technology', market: 'US' },
-  { symbol: 'MSFT', name: 'Microsoft Corporation', sector: 'Technology', market: 'US' },
-  { symbol: 'TSLA', name: 'Tesla Inc.', sector: 'Automotive', market: 'US' },
-  { symbol: 'AMZN', name: 'Amazon.com Inc.', sector: 'E-commerce', market: 'US' },
-  { symbol: 'META', name: 'Meta Platforms Inc.', sector: 'Technology', market: 'US' },
-  { symbol: 'NVDA', name: 'NVIDIA Corporation', sector: 'Technology', market: 'US' },
-  { symbol: 'NFLX', name: 'Netflix Inc.', sector: 'Entertainment', market: 'US' },
-  // Indian Stocks (NSE)
-  { symbol: 'TCS.NS', name: 'Tata Consultancy Services', sector: 'IT Services', market: 'India' },
-  { symbol: 'RELIANCE.NS', name: 'Reliance Industries', sector: 'Oil & Gas', market: 'India' },
-  { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', sector: 'Banking', market: 'India' },
-  { symbol: 'INFY.NS', name: 'Infosys Limited', sector: 'IT Services', market: 'India' },
-  { symbol: 'ICICIBANK.NS', name: 'ICICI Bank', sector: 'Banking', market: 'India' },
-  { symbol: 'HINDUNILVR.NS', name: 'Hindustan Unilever', sector: 'FMCG', market: 'India' },
-  { symbol: 'ITC.NS', name: 'ITC Limited', sector: 'FMCG', market: 'India' },
-  { symbol: 'KOTAKBANK.NS', name: 'Kotak Mahindra Bank', sector: 'Banking', market: 'India' }
-];
-
 function StockChartAnalyzer() {
+  // Extract data from imported JSON
+  const stockDatabase = stocksData.stocks;
+  const popularStocksData = stocksData.popularStocks;
+
   const [uploadedImage, setUploadedImage] = useState(null);
   const [stockSymbol, setStockSymbol] = useState('');
   const [stockData, setStockData] = useState(null);
@@ -169,18 +152,6 @@ function StockChartAnalyzer() {
   const canvasRef = useRef(null);
   const chartCanvasRef = useRef(null);
   const inputRef = useRef(null);
-
-  // Popular stock symbols for quick selection
-  const popularStocks = [
-    { symbol: 'AAPL', name: 'Apple', market: 'US' },
-    { symbol: 'GOOGL', name: 'Google', market: 'US' },
-    { symbol: 'MSFT', name: 'Microsoft', market: 'US' },
-    { symbol: 'TSLA', name: 'Tesla', market: 'US' },
-    { symbol: 'TCS.NS', name: 'TCS', market: 'India' },
-    { symbol: 'RELIANCE.NS', name: 'Reliance', market: 'India' },
-    { symbol: 'HDFCBANK.NS', name: 'HDFC Bank', market: 'India' },
-    { symbol: 'INFY.NS', name: 'Infosys', market: 'India' }
-  ];
 
   // Enhanced pattern detection using actual price data
   const detectPatternFromPriceData = (prices) => {
@@ -1070,13 +1041,17 @@ function StockChartAnalyzer() {
         </h1>
         <p style={{ color: '#6b7280', fontSize: '16px', margin: '0' }}>
           Analyze live stock charts with enhanced 3-month data analysis and breakout timing prediction
+          <br />
+          <span style={{ fontSize: '14px', color: '#9ca3af' }}>
+            📊 Supporting {stockDatabase.length}+ stocks from US and Indian markets
+          </span>
         </p>
       </div>
       
       <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1))', borderLeft: '4px solid #22d3ee', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
         <AlertTriangle size={20} style={{ color: '#22d3ee', marginRight: '16px', flexShrink: 0 }} />
         <div style={{ fontSize: '14px', color: '#0891b2', fontWeight: '600' }}>
-          <strong>🚀 Enhanced Analysis:</strong> Now featuring accurate pattern detection using 3-month price data, dynamic confidence scoring, and breakout timing predictions for both 🇺🇸 US and 🇮🇳 Indian markets!
+          <strong>🚀 Enhanced Analysis:</strong> Now featuring accurate pattern detection using 3-month price data, dynamic confidence scoring, and breakout timing predictions. Comprehensive database with {stockDatabase.length}+ stocks from both 🇺🇸 US and 🇮🇳 Indian markets!
         </div>
       </div>
 
@@ -1222,10 +1197,10 @@ function StockChartAnalyzer() {
         {/* Popular stocks with market indicators */}
         <div>
           <p style={{ fontSize: '14px', color: '#4a5568', marginBottom: '12px', fontWeight: '500' }}>
-            Popular Stocks (🇺🇸 US + 🇮🇳 Indian Markets):
+            Popular Stocks from {stockDatabase.length}+ available (🇺🇸 US + 🇮🇳 Indian Markets):
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-            {popularStocks.map(stock => (
+            {popularStocksData.map(stock => (
               <button
                 key={stock.symbol}
                 onClick={() => selectStock(stock.symbol)}
@@ -1264,7 +1239,7 @@ function StockChartAnalyzer() {
           
           {/* Quick market examples */}
           <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
-            <strong>Examples:</strong> Try searching "TCS" (Indian IT), "Reliance" (Indian Oil), "AAPL" (US Tech), or "HDFC" (Indian Banking)
+            <strong>Examples:</strong> Search from {stockDatabase.length}+ stocks - try "TCS" (Indian IT), "Reliance" (Indian Oil), "AAPL" (US Tech), "HDFC" (Indian Banking), "NVDA" (US Semiconductors), or "Wipro" (Indian IT)
           </div>
         </div>
       </div>
