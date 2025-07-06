@@ -1,6 +1,6 @@
 import React from 'react';
 import { Search, RefreshCw } from 'lucide-react';
-import FlagIcon from './FlagIcon'; // Import FlagIcon directly
+import FlagIcon from './FlagIcon';
 
 const StockSearch = ({
   stockSymbol,
@@ -11,6 +11,7 @@ const StockSearch = ({
   showSuggestions,
   filteredSuggestions,
   selectedSuggestionIndex,
+  setSelectedSuggestionIndex,
   selectSuggestion,
   loading,
   fetchStockData,
@@ -18,7 +19,7 @@ const StockSearch = ({
   selectStock,
   highlightMatch,
   inputRef,
-  stockDatabase // Added: needed for the "Supporting X stocks" text
+  stockDatabase
 }) => {
   return (
     <div style={{ marginBottom: '32px' }}>
@@ -72,6 +73,7 @@ const StockSearch = ({
                     <div
                       key={stock.symbol}
                       onClick={() => selectSuggestion(stock)}
+                      onMouseEnter={() => setSelectedSuggestionIndex(index)}
                       style={{
                         padding: '12px 16px',
                         cursor: 'pointer',
@@ -79,7 +81,6 @@ const StockSearch = ({
                         borderBottom: index < filteredSuggestions.length - 1 ? '1px solid #e5e7eb' : 'none',
                         transition: 'background-color 0.2s'
                       }}
-                      // onMouseEnter={() => setSelectedSuggestionIndex(index)} // This function needs to be passed if used
                     >
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                         <div>
