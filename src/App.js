@@ -733,7 +733,8 @@ function StockChartAnalyzer() {
 
   // Generate realistic mock data as fallback
   const generateMockStockData = (symbol) => {
-    const basePrice = Math.random() * 200 + 50;
+    const isIndianStock = symbol.includes('.NS');
+    const basePrice = isIndianStock ? Math.random() * 2000 + 500 : Math.random() * 200 + 50; // Higher base price for Indian stocks in INR
     const prices = [];
     let currentPrice = basePrice;
     
@@ -766,9 +767,9 @@ function StockChartAnalyzer() {
     
     return {
       symbol: symbol.toUpperCase(),
-      companyName: `${symbol.toUpperCase()} Inc.`,
-      currency: 'USD',
-      exchange: 'NASDAQ',
+      companyName: isIndianStock ? `${symbol.replace('.NS', '')} Ltd.` : `${symbol.toUpperCase()} Inc.`,
+      currency: isIndianStock ? 'INR' : 'USD',
+      exchange: isIndianStock ? 'NSE' : 'NASDAQ',
       currentPrice: currentPrice,
       prices: prices,
       isMockData: true
@@ -1332,7 +1333,7 @@ function StockChartAnalyzer() {
             <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1))', border: '2px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: '#065f46' }}>
               <div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information (3-Month Data):</div>
               <div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div>
-              <div><strong>Current Price:</strong> ${stockData.currentPrice?.toFixed(2)} {stockData.currency} | <strong>Data Points:</strong> {stockData.prices.length} days</div>
+              <div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} | <strong>Data Points:</strong> {stockData.prices.length} days</div>
               {stockData.isMockData && <div style={{ color: '#f59e0b', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}
             </div>
           )}
