@@ -879,7 +879,6 @@ function StockChartAnalyzer() {
 
     const recentPeaks = peaks.slice(-4); // Look at more peaks
     const recentTroughs = troughs.slice(-4); // Look at more troughs
-    //const recentCloses = closes.slice(-20);
 
     if (recentPeaks.length >= 2 && recentTroughs.length >= 2) {
       // Calculate trends
@@ -932,22 +931,21 @@ function StockChartAnalyzer() {
     const firstAvg = firstQuarter.reduce((a, b) => a + b) / firstQuarter.length;
     const secondAvg = secondQuarter.reduce((a, b) => a + b) / secondQuarter.length;
     const thirdAvg = thirdQuarter.reduce((a, b) => a + b) / thirdQuarter.length;
-    const fourthAvg = fourthQuarter.reduce((a, b) => a + b) / fourthQuarter.length;
 
     // Cup: decline then recovery to similar level
     const hasCup = (secondAvg < firstAvg * 0.92) && 
                    (thirdAvg < firstAvg * 0.92) && 
-                   (fourthAvg > firstAvg * 0.95);
+                   (fourthQuarter.reduce((a, b) => a + b) / fourthQuarter.length > firstAvg * 0.95);
 
     // Handle: slight pullback in recent period
-    const hasHandle = fourthAvg < firstAvg * 1.02;
+    const hasHandle = fourthQuarter.reduce((a, b) => a + b) / fourthQuarter.length < firstAvg * 1.02;
 
     return hasCup && hasHandle;
   };
 
   // Detect flag pattern (improved)
-  //const detectFlagPattern = (closes) => {
- //   if (closes.length < 20) return null;
+  const detectFlagPattern = (closes) => {
+    if (closes.length < 20) return null;
 
     const recent20 = closes.slice(-20);
     const first10 = recent20.slice(0, 10);
@@ -959,7 +957,7 @@ function StockChartAnalyzer() {
 
     // Flag: tight consolidation after strong move
     const firstAvg = first10.reduce((a, b) => a + b) / first10.length;
-    //const lastAvg = last10.reduce((a, b) => a + b) / last10.length;
+    const lastAvg = last10.reduce((a, b) => a + b) / last10.length;
     const strongMoveBefore = Math.abs((firstAvg - closes[closes.length - 30]) / closes[closes.length - 30]) > 0.08;
 
     if (priceVariation < 0.06 && strongMoveBefore) { // Less than 6% range and previous strong move
@@ -1559,7 +1557,7 @@ function StockChartAnalyzer() {
         
         // Fallback to basic pattern detection for uploaded images
         if (!detectedPattern) {
-          //const patternKeys = Object.keys(chartPatterns);
+          const patternKeys = Object.keys(chartPatterns);
           
           // Create a weighted distribution instead of pure random
           const patternWeights = {
