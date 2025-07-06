@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronDown, ChevronUp } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp } from 'lucide-react';
 import stocksData from './stocks.json';
 
 // Pattern drawing utility functions
@@ -879,7 +879,7 @@ function StockChartAnalyzer() {
 
     const recentPeaks = peaks.slice(-4); // Look at more peaks
     const recentTroughs = troughs.slice(-4); // Look at more troughs
-    const recentCloses = closes.slice(-20);
+    //const recentCloses = closes.slice(-20);
 
     if (recentPeaks.length >= 2 && recentTroughs.length >= 2) {
       // Calculate trends
@@ -946,8 +946,8 @@ function StockChartAnalyzer() {
   };
 
   // Detect flag pattern (improved)
-  const detectFlagPattern = (closes) => {
-    if (closes.length < 20) return null;
+  //const detectFlagPattern = (closes) => {
+ //   if (closes.length < 20) return null;
 
     const recent20 = closes.slice(-20);
     const first10 = recent20.slice(0, 10);
@@ -959,7 +959,7 @@ function StockChartAnalyzer() {
 
     // Flag: tight consolidation after strong move
     const firstAvg = first10.reduce((a, b) => a + b) / first10.length;
-    const lastAvg = last10.reduce((a, b) => a + b) / last10.length;
+    //const lastAvg = last10.reduce((a, b) => a + b) / last10.length;
     const strongMoveBefore = Math.abs((firstAvg - closes[closes.length - 30]) / closes[closes.length - 30]) > 0.08;
 
     if (priceVariation < 0.06 && strongMoveBefore) { // Less than 6% range and previous strong move
@@ -1559,7 +1559,7 @@ function StockChartAnalyzer() {
         
         // Fallback to basic pattern detection for uploaded images
         if (!detectedPattern) {
-          const patternKeys = Object.keys(chartPatterns);
+          //const patternKeys = Object.keys(chartPatterns);
           
           // Create a weighted distribution instead of pure random
           const patternWeights = {
