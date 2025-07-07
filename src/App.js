@@ -535,6 +535,7 @@ function StockChartAnalyzer() {
   const [entryExit, setEntryExit] = useState(null);
   const [breakoutTiming, setBreakoutTiming] = useState(null);
   const [error, setError] = useState(null);
+  const [stockAssessment, setStockAssessment] = useState(null); // State for 10-year assessment
   
   // Missing state variables for type-ahead functionality
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
@@ -1159,7 +1160,7 @@ function StockChartAnalyzer() {
     try {
       // Using a CORS proxy service to bypass CORS restrictions
       const proxyUrl = 'https://api.allorigins.win/raw?url=';
-      const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=3mo&interval=1d`);
+      const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=10y&interval=1d`);
       
       const response = await fetch(proxyUrl + yahooUrl);
       
@@ -1257,6 +1258,89 @@ function StockChartAnalyzer() {
       currentPrice: currentPrice,
       prices: prices,
       isMockData: true
+    };
+  };
+
+  // Implement data assessment logic
+  const assessStockData = (prices) => {
+    if (!prices || prices.length < 2) {
+      return {
+        longTermTrend: 'N/A',
+        volatility: 'N/A',
+        annualizedReturn: 'N/A',
+        maxDrawdown: 'N/A',
+        assessmentSummary: 'Insufficient data for assessment.'
+      };
+    }
+
+    // Ensure prices are sorted by date
+    const sortedPrices = [...prices].sort((a, b) => new Date(a.date) - new Date(b.date));
+    const closePrices = sortedPrices.map(p => p.close);
+
+    // 1. Long-term Trend (using simple linear regression on log prices)
+    const logPrices = closePrices.map(p => Math.log(p));
+    const n = logPrices.length;
+    const x = Array.from({ length: n }, (_, i) => i);
+    const sumX = x.reduce((a, b) => a + b, 0);
+    const sumY = logPrices.reduce((a, b) => a + b, 0);
+    const sumXY = x.reduce((acc, xi, i) => acc + xi * logPrices[i], 0);
+    const sumX2 = x.reduce((acc, xi) => acc + xi * xi, 0);
+
+    const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+    let longTermTrend;
+    if (slope > 0.0005) longTermTrend = 'Strong Uptrend';
+    else if (slope > 0.0001) longTermTrend = 'Uptrend';
+    else if (slope < -0.0005) longTermTrend = 'Strong Downtrend';
+    else if (slope < -0.0001) longTermTrend = 'Downtrend';
+    else longTermTrend = 'Sideways';
+
+    // 2. Volatility (annualized standard deviation of daily returns)
+    const dailyReturns = [];
+    for (let i = 1; i < closePrices.length; i++) {
+      dailyReturns.push((closePrices[i] - closePrices[i-1]) / closePrices[i-1]);
+    }
+    const meanReturn = dailyReturns.reduce((a, b) => a + b, 0) / dailyReturns.length;
+    const variance = dailyReturns.reduce((acc, r) => acc + Math.pow(r - meanReturn, 2), 0) / dailyReturns.length;
+    const dailyVolatility = Math.sqrt(variance);
+    const annualizedVolatility = dailyVolatility * Math.sqrt(252); // Assuming 252 trading days
+
+    // 3. Annualized Return
+    const startDate = new Date(sortedPrices[0].date);
+    const endDate = new Date(sortedPrices[n - 1].date);
+    const years = (endDate - startDate) / (1000 * 60 * 60 * 24 * 365.25);
+    const totalReturn = (closePrices[n - 1] - closePrices[0]) / closePrices[0];
+    const annualizedReturn = Math.pow(1 + totalReturn, 1 / years) - 1;
+
+    // 4. Maximum Drawdown
+    let peak = -Infinity;
+    let maxDrawdown = 0;
+    for (const price of closePrices) {
+      if (price > peak) peak = price;
+      const drawdown = (peak - price) / peak;
+      if (drawdown > maxDrawdown) maxDrawdown = drawdown;
+    }
+
+    // 5. Assessment Summary
+    let assessmentSummary = `Based on 10-year data: The stock shows a ${longTermTrend.toLowerCase()} with ${(annualizedVolatility * 100).toFixed(1)}% annualized volatility. `;
+    assessmentSummary += `It has delivered an average annualized return of ${(annualizedReturn * 100).toFixed(1)}%. `;
+    assessmentSummary += `The maximum drawdown observed was ${(maxDrawdown * 100).toFixed(1)}%.`;
+
+    if (annualizedReturn > 0.15 && annualizedVolatility < 0.3 && maxDrawdown < 0.5 && (longTermTrend === 'Uptrend' || longTermTrend === 'Strong Uptrend')) {
+        assessmentSummary += " Overall, appears to be a solid long-term performer.";
+    } else if (annualizedReturn < 0.05 && (longTermTrend === 'Downtrend' || longTermTrend === 'Strong Downtrend' || longTermTrend === 'Sideways')) {
+        assessmentSummary += " Caution: Lower returns and/or unfavorable trend observed.";
+    } else if (annualizedVolatility > 0.4 || maxDrawdown > 0.6) {
+        assessmentSummary += " High volatility or significant drawdowns suggest higher risk.";
+    }
+
+
+    return {
+      longTermTrend,
+      volatility: `${(annualizedVolatility * 100).toFixed(1)}%`,
+      annualizedReturn: `${(annualizedReturn * 100).toFixed(1)}%`,
+      maxDrawdown: `${(maxDrawdown * 100).toFixed(1)}%`,
+      assessmentSummary,
+      yearsOfData: years.toFixed(1)
     };
   };
 
@@ -1413,6 +1497,14 @@ function StockChartAnalyzer() {
       const data = await fetchYahooFinanceData(symbol.trim().toUpperCase());
       setStockData(data);
       
+      // Perform 10-year data assessment
+      if (data && data.prices) {
+        const assessment = assessStockData(data.prices);
+        setStockAssessment(assessment);
+      } else {
+        setStockAssessment(null);
+      }
+
       // Create chart image
       setTimeout(() => {
         const chartImageUrl = createChartFromData(data);
@@ -1421,6 +1513,7 @@ function StockChartAnalyzer() {
       
     } catch (error) {
       setError(error.message);
+      setStockAssessment(null); // Clear assessment on error
       console.error('Stock data fetch error:', error);
     } finally {
       setLoading(false);
@@ -1866,6 +1959,35 @@ function StockChartAnalyzer() {
           <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: '#1a202c', padding: '24px 24px 0', textAlign: 'center' }}>
             📈 Enhanced Analysis Results
           </h2>
+
+          {/* 10-Year Data Assessment Section */}
+          {stockAssessment && (
+            <div style={{ padding: '24px', background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(245, 158, 11, 0.1))', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid rgba(245, 158, 11, 0.3)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+                <Info size={28} style={{color: '#b45309'}} />
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#78350f' }}>
+                  📊 Long-Term Data Assessment ({stockAssessment.yearsOfData} Years)
+                </h3>
+              </div>
+              <p style={{ fontSize: '16px', color: '#78350f', lineHeight: '1.6', fontWeight: '500', marginBottom: '16px' }}>
+                {stockAssessment.assessmentSummary}
+              </p>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '12px', fontSize: '14px' }}>
+                <div style={{ background: 'rgba(255, 255, 255, 0.6)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <span style={{ fontWeight: '600', color: '#92400e' }}>Long-Term Trend:</span> {stockAssessment.longTermTrend}
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.6)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <span style={{ fontWeight: '600', color: '#92400e' }}>Annualized Return:</span> {stockAssessment.annualizedReturn}
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.6)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <span style={{ fontWeight: '600', color: '#92400e' }}>Annualized Volatility:</span> {stockAssessment.volatility}
+                </div>
+                <div style={{ background: 'rgba(255, 255, 255, 0.6)', padding: '10px 12px', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.2)' }}>
+                  <span style={{ fontWeight: '600', color: '#92400e' }}>Max Drawdown:</span> {stockAssessment.maxDrawdown}
+                </div>
+              </div>
+            </div>
+          )}
           
           {/* Prediction Section */}
           <div style={{ padding: '24px', background: prediction === 'up' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15))' : prediction === 'down' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(248, 113, 113, 0.15))' : 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15))', borderLeft: `6px solid ${prediction === 'up' ? '#10b981' : prediction === 'down' ? '#ef4444' : '#6366f1'}`, margin: '0 24px 16px', borderRadius: '12px', border: `2px solid ${prediction === 'up' ? 'rgba(16, 185, 129, 0.3)' : prediction === 'down' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(99, 102, 241, 0.3)'}` }}>
