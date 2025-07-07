@@ -3,8 +3,6 @@ import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, Do
 import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
 
-const ALPHA_VANTAGE_API_KEY = '6GYHEP8VTU1YQ08A';
-
 // Pattern drawing utility functions
 const drawLine = (ctx, points) => {
   if (points.length < 2) return;
@@ -1158,76 +1156,63 @@ function StockChartAnalyzer() {
     );
   };
 
-  const fetchAlphaVantageData = async (symbol) => {
+  const fetchYahooFinanceData = async (symbol) => {
     try {
-      const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY_ADJUSTED&symbol=${symbol}&outputsize=full&apikey=${ALPHA_VANTAGE_API_KEY}`;
-      const response = await fetch(url);
+      // Using a CORS proxy service to bypass CORS restrictions
+      const proxyUrl = 'https://api.allorigins.win/raw?url=';
+      const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=10y&interval=1d`);
+
+      const response = await fetch(proxyUrl + yahooUrl);
 
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP error! status: ${response.status} from proxy or Yahoo API.`);
       }
 
       const data = await response.json();
 
-      if (data['Error Message']) {
-        throw new Error(`Alpha Vantage API error: ${data['Error Message']}`);
-      }
-      if (data['Note']) {
-        // This often indicates API limit reached
-        console.warn('Alpha Vantage API Note:', data['Note']);
-        // Potentially throw an error or handle as a specific case if it implies no data
-        if (!data['Time Series (Daily)']) {
-             throw new Error(`Alpha Vantage API limit likely reached or symbol issue: ${data['Note']}`);
-        }
+      if (data.chart?.error) {
+        throw new Error(data.chart.error.description || `Invalid stock symbol or data error for ${symbol} from Yahoo Finance.`);
       }
 
-      const timeSeries = data['Time Series (Daily)'];
-      if (!timeSeries) {
-        throw new Error('No time series data found for this symbol from Alpha Vantage.');
+      if (!data.chart?.result?.[0] || !data.chart.result[0].timestamp || !data.chart.result[0].indicators?.quote?.[0]) {
+        throw new Error(`No chart data found for ${symbol} in Yahoo Finance response.`);
       }
 
-      const prices = Object.entries(timeSeries)
-        .map(([date, dailyData]) => ({
-          date: date,
-          open: parseFloat(dailyData['1. open']),
-          high: parseFloat(dailyData['2. high']),
-          low: parseFloat(dailyData['3. low']),
-          close: parseFloat(dailyData['4. close']),
-          // Adjusted close is often preferred for historical analysis
-          // close: parseFloat(dailyData['5. adjusted close']),
-          volume: parseInt(dailyData['6. volume'], 10)
-        }))
-        .sort((a, b) => new Date(a.date) - new Date(b.date)); // Ensure chronological order
+      const result = data.chart.result[0];
+      const timestamps = result.timestamp;
+      const quotes = result.indicators.quote[0];
+      const meta = result.meta;
+
+      const prices = timestamps.map((timestamp, index) => ({
+        date: new Date(timestamp * 1000).toISOString().split('T')[0],
+        open: quotes.open?.[index],
+        high: quotes.high?.[index],
+        low: quotes.low?.[index],
+        close: quotes.close?.[index],
+        volume: quotes.volume?.[index]
+      })).filter(price =>
+        price.close !== null && price.close !== undefined &&
+        price.open !== null && price.open !== undefined &&
+        price.high !== null && price.high !== undefined &&
+        price.low !== null && price.low !== undefined
+      ); // Ensure all OHLC values are present
 
       if (prices.length === 0) {
-        throw new Error('No valid price data found from Alpha Vantage.');
+        throw new Error(`No valid price data points found for ${symbol} after filtering.`);
       }
       
-      // Alpha Vantage's daily series doesn't provide as much metadata in one go as Yahoo's chart endpoint.
-      // We'll use what we have. A separate call to Symbol Search or Overview might be needed for more details.
-      const metaData = data['Meta Data'];
-      const companyName = metaData ? metaData['2. Symbol'] : symbol; // Or make another call for company name
-      const lastRefreshed = metaData ? metaData['3. Last Refreshed'] : null;
-      const currentPrice = prices.length > 0 ? prices[prices.length-1].close : null;
-
-
       return {
         symbol: symbol.toUpperCase(),
-        companyName: companyName, // This will just be the symbol for now from this endpoint
-        currency: 'USD', // Assuming USD for now, AlphaVantage is US-centric without specifying market
-        exchange: '', // Not readily available from TIME_SERIES_DAILY
-        currentPrice: currentPrice,
+        companyName: meta.longName || meta.shortName || symbol,
+        currency: meta.currency || 'USD', // Default to USD if not provided
+        exchange: meta.exchangeName || '',
+        currentPrice: meta.regularMarketPrice || prices[prices.length - 1].close,
         prices: prices,
-        lastRefreshed: lastRefreshed,
-        dataSource: 'Alpha Vantage'
+        dataSource: 'Yahoo Finance (via allorigins proxy)'
       };
     } catch (error) {
-      console.error('Alpha Vantage API Error:', error);
-      // Specific error for API limit might be useful to show user
-      if (error.message.includes("limit")) {
-          throw new Error(`Failed to fetch data for ${symbol} from Alpha Vantage: API call limit likely reached. Please try again later. (${error.message})`);
-      }
-      throw new Error(`Failed to fetch data for ${symbol} from Alpha Vantage: ${error.message}`);
+      console.error('Yahoo Finance API Error:', error);
+      throw new Error(`Failed to fetch data for ${symbol} from Yahoo Finance: ${error.message}`);
     }
   };
 
@@ -1510,8 +1495,7 @@ function StockChartAnalyzer() {
     setStockAssessment(null); // Clear previous assessment
     
     try {
-      // const data = await fetchYahooFinanceData(symbol.trim().toUpperCase()); // Old call
-      const data = await fetchAlphaVantageData(symbol.trim().toUpperCase()); // New call
+      const data = await fetchYahooFinanceData(symbol.trim().toUpperCase()); // Restored call
       setStockData(data);
       
       // Perform 10-year data assessment
@@ -1529,14 +1513,14 @@ function StockChartAnalyzer() {
       }, 100);
       
     } catch (error) {
-      setError(error.message); // This will now show Alpha Vantage specific errors
-      setStockData(null); // Ensure stockData is also cleared on error before mock
+      setError(error.message);
+      setStockData(null);
       setStockAssessment(null);
-      console.error('Stock data fetch error (Alpha Vantage):', error);
+      console.error('Stock data fetch error (Yahoo Finance via Proxy):', error);
 
       // Attempt to use mock data if API fails
       if (symbol.trim()) {
-        console.warn("Falling back to mock data due to Alpha Vantage API error.");
+        console.warn("Falling back to mock data due to Yahoo Finance API error.");
         try {
           const mockData = generateMockStockData(symbol.trim().toUpperCase());
           setStockData(mockData);
@@ -2318,7 +2302,7 @@ function StockChartAnalyzer() {
       
       <div style={{ fontSize: '15px', color: '#2d3748', background: 'rgba(255, 255, 255, 0.9)', padding: '24px', borderRadius: '16px', border: '2px solid rgba(0, 0, 0, 0.1)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
         <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides enhanced technical analysis for educational purposes only.</p>
-        <p style={{ marginBottom: '12px' }}><strong>📊 Data Source:</strong> Live stock data is fetched using the Alpha Vantage API. The free tier of Alpha Vantage has limitations (e.g., 25 requests per day). If you encounter issues, it might be due to these limits.</p>
+        <p style={{ marginBottom: '12px' }}><strong>📊 Data Source:</strong> Live stock data is fetched using the Yahoo Finance API (via a public CORS proxy). This proxy may sometimes be unreliable, leading to demo data being shown.</p>
         <p style={{ marginBottom: '12px' }}><strong>📈 Features:</strong> Includes 10-year data assessment (when available) and 3-month chart pattern analysis.</p>
         <p style={{ margin: '0' }}>Always conduct thorough research and consult financial advisors before making investment decisions.</p>
       </div>
