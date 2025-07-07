@@ -1,4 +1,4 @@
-import React, { useRef, useEffect } from 'react';
+import React, { useRef } from 'react';
 import { drawPattern } from '../utils/patternDrawing';
 
 // Pattern Visualization Component
