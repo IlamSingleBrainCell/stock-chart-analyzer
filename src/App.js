@@ -1,7 +1,37 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp } from 'lucide-react';
+import React, { useState, useRef, useEffect, useContext } from 'react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon } from 'lucide-react';
 import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
+import { ThemeContext } from './ThemeContext';
+
+const chartThemeColors = {
+  light: {
+    background: '#ffffff',
+    grid: '#f0f0f0',
+    label: '#666666',
+    text: '#1f2937',
+    mainLine: '#2563eb',
+    success: '#10b981', // For bullish patterns/lines
+    danger: '#dc2626',  // For bearish patterns/lines
+    candlestickGreen: '#10b981',
+    candlestickRed: '#ef4444',
+    keyLevelSupport: '#22c55e',
+    keyLevelResistance: '#ef4444',
+  },
+  dark: {
+    background: '#1f2937', // Gray 800
+    grid: '#374151',      // Gray 700
+    label: '#9ca3af',     // Gray 400
+    text: '#f3f4f6',       // Gray 100
+    mainLine: '#60a5fa',   // Blue 400
+    success: '#34d399',   // Green 400
+    danger: '#f87171',    // Red 400
+    candlestickGreen: '#34d399',
+    candlestickRed: '#f87171',
+    keyLevelSupport: '#34d399',
+    keyLevelResistance: '#f87171',
+  }
+};
 
 // *Pattern drawing utility functions
 const drawLine = (ctx, points) => {
@@ -26,9 +56,10 @@ const drawHeadAndShoulders = (ctx, margin, w, h) => {
     [margin + w, margin + h * 0.8]
   ];
   drawLine(ctx, points);
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
   // Draw neckline
-  ctx.strokeStyle = '#dc2626';
+  ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
@@ -49,9 +80,10 @@ const drawInverseHeadAndShoulders = (ctx, margin, w, h) => {
     [margin + w, margin + h * 0.2]
   ];
   drawLine(ctx, points);
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
   // Draw neckline
-  ctx.strokeStyle = '#10b981';
+  ctx.strokeStyle = colors.success;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
@@ -70,9 +102,10 @@ const drawDoubleTop = (ctx, margin, w, h) => {
     [margin + w, margin + h * 0.8]
   ];
   drawLine(ctx, points);
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
   // Draw support line
-  ctx.strokeStyle = '#dc2626';
+  ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
@@ -91,9 +124,10 @@ const drawDoubleBottom = (ctx, margin, w, h) => {
     [margin + w, margin + h * 0.2]
   ];
   drawLine(ctx, points);
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
   // Draw resistance line
-  ctx.strokeStyle = '#10b981';
+  ctx.strokeStyle = colors.success;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
   ctx.beginPath();
@@ -130,9 +164,10 @@ const drawAscendingTriangle = (ctx, margin, w, h) => {
     [margin + w, margin + h * 0.2]
   ];
   drawLine(ctx, points);
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
   // Resistance line (horizontal)
-  ctx.strokeStyle = '#dc2626';
+  ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
@@ -141,7 +176,7 @@ const drawAscendingTriangle = (ctx, margin, w, h) => {
   ctx.stroke();
   
   // Support line (ascending)
-  ctx.strokeStyle = '#10b981';
+  ctx.strokeStyle = colors.success;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.8);
   ctx.lineTo(margin + w * 0.85, margin + h * 0.35);
@@ -159,9 +194,10 @@ const drawDescendingTriangle = (ctx, margin, w, h) => {
     [margin + w, margin + h * 0.8]
   ];
   drawLine(ctx, points);
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
   // Support line (horizontal)
-  ctx.strokeStyle = '#10b981';
+  ctx.strokeStyle = colors.success;
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
@@ -170,7 +206,7 @@ const drawDescendingTriangle = (ctx, margin, w, h) => {
   ctx.stroke();
   
   // Resistance line (descending)
-  ctx.strokeStyle = '#dc2626';
+  ctx.strokeStyle = colors.danger;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.2);
   ctx.lineTo(margin + w * 0.85, margin + h * 0.65);
@@ -179,8 +215,10 @@ const drawDescendingTriangle = (ctx, margin, w, h) => {
 };
 
 const drawRisingWedge = (ctx, margin, w, h) => {
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
+
   // Lower trend line (rising)
-  ctx.strokeStyle = '#10b981';
+  ctx.strokeStyle = colors.success; // Trend lines in wedges often represent support/resistance
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
@@ -189,7 +227,7 @@ const drawRisingWedge = (ctx, margin, w, h) => {
   ctx.stroke();
   
   // Upper trend line (rising slower)
-  ctx.strokeStyle = '#dc2626';
+  ctx.strokeStyle = colors.danger;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.3);
   ctx.lineTo(margin + w, margin + h * 0.2);
@@ -197,7 +235,7 @@ const drawRisingWedge = (ctx, margin, w, h) => {
   ctx.setLineDash([]);
   
   // Price line
-  ctx.strokeStyle = '#2563eb';
+  ctx.strokeStyle = colors.mainLine;
   ctx.lineWidth = 3;
   const points = [
     [margin, margin + h * 0.6],
@@ -211,8 +249,10 @@ const drawRisingWedge = (ctx, margin, w, h) => {
 };
 
 const drawFallingWedge = (ctx, margin, w, h) => {
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
+
   // Upper trend line (falling)
-  ctx.strokeStyle = '#dc2626';
+  ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
@@ -221,7 +261,7 @@ const drawFallingWedge = (ctx, margin, w, h) => {
   ctx.stroke();
   
   // Lower trend line (falling faster)
-  ctx.strokeStyle = '#10b981';
+  ctx.strokeStyle = colors.success;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.7);
   ctx.lineTo(margin + w, margin + h * 0.8);
@@ -229,7 +269,7 @@ const drawFallingWedge = (ctx, margin, w, h) => {
   ctx.setLineDash([]);
   
   // Price line
-  ctx.strokeStyle = '#2563eb';
+  ctx.strokeStyle = colors.mainLine;
   ctx.lineWidth = 3;
   const points = [
     [margin, margin + h * 0.4],
@@ -260,9 +300,10 @@ const drawFlag = (ctx, margin, w, h) => {
     [margin + w, margin + h * 0.1]
   ];
   drawLine(ctx, points2);
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
   // Flag boundaries
-  ctx.strokeStyle = '#dc2626';
+  ctx.strokeStyle = colors.danger; // Or a neutral color, depending on desired emphasis
   ctx.lineWidth = 1;
   ctx.setLineDash([2, 2]);
   ctx.beginPath();
@@ -292,15 +333,21 @@ const drawPattern = (ctx, pattern, w, h) => {
   const margin = 20;
   const chartW = w - 2 * margin;
   const chartH = h - 2 * margin;
+  // The theme should be passed to ctx by the caller (PatternVisualization)
+  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
+
+  // Clear canvas with theme background
+  ctx.fillStyle = colors.background;
+  ctx.fillRect(0, 0, w, h);
   
   // Set default styles
-  ctx.strokeStyle = '#2563eb';
+  ctx.strokeStyle = colors.mainLine;
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   
   // Draw grid
-  ctx.strokeStyle = '#f0f0f0';
+  ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
     const y = margin + (i / 4) * chartH;
@@ -311,9 +358,14 @@ const drawPattern = (ctx, pattern, w, h) => {
   }
   
   // Reset line style for pattern
-  ctx.strokeStyle = '#2563eb';
+  ctx.strokeStyle = colors.mainLine; // Main pattern line color
   ctx.lineWidth = 3;
   
+  // Pass theme to sub-drawing functions by attaching to ctx temporarily
+  // This is a bit of a hack; ideally, theme/colors would be passed explicitly.
+  // However, to minimize changes to existing draw functions signature:
+  // ctx.theme = currentTheme; // This is already expected to be set by PatternVisualization
+
   switch (pattern) {
     case 'head-and-shoulders':
       drawHeadAndShoulders(ctx, margin, chartW, chartH);
@@ -350,7 +402,7 @@ const drawPattern = (ctx, pattern, w, h) => {
   }
   
   // Add pattern name
-  ctx.fillStyle = '#1f2937';
+  ctx.fillStyle = colors.text;
   ctx.font = 'bold 12px Inter, Arial, sans-serif';
   ctx.textAlign = 'center';
   ctx.fillText(pattern.split('-').map(word => 
@@ -359,7 +411,7 @@ const drawPattern = (ctx, pattern, w, h) => {
 };
 
 // Pattern Visualization Component
-const PatternVisualization = ({ patternName, width = 300, height = 150 }) => {
+const PatternVisualization = ({ patternName, theme = 'light', width = 300, height = 150 }) => {
   const canvasRef = useRef(null);
 
   useEffect(() => {
@@ -372,21 +424,20 @@ const PatternVisualization = ({ patternName, width = 300, height = 150 }) => {
     canvas.width = width;
     canvas.height = height;
     
-    // Clear canvas
-    ctx.fillStyle = '#ffffff';
-    ctx.fillRect(0, 0, width, height);
+    // Attach theme to context for drawing functions to use
+    ctx.theme = theme;
     
     // Draw pattern based on type
     drawPattern(ctx, patternName, width, height);
-  }, [patternName, width, height]);
+  }, [patternName, width, height, theme]);
 
   return (
     <canvas 
       ref={canvasRef}
       style={{ 
-        border: '1px solid #e5e7eb', 
+        border: '1px solid var(--card-border)',
         borderRadius: '8px',
-        background: '#ffffff',
+        background: 'var(--background-color)', // Fallback, actual drawing handles theme
         maxWidth: '100%',
         height: 'auto'
       }}
@@ -547,6 +598,8 @@ function StockChartAnalyzer() {
   const canvasRef = useRef(null);
   const chartCanvasRef = useRef(null);
   const inputRef = useRef(null);
+
+  const { theme, toggleTheme } = useContext(ThemeContext);
 
   // Enhanced pattern detection using actual price data
   const detectPatternFromPriceData = (prices) => {
@@ -1183,7 +1236,7 @@ function StockChartAnalyzer() {
     const parts = text.split(new RegExp(`(${query})`, 'gi'));
     return parts.map((part, index) => 
       part.toLowerCase() === query.toLowerCase() ? 
-        <span key={index} style={{ backgroundColor: '#fef3c7', fontWeight: '600' }}>{part}</span> : 
+        <span key={index} style={{ backgroundColor: 'var(--highlight-background)', fontWeight: '600' }}>{part}</span> :
         part
     );
   };
@@ -1294,16 +1347,17 @@ function StockChartAnalyzer() {
   };
 
   // Create enhanced chart image from stock data
-  const createChartFromData = (stockData, currentKeyLevels) => {
+  const createChartFromData = (stockData, currentKeyLevels, currentTheme = 'light') => {
     const canvas = chartCanvasRef.current;
     const ctx = canvas.getContext('2d');
+    const colors = chartThemeColors[currentTheme] || chartThemeColors.light;
     
     // Set high resolution canvas
     canvas.width = 1000;
     canvas.height = 500;
     
     // Clear and set background
-    ctx.fillStyle = '#ffffff';
+    ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
     const prices = stockData.prices.slice(-60);
@@ -1327,7 +1381,7 @@ function StockChartAnalyzer() {
     const currencySymbol = isIndianStock ? '₹' : '$';
     
     // Draw background grid
-    ctx.strokeStyle = '#f0f0f0';
+    ctx.strokeStyle = colors.grid;
     ctx.lineWidth = 1;
     
     // Horizontal grid lines
@@ -1340,7 +1394,7 @@ function StockChartAnalyzer() {
       
       // Price labels with correct currency
       const price = maxPrice + padding - (i / 8) * (priceRange + 2 * padding);
-      ctx.fillStyle = '#666666';
+      ctx.fillStyle = colors.label;
       ctx.font = '12px Inter, Arial, sans-serif';
       ctx.textAlign = 'right';
       ctx.fillText(currencySymbol + price.toFixed(2), margin.left - 10, y + 4);
@@ -1358,7 +1412,7 @@ function StockChartAnalyzer() {
       if (i < prices.length) {
         const priceIndex = Math.floor((i / 6) * (prices.length - 1));
         const date = new Date(prices[priceIndex].date);
-        ctx.fillStyle = '#666666';
+        ctx.fillStyle = colors.label;
         ctx.font = '11px Inter, Arial, sans-serif';
         ctx.textAlign = 'center';
         ctx.fillText(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), x, canvas.height - 20);
@@ -1366,7 +1420,7 @@ function StockChartAnalyzer() {
     }
     
     // Draw price line
-    ctx.strokeStyle = '#2563eb';
+    ctx.strokeStyle = colors.mainLine;
     ctx.lineWidth = 3;
     ctx.beginPath();
     prices.forEach((price, index) => {
@@ -1389,10 +1443,10 @@ function StockChartAnalyzer() {
       const lowY = yScale(price.low);
       
       const isGreen = price.close >= price.open;
-      const color = isGreen ? '#10b981' : '#ef4444';
+      const candleColor = isGreen ? colors.candlestickGreen : colors.candlestickRed;
       
-      ctx.strokeStyle = color;
-      ctx.fillStyle = color;
+      ctx.strokeStyle = candleColor;
+      ctx.fillStyle = candleColor;
       ctx.lineWidth = 1;
       
       // Draw wick (high-low line)
@@ -1421,8 +1475,8 @@ function StockChartAnalyzer() {
       currentKeyLevels.support.forEach(level => {
         if (level >= minPrice && level <= maxPrice) { // Draw only if within visible price range
           const y = yScale(level);
-          ctx.strokeStyle = '#22c55e'; // Green for support
-          ctx.fillStyle = '#22c55e';
+          ctx.strokeStyle = colors.keyLevelSupport;
+          ctx.fillStyle = colors.keyLevelSupport;
           ctx.beginPath();
           ctx.setLineDash([4, 4]);
           ctx.moveTo(margin.left, y);
@@ -1436,8 +1490,8 @@ function StockChartAnalyzer() {
       currentKeyLevels.resistance.forEach(level => {
         if (level >= minPrice && level <= maxPrice) { // Draw only if within visible price range
           const y = yScale(level);
-          ctx.strokeStyle = '#ef4444'; // Red for resistance
-          ctx.fillStyle = '#ef4444';
+          ctx.strokeStyle = colors.keyLevelResistance;
+          ctx.fillStyle = colors.keyLevelResistance;
           ctx.beginPath();
           ctx.setLineDash([4, 4]);
           ctx.moveTo(margin.left, y);
@@ -1450,18 +1504,19 @@ function StockChartAnalyzer() {
     }
 
     // Add title and info
-    ctx.fillStyle = '#1f2937';
+    ctx.fillStyle = colors.text;
     ctx.font = 'bold 20px Inter, Arial, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`${stockData.symbol} - ${stockData.companyName}`, margin.left, 25);
     
     ctx.font = '14px Inter, Arial, sans-serif';
-    ctx.fillStyle = '#4b5563';
+    ctx.fillStyle = colors.label; // Using label color for secondary text
     const currentPrice = stockData.currentPrice || prices[prices.length - 1].close;
     ctx.fillText(`Current: ${currencySymbol}${currentPrice.toFixed(2)} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
     
     if (stockData.isMockData) {
-      ctx.fillStyle = '#f59e0b';
+      // Consider using a themed warning color if available, or ensure this stands out
+      ctx.fillStyle = (currentTheme === 'dark') ? chartThemeColors.dark.warningColor || '#f59e0b' : '#f59e0b';
       ctx.font = 'italic 12px Inter, Arial, sans-serif';
       ctx.fillText('Demo Data - API temporarily unavailable', margin.left + 300, 25);
     }
@@ -1496,7 +1551,7 @@ function StockChartAnalyzer() {
         if (tempKeyLevels) {
           setKeyLevels(tempKeyLevels); // Update state for UI section as well
         }
-        const chartImageUrl = createChartFromData(data, tempKeyLevels); // Pass potentially calculated levels for chart drawing
+        const chartImageUrl = createChartFromData(data, tempKeyLevels, theme); // Pass current theme
         setUploadedImage(chartImageUrl);
       }, 100);
       
@@ -1656,35 +1711,35 @@ function StockChartAnalyzer() {
   };
 
   return (
-    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px', background: 'rgba(255, 255, 255, 0.98)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid rgba(255, 255, 255, 0.4)' }}>
+    <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '40px', background: 'var(--app-background-start)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid var(--app-border)' }}>
       <canvas ref={canvasRef} style={{ display: 'none' }} />
       <canvas ref={chartCanvasRef} style={{ display: 'none' }} />
       
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
-        <h1 style={{ fontSize: '36px', fontWeight: '800', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginBottom: '8px' }}>
+        <h1 style={{ fontSize: '36px', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginBottom: '8px' }}>
           Stock Chart Pattern Analyzer
         </h1>
-        <p style={{ color: '#6b7280', fontSize: '16px', margin: '0' }}>
+        <p style={{ color: 'var(--text-color-lighter)', fontSize: '16px', margin: '0' }}>
           Get data-driven analysis from live stock charts (3-month data) or explore patterns with your own images.
           <br />
-          <span style={{ fontSize: '14px', color: '#9ca3af' }}>
+          <span style={{ fontSize: '14px', color: 'var(--text-color-muted)' }}>
             📊 Supporting {stockDatabase.length}+ stocks from US & Indian markets with Key Level detection.
           </span>
         </p>
       </div>
       
-      <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1))', borderLeft: '4px solid #22d3ee', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
-        <AlertTriangle size={20} style={{ color: '#22d3ee', marginRight: '16px', flexShrink: 0 }} />
-        <div style={{ fontSize: '14px', color: '#0891b2', fontWeight: '600' }}>
+      <div style={{ background: 'var(--info-background)', borderLeft: '4px solid var(--info-color)', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid var(--info-border)' }}>
+        <AlertTriangle size={20} style={{ color: 'var(--info-color)', marginRight: '16px', flexShrink: 0 }} />
+        <div style={{ fontSize: '14px', color: 'var(--info-color)', fontWeight: '600' }}>
           <strong>🚀 Features:</strong> Pattern detection from 3-month price data, dynamic confidence, breakout timing, Key Support/Resistance levels. {stockDatabase.length}+ US & Indian stocks!
         </div>
       </div>
 
       {/* Stock Symbol Input with Type-ahead */}
       <div style={{ marginBottom: '32px' }}>
-        <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: '#1a202c', fontSize: '18px' }}>
-          <Search size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle' }} />
+        <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: 'var(--text-color)', fontSize: '18px' }}>
+          <Search size={20} style={{ display: 'inline', marginRight: '8px', verticalAlign: 'middle', color: 'var(--text-color-light)' }} />
           Get Live Stock Chart (3-Month Analysis)
         </label>
         
@@ -1703,13 +1758,15 @@ function StockChartAnalyzer() {
                 style={{ 
                   width: '100%', 
                   padding: '14px 16px', 
-                  border: showSuggestions ? '2px solid #6366f1' : '2px solid rgba(99, 102, 241, 0.2)', 
+                  border: showSuggestions ? '2px solid var(--input-border-focus)' : '2px solid var(--input-border)',
                   borderRadius: showSuggestions ? '8px 8px 0 0' : '8px',
                   fontSize: '16px', 
                   fontWeight: '500', 
                   outline: 'none', 
                   transition: 'border-color 0.2s',
-                  borderBottom: showSuggestions ? '1px solid rgba(99, 102, 241, 0.2)' : '2px solid rgba(99, 102, 241, 0.2)'
+                  backgroundColor: 'var(--background-color)', // Ensure input bg matches theme
+                  color: 'var(--text-color)', // Ensure input text matches theme
+                  borderBottom: showSuggestions ? '1px solid var(--input-border)' : '2px solid var(--input-border)'
                 }}
               />
               
@@ -1720,8 +1777,8 @@ function StockChartAnalyzer() {
                   top: '100%',
                   left: '0',
                   right: '0',
-                  backgroundColor: 'white',
-                  border: '2px solid #6366f1',
+                  backgroundColor: 'var(--background-color)',
+                  border: '2px solid var(--input-border-focus)',
                   borderTop: 'none',
                   borderRadius: '0 0 8px 8px',
                   boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)',
@@ -1737,30 +1794,30 @@ function StockChartAnalyzer() {
                         style={{
                           padding: '12px 16px',
                           cursor: 'pointer',
-                          backgroundColor: index === selectedSuggestionIndex ? '#f3f4f6' : 'white',
-                          borderBottom: index < filteredSuggestions.length - 1 ? '1px solid #e5e7eb' : 'none',
+                          backgroundColor: index === selectedSuggestionIndex ? 'var(--primary-accent-light)' : 'var(--background-color)',
+                          borderBottom: index < filteredSuggestions.length - 1 ? '1px solid var(--input-border)' : 'none',
                           transition: 'background-color 0.2s'
                         }}
                         onMouseEnter={() => setSelectedSuggestionIndex(index)}
                       >
                         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                           <div>
-                            <div style={{ fontWeight: '600', fontSize: '15px', color: '#1f2937' }}>
+                            <div style={{ fontWeight: '600', fontSize: '15px', color: 'var(--text-color)' }}>
                               {highlightMatch(stock.symbol, stockSymbol)}
                             </div>
-                            <div style={{ fontSize: '13px', color: '#6b7280', marginTop: '2px' }}>
+                            <div style={{ fontSize: '13px', color: 'var(--text-color-lighter)', marginTop: '2px' }}>
                               {highlightMatch(stock.name, stockSymbol)}
                             </div>
                           </div>
                           <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
                             <div style={{ 
                               fontSize: '10px', 
-                              color: stock.market === 'India' ? '#dc2626' : '#2563eb', 
-                              backgroundColor: stock.market === 'India' ? '#fef2f2' : '#eff6ff', 
+                              color: stock.market === 'India' ? 'var(--danger-color)' : 'var(--primary-accent)',
+                              backgroundColor: stock.market === 'India' ? 'var(--danger-background)' : 'var(--primary-accent-light)',
                               padding: '2px 6px', 
                               borderRadius: '4px',
                               fontWeight: '600',
-                              border: `1px solid ${stock.market === 'India' ? '#fecaca' : '#dbeafe'}`,
+                              border: `1px solid ${stock.market === 'India' ? 'var(--danger-border)' : 'var(--primary-accent-border)'}`,
                               display: 'flex',
                               alignItems: 'center',
                               gap: '2px'
@@ -1770,8 +1827,8 @@ function StockChartAnalyzer() {
                             </div>
                             <div style={{ 
                               fontSize: '11px', 
-                              color: '#9ca3af', 
-                              backgroundColor: '#f3f4f6', 
+                              color: 'var(--text-color-muted)',
+                              backgroundColor: 'var(--app-border)', // Using app-border for a subtle background
                               padding: '2px 6px', 
                               borderRadius: '4px',
                               fontWeight: '500'
@@ -1786,7 +1843,7 @@ function StockChartAnalyzer() {
                     <div style={{ 
                       padding: '16px', 
                       textAlign: 'center', 
-                      color: '#6b7280', 
+                      color: 'var(--text-color-lighter)',
                       fontSize: '14px' 
                     }}>
                       <div style={{ marginBottom: '8px' }}>🔍 No stocks found</div>
@@ -1804,8 +1861,8 @@ function StockChartAnalyzer() {
               disabled={loading || !stockSymbol.trim()}
               style={{ 
                 padding: '14px 24px', 
-                background: loading ? '#9ca3af' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', 
-                color: 'white', 
+                background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)',
+                color: 'var(--button-primary-text)',
                 border: 'none', 
                 borderRadius: '8px', 
                 fontWeight: '600', 
@@ -1826,7 +1883,7 @@ function StockChartAnalyzer() {
 
         {/* Popular stocks with market indicators */}
         <div>
-          <p style={{ fontSize: '14px', color: '#4a5568', marginBottom: '12px', fontWeight: '500' }}>
+          <p style={{ fontSize: '14px', color: 'var(--text-color-light)', marginBottom: '12px', fontWeight: '500' }}>
             Popular Stocks from {stockDatabase.length}+ available (<FlagIcon country="US" size={12} />US + <FlagIcon country="India" size={12} />Indian Markets):
           </p>
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
@@ -1837,9 +1894,9 @@ function StockChartAnalyzer() {
                 disabled={loading}
                 style={{ 
                   padding: '8px 12px', 
-                  background: stockSymbol === stock.symbol ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : 'rgba(99, 102, 241, 0.1)', 
-                  color: stockSymbol === stock.symbol ? 'white' : '#4f46e5', 
-                  border: '1px solid rgba(99, 102, 241, 0.3)', 
+                  background: stockSymbol === stock.symbol ? 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)' : 'var(--primary-accent-light)',
+                  color: stockSymbol === stock.symbol ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)',
+                  border: `1px solid var(--primary-accent-border)`,
                   borderRadius: '20px', 
                   fontSize: '13px', 
                   fontWeight: '500', 
@@ -1852,12 +1909,12 @@ function StockChartAnalyzer() {
                 }}
                 onMouseEnter={(e) => {
                   if (stockSymbol !== stock.symbol && !loading) {
-                    e.target.style.background = 'rgba(99, 102, 241, 0.2)';
+                    e.target.style.background = 'var(--input-background-hover)'; // Using input hover for consistency
                   }
                 }}
                 onMouseLeave={(e) => {
                   if (stockSymbol !== stock.symbol && !loading) {
-                    e.target.style.background = 'rgba(99, 102, 241, 0.1)';
+                    e.target.style.background = 'var(--primary-accent-light)';
                   }
                 }}
               >
@@ -1868,7 +1925,7 @@ function StockChartAnalyzer() {
           </div>
           
           {/* Quick market examples */}
-          <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280' }}>
+          <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-color-lighter)' }}>
             <strong>Examples:</strong> Search from {stockDatabase.length}+ stocks - try "TCS" (Indian IT), "Reliance" (Indian Oil), "AAPL" (US Tech), "HDFC" (Indian Banking), "NVDA" (US Semiconductors), or "Wipro" (Indian IT)
           </div>
         </div>
@@ -1876,45 +1933,45 @@ function StockChartAnalyzer() {
 
       {/* Error Display */}
       {error && (
-        <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '2px solid rgba(239, 68, 68, 0.3)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: '#dc2626' }}>
+        <div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}>
           <strong>⚠️ Error:</strong> {error}
         </div>
       )}
 
       {/* OR Divider */}
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}>
-        <div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, transparent, rgba(107, 114, 128, 0.3), transparent)' }}></div>
-        <span style={{ color: '#6b7280', fontWeight: '600', fontSize: '14px', background: 'rgba(255, 255, 255, 0.8)', padding: '8px 16px', borderRadius: '20px', border: '1px solid rgba(107, 114, 128, 0.2)' }}>OR</span>
-        <div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, rgba(107, 114, 128, 0.3), transparent)' }}></div>
+        <div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, transparent, var(--separator-color), transparent)' }}></div>
+        <span style={{ color: 'var(--text-color-lighter)', fontWeight: '600', fontSize: '14px', background: 'var(--card-background)', padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--card-border)' }}>OR</span>
+        <div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, var(--separator-color), transparent)' }}></div>
       </div>
 
       {/* Manual Upload */}
       <div style={{ marginBottom: '32px' }}>
-        <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: '#1a202c', fontSize: '18px' }}>
+        <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)', fontSize: '18px' }}>
           📁 Upload Your Own Chart Image (for Educational Exploration)
         </label>
-        <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px', marginTop: '0px' }}>
+        <p style={{ fontSize: '13px', color: 'var(--text-color-lighter)', marginBottom: '12px', marginTop: '0px' }}>
           Note: Analysis for uploaded images provides an educational example of pattern types. For data-driven analysis, please use the live stock chart feature above.
         </p>
         <input
           type="file"
           accept="image/*"
           onChange={handleImageUpload}
-          style={{ width: '100%', padding: '20px', border: '2px dashed rgba(139, 92, 246, 0.3)', borderRadius: '12px', background: 'rgba(139, 92, 246, 0.05)', fontSize: '16px', fontWeight: '500', color: '#1a202c', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
+          style={{ width: '100%', padding: '20px', border: '2px dashed var(--primary-accent-border)', borderRadius: '12px', background: 'var(--input-background)', fontSize: '16px', fontWeight: '500', color: 'var(--text-color)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }}
           onMouseEnter={(e) => {
-            e.target.style.borderColor = '#8b5cf6';
-            e.target.style.background = 'rgba(139, 92, 246, 0.1)';
+            e.target.style.borderColor = 'var(--secondary-accent)';
+            e.target.style.background = 'var(--input-background-hover)';
           }}
           onMouseLeave={(e) => {
-            e.target.style.borderColor = 'rgba(139, 92, 246, 0.3)';
-            e.target.style.background = 'rgba(139, 92, 246, 0.05)';
+            e.target.style.borderColor = 'var(--primary-accent-border)';
+            e.target.style.background = 'var(--input-background)';
           }}
         />
       </div>
       
       {uploadedImage && (
         <div style={{ marginBottom: '32px' }}>
-          <div style={{ width: '100%', height: '400px', background: 'rgba(255, 255, 255, 0.9)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid rgba(0, 0, 0, 0.1)', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.1)' }}>
+          <div style={{ width: '100%', height: '400px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}>
             <img 
               src={uploadedImage} 
               alt="Stock chart" 
@@ -1923,18 +1980,18 @@ function StockChartAnalyzer() {
           </div>
           
           {stockData && (
-            <div style={{ background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(52, 211, 153, 0.1))', border: '2px solid rgba(16, 185, 129, 0.3)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: '#065f46' }}>
+            <div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}>
               <div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information (3-Month Data):</div>
               <div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div>
               <div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} | <strong>Data Points:</strong> {stockData.prices.length} days</div>
-              {stockData.isMockData && <div style={{ color: '#f59e0b', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}
+              {stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}
             </div>
           )}
           
           <button
             onClick={analyzeChart}
             disabled={loading}
-            style={{ width: '100%', background: loading ? '#9ca3af' : 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', color: 'white', border: 'none', padding: '18px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.3s', boxShadow: loading ? 'none' : '0 4px 20px rgba(99, 102, 241, 0.4)' }}
+            style={{ width: '100%', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', padding: '18px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.3s', boxShadow: loading ? 'none' : `0 4px 20px ${'var(--primary-accent-light)'}` }}
           >
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -1952,35 +2009,35 @@ function StockChartAnalyzer() {
       
       {/* Results Section */}
       {prediction && patternDetected && (
-        <div style={{ background: 'rgba(255, 255, 255, 0.95)', borderRadius: '20px', border: '2px solid rgba(0, 0, 0, 0.1)', marginBottom: '32px', overflow: 'hidden', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
-          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: '#1a202c', padding: '24px 24px 0', textAlign: 'center' }}>
+        <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', marginBottom: '32px', overflow: 'hidden', boxShadow: `0 8px 32px var(--card-shadow)` }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', padding: '24px 24px 0', textAlign: 'center' }}>
             📈 Enhanced Analysis Results
           </h2>
           
           {/* Prediction Section */}
-          <div style={{ padding: '24px', background: prediction === 'up' ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(52, 211, 153, 0.15))' : prediction === 'down' ? 'linear-gradient(135deg, rgba(239, 68, 68, 0.15), rgba(248, 113, 113, 0.15))' : 'linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15))', borderLeft: `6px solid ${prediction === 'up' ? '#10b981' : prediction === 'down' ? '#ef4444' : '#6366f1'}`, margin: '0 24px 16px', borderRadius: '12px', border: `2px solid ${prediction === 'up' ? 'rgba(16, 185, 129, 0.3)' : prediction === 'down' ? 'rgba(239, 68, 68, 0.3)' : 'rgba(99, 102, 241, 0.3)'}` }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ padding: '24px', background: prediction === 'up' ? 'var(--success-background)' : prediction === 'down' ? 'var(--danger-background)' : 'var(--primary-accent-light)', borderLeft: `6px solid ${prediction === 'up' ? 'var(--success-color)' : prediction === 'down' ? 'var(--danger-color)' : 'var(--primary-accent)'}`, margin: '0 24px 16px', borderRadius: '12px', border: `2px solid ${prediction === 'up' ? 'var(--success-border)' : prediction === 'down' ? 'var(--danger-border)' : 'var(--primary-accent-border)'}` }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: prediction === 'up' ? 'var(--success-color)' : prediction === 'down' ? 'var(--danger-color)' : 'var(--primary-accent)' }}>
               {prediction === 'up' ? <TrendingUp size={28} /> : prediction === 'down' ? <TrendingDown size={28} /> : <BarChart size={28} />}
-              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Enhanced Prediction</h3>
+              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Enhanced Prediction</h3>
             </div>
-            <p style={{ fontSize: '20px', marginBottom: '16px', fontWeight: '800', color: prediction === 'up' ? '#059669' : prediction === 'down' ? '#dc2626' : '#4f46e5' }}>
+            <p style={{ fontSize: '20px', marginBottom: '16px', fontWeight: '800', color: prediction === 'up' ? 'var(--success-color)' : prediction === 'down' ? 'var(--danger-color)' : 'var(--primary-accent-darker)' }}>
               {prediction === 'up' ? '📈 Likely to go UP' : prediction === 'down' ? '📉 Likely to go DOWN' : '↔️ Continuation Expected'}
             </p>
-            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', padding: '14px 18px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
-              <span style={{ fontWeight: '700', color: '#1a202c' }}>
+            <div style={{ fontSize: '16px', color: 'var(--text-color)', marginTop: '16px', padding: '14px 18px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)', fontWeight: '600' }}>
+              <span style={{ fontWeight: '700', color: 'var(--text-color)' }}>
                 {prediction === 'up' ? '⏱️ Upward duration:' : prediction === 'down' ? '⏱️ Downward duration:' : '⏱️ Pattern duration:'}
               </span> {prediction === 'up' ? patternDetected.daysUp : prediction === 'down' ? patternDetected.daysDown : patternDetected.timeframe}
             </div>
             {confidence && (
               <div>
-                <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', fontWeight: '700', background: 'rgba(255, 255, 255, 0.8)', padding: '12px 16px', borderRadius: '8px', border: '2px solid rgba(0, 0, 0, 0.1)', textAlign: 'center', position: 'relative' }}>
+                <div style={{ fontSize: '16px', color: 'var(--text-color)', marginTop: '16px', fontWeight: '700', background: 'var(--background-color)', padding: '12px 16px', borderRadius: '8px', border: '2px solid var(--card-border)', textAlign: 'center', position: 'relative' }}>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
                     🎯 Confidence Level: {confidence}%
                     <button
                       onClick={() => setShowConfidenceHelp(!showConfidenceHelp)}
                       style={{
-                        background: 'rgba(99, 102, 241, 0.1)',
-                        border: '1px solid rgba(99, 102, 241, 0.3)',
+                        background: 'var(--primary-accent-light)',
+                        border: '1px solid var(--primary-accent-border)',
                         borderRadius: '50%',
                         width: '24px',
                         height: '24px',
@@ -1992,31 +2049,31 @@ function StockChartAnalyzer() {
                         padding: '0'
                       }}
                       onMouseEnter={(e) => {
-                        e.target.style.background = 'rgba(99, 102, 241, 0.2)';
-                        e.target.style.transform = 'scale(1.1)';
+                        e.currentTarget.style.background = 'var(--input-background-hover)';
+                        e.currentTarget.style.transform = 'scale(1.1)';
                       }}
                       onMouseLeave={(e) => {
-                        e.target.style.background = 'rgba(99, 102, 241, 0.1)';
-                        e.target.style.transform = 'scale(1)';
+                        e.currentTarget.style.background = 'var(--primary-accent-light)';
+                        e.currentTarget.style.transform = 'scale(1)';
                       }}
                       title="Click to understand confidence levels"
                     >
-                      <Info size={12} color="#4f46e5" />
+                      <Info size={12} color="var(--primary-accent-darker)" />
                     </button>
                   </div>
                   
                   {/* Confidence Level Indicator */}
                   <div style={{ marginTop: '8px', fontSize: '14px', fontWeight: '600' }}>
                     {confidence >= 80 ? (
-                      <span style={{ color: '#059669', background: 'rgba(16, 185, 129, 0.1)', padding: '4px 8px', borderRadius: '12px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
+                      <span style={{ color: 'var(--success-color)', background: 'var(--success-background)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--success-border)' }}>
                         🟢 High Confidence - Strong Signal
                       </span>
                     ) : confidence >= 60 ? (
-                      <span style={{ color: '#d97706', background: 'rgba(245, 158, 11, 0.1)', padding: '4px 8px', borderRadius: '12px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
+                      <span style={{ color: 'var(--warning-color)', background: 'var(--warning-background)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--warning-border)' }}>
                         🟡 Medium Confidence - Proceed with Caution
                       </span>
                     ) : (
-                      <span style={{ color: '#dc2626', background: 'rgba(239, 68, 68, 0.1)', padding: '4px 8px', borderRadius: '12px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+                      <span style={{ color: 'var(--danger-color)', background: 'var(--danger-background)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--danger-border)' }}>
                         🟠 Low Confidence - High Risk
                       </span>
                     )}
@@ -2027,14 +2084,14 @@ function StockChartAnalyzer() {
                 {showConfidenceHelp && (
                   <div style={{ 
                     marginTop: '12px', 
-                    background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.05), rgba(139, 92, 246, 0.05))', 
-                    border: '2px solid rgba(99, 102, 241, 0.2)', 
+                    background: 'var(--primary-accent-light)',
+                    border: '2px solid var(--primary-accent-border)',
                     borderRadius: '12px', 
                     padding: '20px',
                     animation: 'slideInUp 0.3s ease-out'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
-                      <h4 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: '#4f46e5' }}>
+                      <h4 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: 'var(--primary-accent-darker)' }}>
                         📊 Understanding Confidence Levels
                       </h4>
                       <button
@@ -2050,41 +2107,41 @@ function StockChartAnalyzer() {
                           justifyContent: 'center'
                         }}
                       >
-                        <ChevronUp size={20} color="#6b7280" />
+                        <ChevronUp size={20} color="var(--text-color-lighter)" />
                       </button>
                     </div>
 
-                    <div style={{ fontSize: '14px', lineHeight: '1.6', color: '#374151' }}>
-                      <div style={{ marginBottom: '16px', padding: '12px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.2)' }}>
-                        <strong style={{ color: '#1f2937' }}>What is Confidence Level?</strong>
+                    <div style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text-color-light)' }}>
+                      <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}>
+                        <strong style={{ color: 'var(--text-color)' }}>What is Confidence Level?</strong>
                         <p style={{ margin: '4px 0 0 0', fontWeight: '500' }}>
                           A percentage (45-92%) indicating how reliable the pattern detection and prediction are. Higher = more trustworthy.
                         </p>
                       </div>
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '16px' }}>
-                        <div style={{ padding: '12px', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                          <div style={{ fontWeight: '700', color: '#059669', marginBottom: '4px' }}>🟢 High (80-92%)</div>
+                        <div style={{ padding: '12px', background: 'var(--success-background)', borderRadius: '8px', border: '1px solid var(--success-border)' }}>
+                          <div style={{ fontWeight: '700', color: 'var(--success-color)', marginBottom: '4px' }}>🟢 High (80-92%)</div>
                           <div style={{ fontSize: '13px', fontWeight: '500' }}>
                             Very reliable • Strong signal • Clear pattern • Normal position sizes
                           </div>
                         </div>
-                        <div style={{ padding: '12px', background: 'rgba(245, 158, 11, 0.1)', borderRadius: '8px', border: '1px solid rgba(245, 158, 11, 0.3)' }}>
-                          <div style={{ fontWeight: '700', color: '#d97706', marginBottom: '4px' }}>🟡 Medium (60-79%)</div>
+                        <div style={{ padding: '12px', background: 'var(--warning-background)', borderRadius: '8px', border: '1px solid var(--warning-border)' }}>
+                          <div style={{ fontWeight: '700', color: 'var(--warning-color)', marginBottom: '4px' }}>🟡 Medium (60-79%)</div>
                           <div style={{ fontSize: '13px', fontWeight: '500' }}>
                             Moderately reliable • Use caution • Smaller positions • Wait for confirmation
                           </div>
                         </div>
-                        <div style={{ padding: '12px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                          <div style={{ fontWeight: '700', color: '#dc2626', marginBottom: '4px' }}>🟠 Low (45-59%)</div>
+                        <div style={{ padding: '12px', background: 'var(--danger-background)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}>
+                          <div style={{ fontWeight: '700', color: 'var(--danger-color)', marginBottom: '4px' }}>🟠 Low (45-59%)</div>
                           <div style={{ fontSize: '13px', fontWeight: '500' }}>
                             High risk • Avoid trading • Wait for better setup • Educational only
                           </div>
                         </div>
                       </div>
 
-                      <div style={{ padding: '12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-                        <div style={{ fontWeight: '700', color: '#4f46e5', marginBottom: '8px' }}>How is it calculated?</div>
+                      <div style={{ padding: '12px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}>
+                        <div style={{ fontWeight: '700', color: 'var(--primary-accent-darker)', marginBottom: '8px' }}>How is it calculated?</div>
                         <ul style={{ margin: '0', paddingLeft: '16px', fontSize: '13px', fontWeight: '500' }}>
                           <li>Base pattern reliability (each pattern has historical success rates)</li>
                           <li>Pattern clarity and shape matching quality</li>
@@ -2094,15 +2151,15 @@ function StockChartAnalyzer() {
                       </div>
 
                       {confidence < 60 && (
-                        <div style={{ marginTop: '12px', padding: '12px', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                          <div style={{ fontWeight: '700', color: '#dc2626', marginBottom: '4px' }}>⚠️ Your Current Score: {confidence}%</div>
-                          <div style={{ fontSize: '13px', fontWeight: '500', color: '#991b1b' }}>
+                        <div style={{ marginTop: '12px', padding: '12px', background: 'var(--danger-background)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}>
+                          <div style={{ fontWeight: '700', color: 'var(--danger-color)', marginBottom: '4px' }}>⚠️ Your Current Score: {confidence}%</div>
+                          <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--danger-color)' /* Adjusted for better contrast on dark theme with danger background */ }}>
                             This is a <strong>low confidence</strong> signal. Consider waiting for a clearer pattern with 70%+ confidence before making trading decisions.
                           </div>
                         </div>
                       )}
 
-                      <div style={{ marginTop: '12px', fontSize: '12px', color: '#6b7280', fontStyle: 'italic', textAlign: 'center' }}>
+                      <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-color-lighter)', fontStyle: 'italic', textAlign: 'center' }}>
                         💡 Remember: Even high confidence doesn't guarantee success. Always use proper risk management and do your own research.
                       </div>
                     </div>
@@ -2114,30 +2171,30 @@ function StockChartAnalyzer() {
 
           {/* Breakout Timing Section */}
           {breakoutTiming && (
-            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
                 <Clock size={28} />
-                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Breakout Timing Prediction</h3>
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Breakout Timing Prediction</h3>
               </div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}>
-                <div style={{ background: 'rgba(34, 211, 238, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
-                  <div style={{ fontWeight: '700', color: '#0891b2', fontSize: '14px' }}>Expected Timeframe</div>
-                  <div style={{ fontWeight: '600', color: '#1a202c', fontSize: '16px' }}>{breakoutTiming.daysRange}</div>
+                <div style={{ background: 'var(--info-background)', padding: '12px', borderRadius: '8px', border: '1px solid var(--info-border)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--info-color)', fontSize: '14px' }}>Expected Timeframe</div>
+                  <div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.daysRange}</div>
                 </div>
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(16, 185, 129, 0.3)' }}>
-                  <div style={{ fontWeight: '700', color: '#059669', fontSize: '14px' }}>Earliest Date</div>
-                  <div style={{ fontWeight: '600', color: '#1a202c', fontSize: '16px' }}>{breakoutTiming.minDate}</div>
+                <div style={{ background: 'var(--success-background)', padding: '12px', borderRadius: '8px', border: '1px solid var(--success-border)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--success-color)', fontSize: '14px' }}>Earliest Date</div>
+                  <div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.minDate}</div>
                 </div>
-                <div style={{ background: 'rgba(239, 68, 68, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
-                  <div style={{ fontWeight: '700', color: '#dc2626', fontSize: '14px' }}>Latest Date</div>
-                  <div style={{ fontWeight: '600', color: '#1a202c', fontSize: '16px' }}>{breakoutTiming.maxDate}</div>
+                <div style={{ background: 'var(--danger-background)', padding: '12px', borderRadius: '8px', border: '1px solid var(--danger-border)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--danger-color)', fontSize: '14px' }}>Latest Date</div>
+                  <div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.maxDate}</div>
                 </div>
-                <div style={{ background: 'rgba(99, 102, 241, 0.1)', padding: '12px', borderRadius: '8px', border: '1px solid rgba(99, 102, 241, 0.3)' }}>
-                  <div style={{ fontWeight: '700', color: '#4f46e5', fontSize: '14px' }}>Timing Confidence</div>
-                  <div style={{ fontWeight: '600', color: '#1a202c', fontSize: '16px' }}>{breakoutTiming.confidence}</div>
+                <div style={{ background: 'var(--primary-accent-light)', padding: '12px', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}>
+                  <div style={{ fontWeight: '700', color: 'var(--primary-accent-darker)', fontSize: '14px' }}>Timing Confidence</div>
+                  <div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.confidence}</div>
                 </div>
               </div>
-              <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(255, 248, 230, 0.8)', borderRadius: '6px', fontSize: '14px', color: '#92400e', fontWeight: '500' }}>
+              <div style={{ marginTop: '12px', padding: '10px', background: 'var(--warning-background)', borderRadius: '6px', fontSize: '14px', color: 'var(--warning-color)', fontWeight: '500' }}>
                 💡 <strong>Note:</strong> Breakout timing is based on pattern analysis and current market momentum. Monitor volume and price action for confirmation.
               </div>
             </div>
@@ -2145,17 +2202,17 @@ function StockChartAnalyzer() {
 
           {/* Key Levels Section */}
           {keyLevels && (keyLevels.support?.length > 0 || keyLevels.resistance?.length > 0) && (
-            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
                 <BarChart size={28} /> {/* Using BarChart icon as a placeholder, consider a more specific one if available */}
-                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Key Price Levels</h3>
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Key Price Levels</h3>
               </div>
               {keyLevels.support?.length > 0 && (
                 <div style={{ marginBottom: '12px' }}>
-                  <strong style={{ color: '#22c55e' }}>Support Levels:</strong>
+                  <strong style={{ color: 'var(--success-color)' }}>Support Levels:</strong>
                   <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
                     {keyLevels.support.map((level, idx) => (
-                      <li key={`s-${idx}`} style={{ fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>
+                      <li key={`s-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>
                         {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}
                       </li>
                     ))}
@@ -2164,17 +2221,17 @@ function StockChartAnalyzer() {
               )}
               {keyLevels.resistance?.length > 0 && (
                 <div>
-                  <strong style={{ color: '#ef4444' }}>Resistance Levels:</strong>
+                  <strong style={{ color: 'var(--danger-color)' }}>Resistance Levels:</strong>
                   <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
                     {keyLevels.resistance.map((level, idx) => (
-                      <li key={`r-${idx}`} style={{ fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>
+                      <li key={`r-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>
                         {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-               <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(243, 244, 246, 0.8)', borderRadius: '6px', fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>
+               <div style={{ marginTop: '12px', padding: '10px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontSize: '13px', color: 'var(--text-color-light)', fontWeight: '500' }}>
                 💡 These are automatically identified potential support (price floor) and resistance (price ceiling) levels from recent price action.
               </div>
             </div>
@@ -2182,67 +2239,67 @@ function StockChartAnalyzer() {
 
           {/* Other sections with enhanced styling */}
           {recommendation && (
-            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
                 <DollarSign size={28} />
-                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Recommendation</h3>
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Recommendation</h3>
               </div>
-              <p style={{ fontSize: '20px', marginBottom: '12px', fontWeight: '800', color: recommendation.action === 'BUY' ? '#059669' : recommendation.action === 'SELL' ? '#dc2626' : '#4f46e5' }}>
+              <p style={{ fontSize: '20px', marginBottom: '12px', fontWeight: '800', color: recommendation.action === 'BUY' ? 'var(--success-color)' : recommendation.action === 'SELL' ? 'var(--danger-color)' : 'var(--primary-accent-darker)' }}>
                 {recommendation.action === 'BUY' ? '💰 BUY' : recommendation.action === 'SELL' ? '💸 SELL' : '✋ HOLD'}
               </p>
-              <p style={{ fontSize: '16px', color: '#2d3748', lineHeight: '1.6', fontWeight: '500' }}>
+              <p style={{ fontSize: '16px', color: 'var(--text-color-light)', lineHeight: '1.6', fontWeight: '500' }}>
                 {recommendation.reasoning}
               </p>
             </div>
           )}
 
           {entryExit && (
-            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+            <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
                 <Target size={28} />
-                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Entry & Exit Strategy</h3>
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Entry & Exit Strategy</h3>
               </div>
               <div style={{ marginBottom: '12px' }}>
-                <span style={{ fontWeight: '700', color: '#059669' }}>🟢 Entry Point: </span>
-                <span style={{ color: '#2d3748', fontWeight: '500' }}>{entryExit.entry}</span>
+                <span style={{ fontWeight: '700', color: 'var(--success-color)' }}>🟢 Entry Point: </span>
+                <span style={{ color: 'var(--text-color-light)', fontWeight: '500' }}>{entryExit.entry}</span>
               </div>
               <div>
-                <span style={{ fontWeight: '700', color: '#dc2626' }}>🔴 Exit Strategy: </span>
-                <span style={{ color: '#2d3748', fontWeight: '500' }}>{entryExit.exit}</span>
+                <span style={{ fontWeight: '700', color: 'var(--danger-color)' }}>🔴 Exit Strategy: </span>
+                <span style={{ color: 'var(--text-color-light)', fontWeight: '500' }}>{entryExit.exit}</span>
               </div>
             </div>
           )}
 
-          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
               <Calendar size={28} />
-              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Time Estimate</h3>
+              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Time Estimate</h3>
             </div>
-            <p style={{ fontSize: '18px', marginBottom: '12px', color: '#2d3748', fontWeight: '600' }}>{timeEstimate}</p>
-            <div style={{ fontSize: '16px', color: '#1a202c', marginTop: '16px', padding: '12px 16px', background: 'rgba(255, 255, 255, 0.7)', borderRadius: '8px', border: '1px solid rgba(0, 0, 0, 0.1)', fontWeight: '600' }}>
-              <span style={{ fontWeight: '700', color: '#1a202c' }}>📅 Typical pattern duration:</span> {patternDetected.timeframe}
+            <p style={{ fontSize: '18px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '600' }}>{timeEstimate}</p>
+            <div style={{ fontSize: '16px', color: 'var(--text-color)', marginTop: '16px', padding: '12px 16px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)', fontWeight: '600' }}>
+              <span style={{ fontWeight: '700', color: 'var(--text-color)' }}>📅 Typical pattern duration:</span> {patternDetected.timeframe}
             </div>
           </div>
 
-          <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
-            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+          <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+            <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
               <BarChart size={28} />
-              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Pattern Detected</h3>
+              <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Pattern Detected</h3>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
               <div>
-                <p style={{ fontSize: '20px', marginBottom: '12px', color: '#2d3748', fontWeight: '700' }}>
+                <p style={{ fontSize: '20px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '700' }}>
                   📊 {patternDetected.name.split('-').map(word => 
                     word.charAt(0).toUpperCase() + word.slice(1)
                   ).join(' ')}
                 </p>
-                <div style={{ fontSize: '14px', color: '#6b7280', marginTop: '8px', padding: '8px 12px', background: 'rgba(99, 102, 241, 0.1)', borderRadius: '6px', fontWeight: '500' }}>
+                <div style={{ fontSize: '14px', color: 'var(--text-color-lighter)', marginTop: '8px', padding: '8px 12px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontWeight: '500' }}>
                   💡 Compare the actual chart above with this pattern example below
                 </div>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px', padding: '16px', background: 'rgba(248, 250, 252, 0.8)', borderRadius: '8px', border: '1px solid rgba(226, 232, 240, 0.8)' }}>
-                <PatternVisualization patternName={patternDetected.name} width={300} height={160} />
-                <div style={{ fontSize: '12px', color: '#9ca3af', textAlign: 'center', fontWeight: '500' }}>
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+                <PatternVisualization patternName={patternDetected.name} theme={theme} width={300} height={160} />
+                <div style={{ fontSize: '12px', color: 'var(--text-color-muted)', textAlign: 'center', fontWeight: '500' }}>
                   📈 Typical {patternDetected.name.split('-').join(' ')} pattern example
                 </div>
               </div>
@@ -2252,27 +2309,27 @@ function StockChartAnalyzer() {
       )}
       
       {patternDetected && (
-        <div style={{ background: 'rgba(255, 255, 255, 0.95)', padding: '32px', borderRadius: '20px', marginBottom: '32px', border: '2px solid rgba(0, 0, 0, 0.1)', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)' }}>
-          <h3 style={{ fontWeight: '700', fontSize: '24px', marginTop: '0', marginBottom: '20px', color: '#1a202c', textAlign: 'center' }}>📚 Pattern Education</h3>
-          <h4 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '12px', color: '#1a202c' }}>Description:</h4>
-          <p style={{ marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>{patternDetected.description}</p>
-          <div style={{ padding: '24px', border: '2px solid rgba(0, 0, 0, 0.1)', background: 'rgba(99, 102, 241, 0.05)', borderRadius: '12px' }}>
-            <h4 style={{ fontWeight: '700', fontSize: '18px', color: '#1a202c', marginTop: '0', marginBottom: '16px' }}>🔍 What to look for:</h4>
-            <ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: '#2d3748' }}>
-              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
-                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+        <div style={{ background: 'var(--card-background)', padding: '32px', borderRadius: '20px', marginBottom: '32px', border: '2px solid var(--card-border)', boxShadow: `0 8px 32px var(--card-shadow)` }}>
+          <h3 style={{ fontWeight: '700', fontSize: '24px', marginTop: '0', marginBottom: '20px', color: 'var(--text-color)', textAlign: 'center' }}>📚 Pattern Education</h3>
+          <h4 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '12px', color: 'var(--text-color)' }}>Description:</h4>
+          <p style={{ marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>{patternDetected.description}</p>
+          <div style={{ padding: '24px', border: '2px solid var(--card-border)', background: 'var(--primary-accent-light)', borderRadius: '12px' }}>
+            <h4 style={{ fontWeight: '700', fontSize: '18px', color: 'var(--primary-accent-darker)', marginTop: '0', marginBottom: '16px' }}>🔍 What to look for:</h4>
+            <ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: 'var(--text-color-light)' }}>
+              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}>
+                <span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Look for clear pattern formation with multiple confirmation points
               </li>
-              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
-                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}>
+                <span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Check volume patterns that support the chart pattern
               </li>
-              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
-                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+              <li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}>
+                <span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Confirm breakout direction before making decisions
               </li>
-              <li style={{ marginBottom: '0', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500', color: '#2d3748' }}>
-                <span style={{ position: 'absolute', left: '0', color: '#4f46e5', fontWeight: 'bold', fontSize: '16px' }}>→</span>
+              <li style={{ marginBottom: '0', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}>
+                <span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>
                 Consider overall market conditions and sentiment
               </li>
             </ul>
@@ -2280,18 +2337,41 @@ function StockChartAnalyzer() {
         </div>
       )}
       
-      <div style={{ fontSize: '15px', color: '#2d3748', background: 'rgba(255, 255, 255, 0.9)', padding: '24px', borderRadius: '16px', border: '2px solid rgba(0, 0, 0, 0.1)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
+      <div style={{ fontSize: '15px', color: 'var(--text-color-light)', background: 'var(--card-background)', padding: '24px', borderRadius: '16px', border: '2px solid var(--card-border)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
         <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides enhanced technical analysis for educational purposes only.</p>
         <p style={{ marginBottom: '12px' }}><strong>📊 Enhanced Features:</strong> 3-month data analysis, dynamic confidence scoring, and breakout timing predictions.</p>
         <p style={{ margin: '0' }}>Always conduct thorough research and consult financial advisors before making investment decisions.</p>
       </div>
 
       {/* Footer */}
-      <div style={{ borderTop: '2px solid rgba(0, 0, 0, 0.1)', paddingTop: '20px', marginTop: '32px', textAlign: 'center', fontSize: '14px', color: '#6b7280', background: 'rgba(255, 255, 255, 0.8)', padding: '20px', borderRadius: '12px' }}>
-        <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: '#4a5568' }}>
-          💻 Enhanced by <span style={{ color: '#6366f1', fontWeight: '700' }}>Advanced AI Pattern Recognition</span>
+      <div style={{ borderTop: '2px solid var(--card-border)', paddingTop: '20px', marginTop: '32px', textAlign: 'center', fontSize: '14px', color: 'var(--text-color-lighter)', background: 'var(--card-background)', padding: '20px', borderRadius: '12px', position: 'relative' }}>
+        <button
+          onClick={toggleTheme}
+          style={{
+            position: 'absolute',
+            top: '20px',
+            right: '20px',
+            background: 'var(--primary-accent-light)',
+            border: '1px solid var(--primary-accent-border)',
+            color: 'var(--primary-accent-darker)',
+            padding: '8px 12px',
+            borderRadius: '20px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            fontSize: '13px',
+            fontWeight: '500'
+          }}
+          title={`Switch to ${theme === 'light' ? 'Dark' : 'Light'} Mode`}
+        >
+          {theme === 'light' ? <Moon size={16} /> : <Sun size={16} />}
+          <span>{theme === 'light' ? 'Dark Mode' : 'Light Mode'}</span>
+        </button>
+        <p style={{ margin: '0 0 8px 0', fontWeight: '600', color: 'var(--text-color-light)' }}>
+          💻 Enhanced by <span style={{ color: 'var(--primary-accent-darker)', fontWeight: '700' }}>Advanced AI Pattern Recognition</span>
         </p>
-        <p style={{ margin: '0', fontSize: '13px', color: '#9ca3af' }}>
+        <p style={{ margin: '0', fontSize: '13px', color: 'var(--text-color-muted)' }}>
           © {new Date().getFullYear()} Stock Chart Analyzer v2.0. All rights reserved.
         </p>
       </div>
