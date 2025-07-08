@@ -51,91 +51,9 @@
 
   --app-background-start: rgba(255, 255, 255, 0.98); /* For the main div background */
   --app-border: rgba(255, 255, 255, 0.4);
-
-  /* Glassmorphism Variables - Light Theme */
-  --body-gradient-start-light: #667eea; /* Light purple-blue */
-  --body-gradient-end-light: #764ba2; /* Darker purple */
-
-  --sidebar-bg-light: rgba(255, 255, 255, 0.15);
-  --sidebar-blur-light: blur(12px);
-  --sidebar-border-color-light: rgba(255, 255, 255, 0.25);
-  --sidebar-shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
-  --sidebar-text-color-light: #ffffff;
-  --sidebar-header-color-light: #ffffff;
-  --sidebar-link-color-light: #e0e0e0;
-  --sidebar-link-hover-bg-light: rgba(255, 255, 255, 0.25);
-  --sidebar-link-hover-color-light: #ffffff;
-  --sidebar-link-hover-shadow-light: 0 0 15px rgba(255, 255, 255, 0.4);
-  --sidebar-footer-color-light: #d1d5db;
-  --sidebar-divider-color-light: rgba(255, 255, 255, 0.15);
-
-  --main-content-bg-light: rgba(255, 255, 255, 0.05); /* Very subtle */
-
-  --menu-toggle-bg-light: rgba(255, 255, 255, 0.2);
-  --menu-toggle-color-light: #fff;
-  --menu-toggle-border-color-light: rgba(255, 255, 255, 0.3);
-  --menu-toggle-blur-light: blur(5px);
-  --menu-toggle-shadow-light: 0 2px 10px rgba(0,0,0,0.2);
-  --menu-toggle-hover-bg-light: rgba(255, 255, 255, 0.3);
-  --menu-toggle-hover-shadow-light: 0 4px 15px rgba(0,0,0,0.3);
-
-  --widget-card-bg-light: rgba(255, 255, 255, 0.2);
-  --widget-card-blur-light: blur(10px);
-  --widget-card-border-color-light: rgba(255, 255, 255, 0.3);
-  --widget-card-shadow-light: 0 8px 28px 0 rgba(31, 38, 135, 0.2);
-  --widget-card-hover-shadow-light: 0 12px 36px 0 rgba(31, 38, 135, 0.3);
-  --widget-card-text-color-light: #fff; /* Text on cards for light theme bg */
-  --widget-card-header-color-light: #fff;
-  --widget-card-paragraph-color-light: #f0f0f0;
-
-  --button-gradient-light: linear-gradient(135deg, #667eea99 0%, #764ba2cc 100%);
-  --button-text-color-light: #fff;
-  --button-shadow-light: 0 4px 15px rgba(0, 0, 0, 0.2);
-  --button-hover-gradient-light: linear-gradient(135deg, #667eeaaa 0%, #764ba2dd 100%);
-  --button-hover-glow-light: 0 0 20px rgba(120, 75, 162, 0.7), 0 0 30px rgba(102, 126, 234, 0.5);
-  --button-active-shadow-light: 0 2px 10px rgba(0, 0, 0, 0.2);
-
-  /* Apply light theme glassmorphism variables by default */
-  --body-gradient-start: var(--body-gradient-start-light);
-  --body-gradient-end: var(--body-gradient-end-light);
-  --sidebar-bg: var(--sidebar-bg-light);
-  --sidebar-blur: var(--sidebar-blur-light);
-  --sidebar-border-color: var(--sidebar-border-color-light);
-  --sidebar-shadow: var(--sidebar-shadow-light);
-  --sidebar-text-color: var(--sidebar-text-color-light);
-  --sidebar-header-color: var(--sidebar-header-color-light);
-  --sidebar-link-color: var(--sidebar-link-color-light);
-  --sidebar-link-hover-bg: var(--sidebar-link-hover-bg-light);
-  --sidebar-link-hover-color: var(--sidebar-link-hover-color-light);
-  --sidebar-link-hover-shadow: var(--sidebar-link-hover-shadow-light);
-  --sidebar-footer-color: var(--sidebar-footer-color-light);
-  --sidebar-divider-color: var(--sidebar-divider-color-light);
-  --main-content-bg: var(--main-content-bg-light);
-  --menu-toggle-bg: var(--menu-toggle-bg-light);
-  --menu-toggle-color: var(--menu-toggle-color-light);
-  --menu-toggle-border-color: var(--menu-toggle-border-color-light);
-  --menu-toggle-blur: var(--menu-toggle-blur-light);
-  --menu-toggle-shadow: var(--menu-toggle-shadow-light);
-  --menu-toggle-hover-bg: var(--menu-toggle-hover-bg-light);
-  --menu-toggle-hover-shadow: var(--menu-toggle-hover-shadow-light);
-  --widget-card-bg: var(--widget-card-bg-light);
-  --widget-card-blur: var(--widget-card-blur-light);
-  --widget-card-border-color: var(--widget-card-border-color-light);
-  --widget-card-shadow: var(--widget-card-shadow-light);
-  --widget-card-hover-shadow: var(--widget-card-hover-shadow-light);
-  --widget-card-text-color: var(--widget-card-text-color-light);
-  --widget-card-header-color: var(--widget-card-header-color-light);
-  --widget-card-paragraph-color: var(--widget-card-paragraph-color-light);
-  --button-gradient: var(--button-gradient-light);
-  --button-text-color: var(--button-text-color-light);
-  --button-shadow: var(--button-shadow-light);
-  --button-hover-gradient: var(--button-hover-gradient-light);
-  --button-hover-glow: var(--button-hover-glow-light);
-  --button-active-shadow: var(--button-active-shadow-light);
 }
 
 body.dark-mode {
-  /* Existing dark mode variables */
   --background-color: #111827; /* Gray 900 */
   --text-color: #f3f4f6; /* Gray 100 */
   --text-color-light: #d1d5db; /* Gray 300 */
@@ -188,107 +106,19 @@ body.dark-mode {
 
   --app-background-start: #1f2937; /* For the main div background - Gray 800 */
   --app-border: rgba(55, 65, 81, 0.6); /* Gray 700 with opacity */
-
-  /* Glassmorphism Variables - Dark Theme */
-  --body-gradient-start-dark: #1e293b; /* Dark Slate Blue */
-  --body-gradient-end-dark: #334155;   /* Medium Slate Gray */
-
-  --sidebar-bg-dark: rgba(30, 41, 59, 0.25); /* Darker, more transparent */
-  --sidebar-blur-dark: blur(15px);
-  --sidebar-border-color-dark: rgba(71, 85, 105, 0.4); /* Slate 600 with opacity */
-  --sidebar-shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
-  --sidebar-text-color-dark: #e2e8f0; /* Lighter text for dark bg - Slate 200 */
-  --sidebar-header-color-dark: #f1f5f9; /* Slate 100 */
-  --sidebar-link-color-dark: #cbd5e1; /* Slate 300 */
-  --sidebar-link-hover-bg-dark: rgba(51, 65, 85, 0.4); /* Slate 700 with opacity */
-  --sidebar-link-hover-color-dark: #f8fafc; /* Slate 50 */
-  --sidebar-link-hover-shadow-dark: 0 0 15px rgba(100, 116, 139, 0.5); /* Slate 500 with opacity */
-  --sidebar-footer-color-dark: #94a3b8; /* Slate 400 */
-  --sidebar-divider-color-dark: rgba(71, 85, 105, 0.3);
-
-  --main-content-bg-dark: rgba(15, 23, 42, 0.1); /* Very subtle dark overlay - Slate 900 with opacity */
-
-  --menu-toggle-bg-dark: rgba(51, 65, 85, 0.3);
-  --menu-toggle-color-dark: #e2e8f0;
-  --menu-toggle-border-color-dark: rgba(71, 85, 105, 0.5);
-  --menu-toggle-blur-dark: blur(8px);
-  --menu-toggle-shadow-dark: 0 2px 10px rgba(0,0,0,0.3);
-  --menu-toggle-hover-bg-dark: rgba(71, 85, 105, 0.5);
-  --menu-toggle-hover-shadow-dark: 0 4px 15px rgba(0,0,0,0.4);
-
-  --widget-card-bg-dark: rgba(51, 65, 85, 0.35); /* Darker card */
-  --widget-card-blur-dark: blur(12px);
-  --widget-card-border-color-dark: rgba(71, 85, 105, 0.5);
-  --widget-card-shadow-dark: 0 8px 28px 0 rgba(0,0,0,0.3);
-  --widget-card-hover-shadow-dark: 0 12px 36px 0 rgba(0,0,0,0.4);
-  --widget-card-text-color-dark: #cbd5e1;
-  --widget-card-header-color-dark: #e2e8f0;
-  --widget-card-paragraph-color-dark: #94a3b8;
-
-  --button-gradient-dark: linear-gradient(135deg, #818cf8cc 0%, #a78bfaee 100%); /* Lighter purple for dark mode */
-  --button-text-color-dark: #f8fafc;
-  --button-shadow-dark: 0 4px 15px rgba(0, 0, 0, 0.3);
-  --button-hover-gradient-dark: linear-gradient(135deg, #818cf8dd 0%, #a78bfaff 100%);
-  --button-hover-glow-dark: 0 0 20px rgba(167, 139, 250, 0.6), 0 0 30px rgba(129, 140, 248, 0.4);
-  --button-active-shadow-dark: 0 2px 10px rgba(0, 0, 0, 0.3);
-
-  /* Apply dark theme glassmorphism variables */
-  --body-gradient-start: var(--body-gradient-start-dark);
-  --body-gradient-end: var(--body-gradient-end-dark);
-  --sidebar-bg: var(--sidebar-bg-dark);
-  --sidebar-blur: var(--sidebar-blur-dark);
-  --sidebar-border-color: var(--sidebar-border-color-dark);
-  --sidebar-shadow: var(--sidebar-shadow-dark);
-  --sidebar-text-color: var(--sidebar-text-color-dark);
-  --sidebar-header-color: var(--sidebar-header-color-dark);
-  --sidebar-link-color: var(--sidebar-link-color-dark);
-  --sidebar-link-hover-bg: var(--sidebar-link-hover-bg-dark);
-  --sidebar-link-hover-color: var(--sidebar-link-hover-color-dark);
-  --sidebar-link-hover-shadow: var(--sidebar-link-hover-shadow-dark);
-  --sidebar-footer-color: var(--sidebar-footer-color-dark);
-  --sidebar-divider-color: var(--sidebar-divider-color-dark);
-  --main-content-bg: var(--main-content-bg-dark);
-  --menu-toggle-bg: var(--menu-toggle-bg-dark);
-  --menu-toggle-color: var(--menu-toggle-color-dark);
-  --menu-toggle-border-color: var(--menu-toggle-border-color-dark);
-  --menu-toggle-blur: var(--menu-toggle-blur-dark);
-  --menu-toggle-shadow: var(--menu-toggle-shadow-dark);
-  --menu-toggle-hover-bg: var(--menu-toggle-hover-bg-dark);
-  --menu-toggle-hover-shadow: var(--menu-toggle-hover-shadow-dark);
-  --widget-card-bg: var(--widget-card-bg-dark);
-  --widget-card-blur: var(--widget-card-blur-dark);
-  --widget-card-border-color: var(--widget-card-border-color-dark);
-  --widget-card-shadow: var(--widget-card-shadow-dark);
-  --widget-card-hover-shadow: var(--widget-card-hover-shadow-dark);
-  --widget-card-text-color: var(--widget-card-text-color-dark);
-  --widget-card-header-color: var(--widget-card-header-color-dark);
-  --widget-card-paragraph-color: var(--widget-card-paragraph-color-dark);
-  --button-gradient: var(--button-gradient-dark);
-  --button-text-color: var(--button-text-color-dark);
-  --button-shadow: var(--button-shadow-dark);
-  --button-hover-gradient: var(--button-hover-gradient-dark);
-  --button-hover-glow: var(--button-hover-glow-dark);
-  --button-active-shadow: var(--button-active-shadow-dark);
 }
 
 
 body {
   margin: 0;
-  font-family: 'Poppins', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', /* Added Poppins */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-
-  /* Apply the gradient background to the body */
-  background: linear-gradient(135deg, var(--body-gradient-start) 0%, var(--body-gradient-end) 100%);
-  background-attachment: fixed; /* Keep gradient fixed during scroll */
-
-  color: var(--text-color); /* Default text color from theme */
-  transition: background 0.3s ease, color 0.3s ease; /* Transition for theme switch */
-  min-height: 100vh;
-  overflow-x: hidden;
-  line-height: 1.6;
+  background-color: var(--background-color);
+  color: var(--text-color);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 code {
