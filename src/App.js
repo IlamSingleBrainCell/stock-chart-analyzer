@@ -587,6 +587,8 @@ function StockChartAnalyzer() {
   const [breakoutTiming, setBreakoutTiming] = useState(null);
   const [error, setError] = useState(null);
   const [keyLevels, setKeyLevels] = useState(null); // State for Support/Resistance
+  const [selectedTimeRange, setSelectedTimeRange] = useState('3mo'); // Default to 3 months
+  const [longTermAssessment, setLongTermAssessment] = useState(null);
   
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -1107,6 +1109,88 @@ function StockChartAnalyzer() {
     };
   };
 
+  const generateLongTermAssessment = (stockData, timeRangeString) => {
+    if (!stockData || !stockData.prices || stockData.prices.length < 2) {
+      return null;
+    }
+
+    const prices = stockData.prices.map(p => p.close).filter(p => p !== null && p !== undefined);
+    if (prices.length < 2) return null;
+
+    const firstPrice = prices[0];
+    const lastPrice = prices[prices.length - 1];
+    const firstDate = new Date(stockData.prices[0].date);
+    const lastDate = new Date(stockData.prices[stockData.prices.length - 1].date);
+
+    const actualTimeRangeYears = (lastDate - firstDate) / (1000 * 60 * 60 * 24 * 365.25);
+    const timeRangeLabel = actualTimeRangeYears >= 1 ? `${actualTimeRangeYears.toFixed(1)} years` : `${(actualTimeRangeYears * 12).toFixed(0)} months`;
+
+
+    // Overall Trend
+    let trend = 'stayed relatively flat';
+    if (lastPrice > firstPrice * 1.1) trend = 'generally gone up';
+    else if (lastPrice < firstPrice * 0.9) trend = 'generally gone down';
+
+    // Total Return
+    const totalReturn = ((lastPrice - firstPrice) / firstPrice) * 100;
+    const returnExample = (100 * (1 + totalReturn / 100)).toFixed(2);
+
+    // Major Highs/Lows
+    let majorHigh = -Infinity;
+    let majorLow = Infinity;
+    let highDate = '';
+    let lowDate = '';
+
+    stockData.prices.forEach(p => {
+      if (p.high > majorHigh) {
+        majorHigh = p.high;
+        highDate = new Date(p.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      }
+      if (p.low < majorLow) {
+        majorLow = p.low;
+        lowDate = new Date(p.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' });
+      }
+    });
+
+    // Simplified Volatility (Standard Deviation of monthly returns if enough data)
+    let volatilityDescription = "The stock's price movement history can provide insights into its stability.";
+    if (prices.length > 12) { // Need at least a year of data for meaningful volatility
+        const monthlyReturns = [];
+        // Assuming prices are sorted chronologically. Group by month approximately.
+        // This is a simplification; for true monthly returns, data needs to be end-of-month.
+        const approxPointsPerMonth = Math.max(1, Math.floor(prices.length / (actualTimeRangeYears * 12)));
+
+        for (let i = approxPointsPerMonth; i < prices.length; i += approxPointsPerMonth) {
+            const prevPrice = prices[i - approxPointsPerMonth];
+            const currentPrice = prices[i];
+            if (prevPrice > 0) { // Avoid division by zero
+                 monthlyReturns.push((currentPrice - prevPrice) / prevPrice);
+            }
+        }
+        if (monthlyReturns.length > 1) {
+            const meanReturn = monthlyReturns.reduce((a, b) => a + b, 0) / monthlyReturns.length;
+            const variance = monthlyReturns.reduce((sum, ret) => sum + Math.pow(ret - meanReturn, 2), 0) / monthlyReturns.length;
+            const stdDev = Math.sqrt(variance);
+            const annualizedStdDev = stdDev * Math.sqrt(12); // Annualize from monthly
+
+            if (annualizedStdDev > 0.4) volatilityDescription = `This stock has shown high volatility, meaning its price has experienced significant swings.`;
+            else if (annualizedStdDev > 0.2) volatilityDescription = `This stock has shown moderate volatility, with noticeable price fluctuations.`;
+            else volatilityDescription = `This stock has shown relatively low volatility, indicating more stable price movements.`;
+        }
+    }
+
+
+    const assessment = {
+      trend: `Over the past ${timeRangeLabel}, ${stockData.symbol} has ${trend}.`,
+      totalReturn: `An investment of $100 at the start of this period would be worth approximately $${returnExample} today, a change of ${totalReturn.toFixed(1)}%.`,
+      highLow: `The highest price reached was around ${stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}${majorHigh.toFixed(2)} in ${highDate}, and the lowest was about ${stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}${majorLow.toFixed(2)} in ${lowDate}.`,
+      volatility: volatilityDescription,
+      disclaimer: "Remember, past performance is not a guarantee of future results. This assessment is for educational purposes."
+    };
+
+    return assessment;
+  };
+
   // Type-ahead functionality with market support
   const filterSuggestions = (input) => {
     if (!input || input.length < 1) return [];
@@ -1211,7 +1295,24 @@ function StockChartAnalyzer() {
     setStockSymbol(stock.symbol);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
-    fetchStockData(stock.symbol);
+    fetchStockData(stock.symbol, selectedTimeRange); // Pass current time range
+  };
+
+  const handleTimeRangeChange = (range) => {
+    setSelectedTimeRange(range);
+    if (stockSymbol.trim()) {
+      // Clear previous analysis data as it's for a different range now
+      setPrediction(null);
+      setPatternDetected(null);
+      setConfidence(null);
+      setRecommendation(null);
+      setEntryExit(null);
+      setTimeEstimate(null);
+      setBreakoutTiming(null);
+      setKeyLevels(null);
+      setLongTermAssessment(null);
+      fetchStockData(stockSymbol.toUpperCase(), range);
+    }
   };
 
   const handleInputFocus = () => {
@@ -1241,11 +1342,19 @@ function StockChartAnalyzer() {
     );
   };
 
-  const fetchYahooFinanceData = async (symbol) => {
+  const fetchYahooFinanceData = async (symbol, range = '3mo') => {
+    let interval = '1d';
+    if (range === '5y' || range === '10y') {
+      interval = '1mo';
+    } else if (range === '1y') {
+      interval = '1wk'; // Weekly for 1 year might be better than daily for density
+    }
+    // For '3mo', default '1d' is fine.
+
     try {
       // Using a CORS proxy service to bypass CORS restrictions
       const proxyUrl = 'https://api.allorigins.win/raw?url=';
-      const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=3mo&interval=1d`);
+      const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`);
       
       const response = await fetch(proxyUrl + yahooUrl);
       
@@ -1360,7 +1469,10 @@ function StockChartAnalyzer() {
     ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    const prices = stockData.prices.slice(-60);
+    // Use all available prices for the chart, not just slice(-60)
+    const prices = stockData.prices;
+    if (!prices || prices.length === 0) return null; // Should not happen if stockData is valid
+
     const margin = { top: 40, right: 60, bottom: 60, left: 80 };
     const chartWidth = canvas.width - margin.left - margin.right;
     const chartHeight = canvas.height - margin.top - margin.bottom;
@@ -1400,22 +1512,30 @@ function StockChartAnalyzer() {
       ctx.fillText(currencySymbol + price.toFixed(2), margin.left - 10, y + 4);
     }
     
-    // Vertical grid lines
-    for (let i = 0; i <= 6; i++) {
-      const x = margin.left + (i / 6) * chartWidth;
+    // Vertical grid lines and Date labels
+    const numVerticalGridLines = prices.length > 250 ? 5 : (prices.length > 60 ? 6 : 4); // Fewer lines for very long ranges
+    for (let i = 0; i <= numVerticalGridLines; i++) {
+      const x = margin.left + (i / numVerticalGridLines) * chartWidth;
       ctx.beginPath();
       ctx.moveTo(x, margin.top);
       ctx.lineTo(x, margin.top + chartHeight);
       ctx.stroke();
       
-      // Date labels
-      if (i < prices.length) {
-        const priceIndex = Math.floor((i / 6) * (prices.length - 1));
+      const priceIndex = Math.floor((i / numVerticalGridLines) * (prices.length - 1));
+      if (priceIndex < prices.length) {
         const date = new Date(prices[priceIndex].date);
+        let dateFormatOptions = { month: 'short', day: 'numeric' };
+        if (prices.length > 365 * 2) { // More than 2 years, show year
+          dateFormatOptions = { year: 'numeric', month: 'short' };
+        } else if (prices.length > 90) { // More than 3 months, show month/day
+           dateFormatOptions = { month: 'short', day: 'numeric' };
+        }
+        // For very short ranges (default 3mo daily), current options are fine.
+
         ctx.fillStyle = colors.label;
         ctx.font = '11px Inter, Arial, sans-serif';
         ctx.textAlign = 'center';
-        ctx.fillText(date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }), x, canvas.height - 20);
+        ctx.fillText(date.toLocaleDateString('en-US', dateFormatOptions), x, canvas.height - 20);
       }
     }
     
@@ -1526,16 +1646,17 @@ function StockChartAnalyzer() {
   };
 
   // Fetch stock data
-  const fetchStockData = async (symbol) => {
+  const fetchStockData = async (symbol, timeRange = '3mo') => {
     if (!symbol.trim()) return;
     
     setLoading(true);
     setError(null);
     setStockData(null);
     setKeyLevels(null); // Clear key levels on new fetch
+    // setLongTermAssessment(null); // Clear long term assessment when fetching new data
     
     try {
-      const data = await fetchYahooFinanceData(symbol.trim().toUpperCase());
+      const data = await fetchYahooFinanceData(symbol.trim().toUpperCase(), timeRange);
       setStockData(data);
       
       // Create chart image
@@ -1610,6 +1731,7 @@ function StockChartAnalyzer() {
         setTimeEstimate(null);
         setBreakoutTiming(null);
         setKeyLevels(null); // Clear key levels
+        setLongTermAssessment(null);
       };
       reader.readAsDataURL(file);
     }
@@ -1619,25 +1741,46 @@ function StockChartAnalyzer() {
     if (!uploadedImage) return;
     
     setLoading(true);
+    setLongTermAssessment(null); // Clear previous long-term assessment
     
     setTimeout(() => {
       try {
         let detectedPattern = null;
         let confidenceScore = 70;
-        
         let calculatedKeyLevels = null;
-        // Use real stock data analysis if available
-        if (stockData && stockData.prices && stockData.prices.length > 20) {
-          const analysis = detectPatternFromPriceData(stockData.prices);
-          if (analysis) {
-            detectedPattern = analysis.pattern;
-            confidenceScore = analysis.confidence;
+        let currentLongTermAssessment = null;
+
+        if (stockData && stockData.prices && stockData.prices.length > 0) {
+          calculatedKeyLevels = calculateKeyLevels(stockData.prices); // Calculate regardless of range for chart
+
+          if (selectedTimeRange === '1y' || selectedTimeRange === '5y' || selectedTimeRange === '10y') {
+            currentLongTermAssessment = generateLongTermAssessment(stockData, selectedTimeRange);
+            // For long-term views, we might not want to show short-term patterns
+            // or we could make detectPatternFromPriceData aware of the range.
+            // For now, long-term assessment will be primary if range is long.
+            // We can skip short-term pattern detection for long ranges if desired.
+            // Let's assume for now if it's a long range, we don't run detectPatternFromPriceData.
+            // OR, we can run it but prioritize displaying longTermAssessment.
+            // For simplicity in this step, if it's a long range, we might only show long-term assessment.
+            if (currentLongTermAssessment) {
+               setLongTermAssessment(currentLongTermAssessment);
+               // Clear short-term pattern details if showing long-term assessment
+               setPatternDetected(null); setPrediction(null); setConfidence(null);
+               setRecommendation(null); setEntryExit(null); setTimeEstimate(null); setBreakoutTiming(null);
+            }
+          } else { // For short-term ranges like '3mo' or if stockData is present but not for long-term view
+            setLongTermAssessment(null); // Ensure long-term assessment is cleared
+            const analysis = detectPatternFromPriceData(stockData.prices);
+            if (analysis) {
+              detectedPattern = analysis.pattern;
+              confidenceScore = analysis.confidence;
+            }
           }
-          calculatedKeyLevels = calculateKeyLevels(stockData.prices);
         }
         
-        // Fallback to basic pattern detection for uploaded images
-        if (!detectedPattern) {
+        // This block now primarily handles uploaded images OR if stockData was present but resulted in no specific analysis (short or long)
+        // If currentLongTermAssessment is set, we skip this to avoid overriding.
+        if (!currentLongTermAssessment && !detectedPattern) {
           // Create a weighted distribution instead of pure random
           const patternWeights = {
             'head-and-shoulders': 12,
@@ -1857,7 +2000,7 @@ function StockChartAnalyzer() {
             </div>
             
             <button
-              onClick={() => stockSymbol.trim() && fetchStockData(stockSymbol.toUpperCase())}
+              onClick={() => stockSymbol.trim() && fetchStockData(stockSymbol.toUpperCase(), selectedTimeRange)}
               disabled={loading || !stockSymbol.trim()}
               style={{ 
                 padding: '14px 24px', 
@@ -1878,6 +2021,42 @@ function StockChartAnalyzer() {
               {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
               {loading ? 'Fetching...' : 'Get Chart'}
             </button>
+          </div>
+        </div>
+
+        {/* Time Range Selection */}
+        <div style={{ marginBottom: '24px', marginTop: '16px' }}>
+          <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)', fontSize: '16px' }}>
+            Select Data Time Range:
+          </label>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+            {['3mo', '1y', '5y', '10y'].map(range => {
+              let displayLabel = '';
+              if (range === '3mo') displayLabel = '3 Months';
+              else if (range === '1y') displayLabel = '1 Year';
+              else if (range === '5y') displayLabel = '5 Years';
+              else if (range === '10y') displayLabel = '10 Years';
+
+              return (
+                <button
+                  key={range}
+                  onClick={() => handleTimeRangeChange(range)}
+                  style={{
+                    padding: '8px 16px',
+                    background: selectedTimeRange === range ? 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)' : 'var(--primary-accent-light)',
+                    color: selectedTimeRange === range ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)',
+                    border: `1px solid ${selectedTimeRange === range ? 'transparent' : 'var(--primary-accent-border)'}`,
+                    borderRadius: '20px',
+                    fontSize: '13px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    transition: 'all 0.2s ease-in-out',
+                  }}
+                >
+                  {displayLabel}
+                </button>
+              );
+            })}
           </div>
         </div>
 
@@ -1981,9 +2160,21 @@ function StockChartAnalyzer() {
           
           {stockData && (
             <div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}>
-              <div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information (3-Month Data):</div>
+              <div style={{ fontWeight: '700', marginBottom: '8px' }}>
+                📊 Stock Information ({
+                  selectedTimeRange === '1y' ? '1 Year' :
+                  selectedTimeRange === '5y' ? '5 Years' :
+                  selectedTimeRange === '10y' ? '10 Years' : '3 Months'
+                } Data):
+              </div>
               <div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div>
-              <div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} | <strong>Data Points:</strong> {stockData.prices.length} days</div>
+              <div>
+                <strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |
+                <strong> Data Points:</strong> {stockData.prices.length} {
+                  selectedTimeRange === '1y' ? 'weeks' :
+                  (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'
+                }
+              </div>
               {stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}
             </div>
           )}
@@ -2008,10 +2199,44 @@ function StockChartAnalyzer() {
       )}
       
       {/* Results Section */}
-      {prediction && patternDetected && (
+
+      {/* Long-Term Assessment Section */}
+      {longTermAssessment && stockData && (
+        <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', marginBottom: '32px', padding: '24px', boxShadow: `0 8px 32px var(--card-shadow)` }}>
+          <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', textAlign: 'center' }}>
+            🗓️ Long-Term Review ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : '10 Years'})
+          </h2>
+          <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)'}}>
+            <p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Overall Trend:</p>
+            <p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.trend}</p>
+            <p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Shows the general direction of the stock's price over the selected period.</p>
+          </div>
+          <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)'}}>
+            <p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Total Return:</p>
+            <p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.totalReturn}</p>
+            <p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Illustrates the percentage gain or loss if you had invested at the beginning and held until the end of the period.</p>
+          </div>
+          <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)'}}>
+            <p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Price Extremes:</p>
+            <p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.highLow}</p>
+            <p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Highlights the highest and lowest prices the stock reached during this timeframe.</p>
+          </div>
+          <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)'}}>
+            <p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Volatility Insight:</p>
+            <p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.volatility}</p>
+            <p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Gives an idea of how much the stock's price fluctuated; higher volatility means bigger price swings.</p>
+          </div>
+          <p style={{ fontSize: '13px', color: 'var(--text-color-muted)', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>
+            {longTermAssessment.disclaimer}
+          </p>
+        </div>
+      )}
+
+      {/* Short-Term Pattern Analysis Section (conditionally rendered) */}
+      {prediction && patternDetected && !longTermAssessment && (
         <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', marginBottom: '32px', overflow: 'hidden', boxShadow: `0 8px 32px var(--card-shadow)` }}>
           <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', padding: '24px 24px 0', textAlign: 'center' }}>
-            📈 Enhanced Analysis Results
+            📈 Short-Term Pattern Analysis
           </h2>
           
           {/* Prediction Section */}
@@ -2338,9 +2563,9 @@ function StockChartAnalyzer() {
       )}
       
       <div style={{ fontSize: '15px', color: 'var(--text-color-light)', background: 'var(--card-background)', padding: '24px', borderRadius: '16px', border: '2px solid var(--card-border)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
-        <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides enhanced technical analysis for educational purposes only.</p>
-        <p style={{ marginBottom: '12px' }}><strong>📊 Enhanced Features:</strong> 3-month data analysis, dynamic confidence scoring, and breakout timing predictions.</p>
-        <p style={{ margin: '0' }}>Always conduct thorough research and consult financial advisors before making investment decisions.</p>
+        <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides technical analysis and historical data reviews for educational purposes only.</p>
+        <p style={{ marginBottom: '12px' }}><strong>📊 Features Include:</strong> Short-term pattern analysis (3-month data), long-term historical reviews (up to 10 years), dynamic confidence scoring, and breakout timing predictions.</p>
+        <p style={{ margin: '0' }}>All information should be used for learning and not as financial advice. Always conduct thorough research and consult financial advisors before making investment decisions.</p>
       </div>
 
       {/* Footer */}
