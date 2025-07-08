@@ -11,21 +11,21 @@ const chartThemeColors = {
     label: '#666666',
     text: '#1f2937',
     mainLine: '#2563eb',
-    success: '#10b981', // For bullish patterns/lines
-    danger: '#dc2626',  // For bearish patterns/lines
+    success: '#10b981',
+    danger: '#dc2626',
     candlestickGreen: '#10b981',
     candlestickRed: '#ef4444',
     keyLevelSupport: '#22c55e',
     keyLevelResistance: '#ef4444',
   },
   dark: {
-    background: '#1f2937', // Gray 800
-    grid: '#374151',      // Gray 700
-    label: '#9ca3af',     // Gray 400
-    text: '#f3f4f6',       // Gray 100
-    mainLine: '#60a5fa',   // Blue 400
-    success: '#34d399',   // Green 400
-    danger: '#f87171',    // Red 400
+    background: '#1f2937',
+    grid: '#374151',
+    label: '#9ca3af',
+    text: '#f3f4f6',
+    mainLine: '#60a5fa',
+    success: '#34d399',
+    danger: '#f87171',
     candlestickGreen: '#34d399',
     candlestickRed: '#f87171',
     keyLevelSupport: '#34d399',
@@ -33,7 +33,7 @@ const chartThemeColors = {
   }
 };
 
-// *Pattern drawing utility functions
+// Pattern drawing utility functions
 const drawLine = (ctx, points) => {
   if (points.length < 2) return;
   
@@ -48,17 +48,16 @@ const drawLine = (ctx, points) => {
 const drawHeadAndShoulders = (ctx, margin, w, h) => {
   const points = [
     [margin, margin + h * 0.7],
-    [margin + w * 0.2, margin + h * 0.4],  // Left shoulder
-    [margin + w * 0.35, margin + h * 0.6], // Valley
-    [margin + w * 0.5, margin + h * 0.1],  // Head
-    [margin + w * 0.65, margin + h * 0.6], // Valley
-    [margin + w * 0.8, margin + h * 0.4],  // Right shoulder
+    [margin + w * 0.2, margin + h * 0.4],
+    [margin + w * 0.35, margin + h * 0.6],
+    [margin + w * 0.5, margin + h * 0.1],
+    [margin + w * 0.65, margin + h * 0.6],
+    [margin + w * 0.8, margin + h * 0.4],
     [margin + w, margin + h * 0.8]
   ];
   drawLine(ctx, points);
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
-  // Draw neckline
   ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
@@ -72,17 +71,16 @@ const drawHeadAndShoulders = (ctx, margin, w, h) => {
 const drawInverseHeadAndShoulders = (ctx, margin, w, h) => {
   const points = [
     [margin, margin + h * 0.3],
-    [margin + w * 0.2, margin + h * 0.6],  // Left shoulder
-    [margin + w * 0.35, margin + h * 0.4], // Peak
-    [margin + w * 0.5, margin + h * 0.9],  // Head
-    [margin + w * 0.65, margin + h * 0.4], // Peak
-    [margin + w * 0.8, margin + h * 0.6],  // Right shoulder
+    [margin + w * 0.2, margin + h * 0.6],
+    [margin + w * 0.35, margin + h * 0.4],
+    [margin + w * 0.5, margin + h * 0.9],
+    [margin + w * 0.65, margin + h * 0.4],
+    [margin + w * 0.8, margin + h * 0.6],
     [margin + w, margin + h * 0.2]
   ];
   drawLine(ctx, points);
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
-  // Draw neckline
   ctx.strokeStyle = colors.success;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
@@ -96,15 +94,14 @@ const drawInverseHeadAndShoulders = (ctx, margin, w, h) => {
 const drawDoubleTop = (ctx, margin, w, h) => {
   const points = [
     [margin, margin + h * 0.7],
-    [margin + w * 0.25, margin + h * 0.2], // First peak
-    [margin + w * 0.4, margin + h * 0.6],  // Valley
-    [margin + w * 0.6, margin + h * 0.2],  // Second peak
+    [margin + w * 0.25, margin + h * 0.2],
+    [margin + w * 0.4, margin + h * 0.6],
+    [margin + w * 0.6, margin + h * 0.2],
     [margin + w, margin + h * 0.8]
   ];
   drawLine(ctx, points);
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
-  // Draw support line
   ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
@@ -118,15 +115,14 @@ const drawDoubleTop = (ctx, margin, w, h) => {
 const drawDoubleBottom = (ctx, margin, w, h) => {
   const points = [
     [margin, margin + h * 0.3],
-    [margin + w * 0.25, margin + h * 0.8], // First trough
-    [margin + w * 0.4, margin + h * 0.4],  // Peak
-    [margin + w * 0.6, margin + h * 0.8],  // Second trough
+    [margin + w * 0.25, margin + h * 0.8],
+    [margin + w * 0.4, margin + h * 0.4],
+    [margin + w * 0.6, margin + h * 0.8],
     [margin + w, margin + h * 0.2]
   ];
   drawLine(ctx, points);
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
-  // Draw resistance line
   ctx.strokeStyle = colors.success;
   ctx.lineWidth = 2;
   ctx.setLineDash([5, 5]);
@@ -138,13 +134,11 @@ const drawDoubleBottom = (ctx, margin, w, h) => {
 };
 
 const drawCupAndHandle = (ctx, margin, w, h) => {
-  // Cup
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.3);
   ctx.quadraticCurveTo(margin + w * 0.35, margin + h * 0.8, margin + w * 0.7, margin + h * 0.3);
   ctx.stroke();
   
-  // Handle
   const points = [
     [margin + w * 0.7, margin + h * 0.3],
     [margin + w * 0.8, margin + h * 0.45],
@@ -166,7 +160,6 @@ const drawAscendingTriangle = (ctx, margin, w, h) => {
   drawLine(ctx, points);
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
-  // Resistance line (horizontal)
   ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
@@ -175,7 +168,6 @@ const drawAscendingTriangle = (ctx, margin, w, h) => {
   ctx.lineTo(margin + w, margin + h * 0.3);
   ctx.stroke();
   
-  // Support line (ascending)
   ctx.strokeStyle = colors.success;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.8);
@@ -196,7 +188,6 @@ const drawDescendingTriangle = (ctx, margin, w, h) => {
   drawLine(ctx, points);
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
-  // Support line (horizontal)
   ctx.strokeStyle = colors.success;
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
@@ -205,7 +196,6 @@ const drawDescendingTriangle = (ctx, margin, w, h) => {
   ctx.lineTo(margin + w, margin + h * 0.7);
   ctx.stroke();
   
-  // Resistance line (descending)
   ctx.strokeStyle = colors.danger;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.2);
@@ -217,8 +207,7 @@ const drawDescendingTriangle = (ctx, margin, w, h) => {
 const drawRisingWedge = (ctx, margin, w, h) => {
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
 
-  // Lower trend line (rising)
-  ctx.strokeStyle = colors.success; // Trend lines in wedges often represent support/resistance
+  ctx.strokeStyle = colors.success;
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
   ctx.beginPath();
@@ -226,7 +215,6 @@ const drawRisingWedge = (ctx, margin, w, h) => {
   ctx.lineTo(margin + w, margin + h * 0.4);
   ctx.stroke();
   
-  // Upper trend line (rising slower)
   ctx.strokeStyle = colors.danger;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.3);
@@ -234,7 +222,6 @@ const drawRisingWedge = (ctx, margin, w, h) => {
   ctx.stroke();
   ctx.setLineDash([]);
   
-  // Price line
   ctx.strokeStyle = colors.mainLine;
   ctx.lineWidth = 3;
   const points = [
@@ -251,7 +238,6 @@ const drawRisingWedge = (ctx, margin, w, h) => {
 const drawFallingWedge = (ctx, margin, w, h) => {
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
 
-  // Upper trend line (falling)
   ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 2;
   ctx.setLineDash([3, 3]);
@@ -260,7 +246,6 @@ const drawFallingWedge = (ctx, margin, w, h) => {
   ctx.lineTo(margin + w, margin + h * 0.6);
   ctx.stroke();
   
-  // Lower trend line (falling faster)
   ctx.strokeStyle = colors.success;
   ctx.beginPath();
   ctx.moveTo(margin, margin + h * 0.7);
@@ -268,7 +253,6 @@ const drawFallingWedge = (ctx, margin, w, h) => {
   ctx.stroke();
   ctx.setLineDash([]);
   
-  // Price line
   ctx.strokeStyle = colors.mainLine;
   ctx.lineWidth = 3;
   const points = [
@@ -283,14 +267,12 @@ const drawFallingWedge = (ctx, margin, w, h) => {
 };
 
 const drawFlag = (ctx, margin, w, h) => {
-  // Strong move up (flagpole)
   const points1 = [
     [margin, margin + h * 0.9],
     [margin + w * 0.4, margin + h * 0.2]
   ];
   drawLine(ctx, points1);
   
-  // Consolidation (flag)
   const points2 = [
     [margin + w * 0.4, margin + h * 0.2],
     [margin + w * 0.5, margin + h * 0.3],
@@ -302,8 +284,7 @@ const drawFlag = (ctx, margin, w, h) => {
   drawLine(ctx, points2);
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
   
-  // Flag boundaries
-  ctx.strokeStyle = colors.danger; // Or a neutral color, depending on desired emphasis
+  ctx.strokeStyle = colors.danger;
   ctx.lineWidth = 1;
   ctx.setLineDash([2, 2]);
   ctx.beginPath();
@@ -333,20 +314,16 @@ const drawPattern = (ctx, pattern, w, h) => {
   const margin = 20;
   const chartW = w - 2 * margin;
   const chartH = h - 2 * margin;
-  // The theme should be passed to ctx by the caller (PatternVisualization)
   const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
 
-  // Clear canvas with theme background
   ctx.fillStyle = colors.background;
   ctx.fillRect(0, 0, w, h);
   
-  // Set default styles
   ctx.strokeStyle = colors.mainLine;
   ctx.lineWidth = 3;
   ctx.lineCap = 'round';
   ctx.lineJoin = 'round';
   
-  // Draw grid
   ctx.strokeStyle = colors.grid;
   ctx.lineWidth = 1;
   for (let i = 0; i <= 4; i++) {
@@ -357,14 +334,8 @@ const drawPattern = (ctx, pattern, w, h) => {
     ctx.stroke();
   }
   
-  // Reset line style for pattern
-  ctx.strokeStyle = colors.mainLine; // Main pattern line color
+  ctx.strokeStyle = colors.mainLine;
   ctx.lineWidth = 3;
-  
-  // Pass theme to sub-drawing functions by attaching to ctx temporarily
-  // This is a bit of a hack; ideally, theme/colors would be passed explicitly.
-  // However, to minimize changes to existing draw functions signature:
-  // ctx.theme = currentTheme; // This is already expected to be set by PatternVisualization
 
   switch (pattern) {
     case 'head-and-shoulders':
@@ -401,7 +372,6 @@ const drawPattern = (ctx, pattern, w, h) => {
       drawGenericPattern(ctx, margin, chartW, chartH);
   }
   
-  // Add pattern name
   ctx.fillStyle = colors.text;
   ctx.font = 'bold 12px Inter, Arial, sans-serif';
   ctx.textAlign = 'center';
@@ -420,14 +390,11 @@ const PatternVisualization = ({ patternName, theme = 'light', width = 300, heigh
     const canvas = canvasRef.current;
     const ctx = canvas.getContext('2d');
     
-    // Set canvas size
     canvas.width = width;
     canvas.height = height;
     
-    // Attach theme to context for drawing functions to use
     ctx.theme = theme;
     
-    // Draw pattern based on type
     drawPattern(ctx, patternName, width, height);
   }, [patternName, width, height, theme]);
 
@@ -437,7 +404,7 @@ const PatternVisualization = ({ patternName, theme = 'light', width = 300, heigh
       style={{ 
         border: '1px solid var(--card-border)',
         borderRadius: '8px',
-        background: 'var(--background-color)', // Fallback, actual drawing handles theme
+        background: 'var(--background-color)',
         maxWidth: '100%',
         height: 'auto'
       }}
@@ -570,7 +537,6 @@ const chartPatterns = {
 };
 
 function StockChartAnalyzer() {
-  // Extract data from imported JSON
   const stockDatabase = stocksData.stocks;
   const popularStocksData = stocksData.popularStocks;
 
@@ -586,8 +552,8 @@ function StockChartAnalyzer() {
   const [entryExit, setEntryExit] = useState(null);
   const [breakoutTiming, setBreakoutTiming] = useState(null);
   const [error, setError] = useState(null);
-  const [keyLevels, setKeyLevels] = useState(null); // State for Support/Resistance
-  const [selectedTimeRange, setSelectedTimeRange] = useState('3mo'); // Default to 3 months
+  const [keyLevels, setKeyLevels] = useState(null);
+  const [selectedTimeRange, setSelectedTimeRange] = useState('3mo');
   const [longTermAssessment, setLongTermAssessment] = useState(null);
   const [stockNews, setStockNews] = useState(null);
   const [newsLoading, setNewsLoading] = useState(false);
@@ -595,8 +561,6 @@ function StockChartAnalyzer() {
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
-  
-  // State for confidence level help
   const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
   
   const canvasRef = useRef(null);
@@ -613,11 +577,9 @@ function StockChartAnalyzer() {
     const highs = prices.map(p => p.high);
     const lows = prices.map(p => p.low);
     
-    // Find significant peaks and troughs
     const peaks = findPeaksAndTroughs(highs, true);
     const troughs = findPeaksAndTroughs(lows, false);
     
-    // Calculate various technical indicators
     const rsi = calculateRSI(closes, 14);
     const currentRSI = rsi[rsi.length - 1] || 50;
     
@@ -628,18 +590,12 @@ function StockChartAnalyzer() {
     const priceVsSMA20 = sma20.length > 0 ? ((currentPrice - sma20[sma20.length - 1]) / sma20[sma20.length - 1]) * 100 : 0;
     const priceVsSMA50 = sma50.length > 0 ? ((currentPrice - sma50[sma50.length - 1]) / sma50[sma50.length - 1]) * 100 : 0;
     
-    // Enhanced pattern recognition
     const patternData = analyzePatterns(peaks, troughs, closes, highs, lows);
     
-    // Prioritize detected pattern, with deterministic fallback if strength is low.
     let determinedPattern = patternData.pattern;
-    const patternStrengthThreshold = 0.6; // Example threshold
+    const patternStrengthThreshold = 0.6;
 
     if (!patternData.pattern || patternData.strength < patternStrengthThreshold) {
-      // Fallback logic: if primary pattern is weak or missing,
-      // try a related pattern or a default based on trend.
-      // This is a placeholder for more sophisticated deterministic fallback.
-      // For now, we can use the first variant if available, or stick to the original.
       const patternVariants = {
         'head-and-shoulders': ['head-and-shoulders', 'double-top'],
         'inverse-head-and-shoulders': ['inverse-head-and-shoulders', 'double-bottom'],
@@ -654,10 +610,9 @@ function StockChartAnalyzer() {
       };
       const variants = patternVariants[patternData.pattern];
       if (variants && variants.length > 0) {
-        // Simple deterministic choice: pick the first variant or the original pattern
         determinedPattern = variants[0];
       } else {
-        determinedPattern = patternData.pattern || 'flag'; // Default to 'flag' if no pattern
+        determinedPattern = patternData.pattern || 'flag';
       }
     }
     
@@ -679,17 +634,15 @@ function StockChartAnalyzer() {
     };
   };
 
-  // Find peaks and troughs in price data (improved)
   const findPeaksAndTroughs = (data, isPeak = true) => {
     const results = [];
-    const lookback = 3; // Reduced lookback for more sensitivity
-    const minChangePercent = 0.02; // Minimum 2% change to be significant
+    const lookback = 3;
+    const minChangePercent = 0.02;
     
     for (let i = lookback; i < data.length - lookback; i++) {
       let isSignificant = true;
       let maxDiff = 0;
       
-      // Check if this point is a local peak/trough
       for (let j = i - lookback; j <= i + lookback; j++) {
         if (j === i) continue;
         
@@ -708,14 +661,12 @@ function StockChartAnalyzer() {
         }
       }
       
-      // Check if the change is significant enough
       const changePercent = maxDiff / data[i];
       if (isSignificant && changePercent >= minChangePercent) {
         results.push({ index: i, value: data[i] });
       }
     }
     
-    // If we don't find enough peaks/troughs, be less strict
     if (results.length < 2) {
       for (let i = lookback; i < data.length - lookback; i++) {
         let isSignificant = true;
@@ -745,7 +696,6 @@ function StockChartAnalyzer() {
     return results;
   };
 
-  // Calculate RSI
   const calculateRSI = (data, period = 14) => {
     const gains = [];
     const losses = [];
@@ -773,7 +723,6 @@ function StockChartAnalyzer() {
     return rsi;
   };
 
-  // Calculate Simple Moving Average
   const calculateSMA = (data, period) => {
     const sma = [];
     
@@ -785,20 +734,17 @@ function StockChartAnalyzer() {
     return sma;
   };
 
-  // Analyze patterns with enhanced logic
   const analyzePatterns = (peaks, troughs, closes, highs, lows) => {
-    const recentData = closes.slice(-30); // Last 30 days
-    const fullData = closes.slice(-60); // Last 60 days for better analysis
+    const recentData = closes.slice(-30);
+    const fullData = closes.slice(-60);
     const priceRange = Math.max(...recentData) - Math.min(...recentData);
-    const tolerance = priceRange * 0.05; // Increased tolerance to 5%
+    const tolerance = priceRange * 0.05;
     
-    // Calculate price trend and volatility
     const startPrice = fullData[0];
     const endPrice = fullData[fullData.length - 1];
     const priceChange = ((endPrice - startPrice) / startPrice) * 100;
     const volatility = calculateVolatility(recentData);
     
-    // Head and Shoulders detection (more lenient)
     if (peaks.length >= 3) {
       const lastThreePeaks = peaks.slice(-3);
       const [left, head, right] = lastThreePeaks;
@@ -813,7 +759,6 @@ function StockChartAnalyzer() {
       }
     }
 
-    // Inverse Head and Shoulders (more lenient)
     if (troughs.length >= 3) {
       const lastThreeTroughs = troughs.slice(-3);
       const [left, head, right] = lastThreeTroughs;
@@ -828,7 +773,6 @@ function StockChartAnalyzer() {
       }
     }
 
-    // Double Top (more lenient)
     if (peaks.length >= 2) {
       const lastTwoPeaks = peaks.slice(-2);
       const [first, second] = lastTwoPeaks;
@@ -838,7 +782,6 @@ function StockChartAnalyzer() {
       }
     }
 
-    // Double Bottom (more lenient)
     if (troughs.length >= 2) {
       const lastTwoTroughs = troughs.slice(-2);
       const [first, second] = lastTwoTroughs;
@@ -848,44 +791,34 @@ function StockChartAnalyzer() {
       }
     }
 
-    // Triangle patterns
     const trianglePattern = detectTrianglePatterns(peaks, troughs, closes);
     if (trianglePattern) return trianglePattern;
 
-    // Cup and Handle
     const cupPattern = detectCupAndHandle(closes);
     if (cupPattern) return { pattern: 'cup-and-handle', strength: 0.6 };
 
-    // Wedge patterns
     const wedgePattern = detectWedgePatterns(peaks, troughs, closes);
     if (wedgePattern) return wedgePattern;
 
-    // Flag pattern (tight consolidation)
     if (volatility < 2 && Math.abs(priceChange) < 5) {
       return { pattern: 'flag', strength: 0.6 };
     }
 
-    // Trend-based pattern detection as fallback
     if (priceChange > 8) {
-      // Strong uptrend - likely ascending triangle or rising wedge
       if (peaks.length >= 2 && troughs.length >= 2) {
         return { pattern: 'ascending-triangle', strength: 0.5 };
       }
       return { pattern: 'cup-and-handle', strength: 0.5 };
     } else if (priceChange < -8) {
-      // Strong downtrend - likely descending triangle or falling wedge
       if (peaks.length >= 2 && troughs.length >= 2) {
         return { pattern: 'descending-triangle', strength: 0.5 };
       }
       return { pattern: 'head-and-shoulders', strength: 0.5 };
     } else if (priceChange > 3) {
-      // Moderate uptrend
       return { pattern: 'ascending-triangle', strength: 0.4 };
     } else if (priceChange < -3) {
-      // Moderate downtrend  
       return { pattern: 'descending-triangle', strength: 0.4 };
     } else {
-      // Sideways movement
       if (volatility > 4) {
         return Math.random() > 0.5 ? 
           { pattern: 'double-top', strength: 0.4 } : 
@@ -895,7 +828,6 @@ function StockChartAnalyzer() {
     }
   };
 
-  // Helper function to calculate volatility
   const calculateVolatility = (prices) => {
     if (prices.length < 2) return 0;
     
@@ -909,32 +841,27 @@ function StockChartAnalyzer() {
     return Math.sqrt(variance);
   };
 
-  // Detect triangle patterns (improved)
   const detectTrianglePatterns = (peaks, troughs, closes) => {
     if (peaks.length < 2 || troughs.length < 2) return null;
 
-    const recentPeaks = peaks.slice(-4); // Look at more peaks
-    const recentTroughs = troughs.slice(-4); // Look at more troughs
+    const recentPeaks = peaks.slice(-4);
+    const recentTroughs = troughs.slice(-4);
 
     if (recentPeaks.length >= 2 && recentTroughs.length >= 2) {
-      // Calculate trends
       const peakValues = recentPeaks.map(p => p.value);
       const troughValues = recentTroughs.map(t => t.value);
       
       const peakTrend = calculateTrend(peakValues);
       const troughTrend = calculateTrend(troughValues);
 
-      // Ascending triangle (flat resistance, rising support)
       if (Math.abs(peakTrend) < 1 && troughTrend > 0.5) {
         return { pattern: 'ascending-triangle', strength: 0.6 };
       }
 
-      // Descending triangle (falling resistance, flat support)
       if (peakTrend < -0.5 && Math.abs(troughTrend) < 1) {
         return { pattern: 'descending-triangle', strength: 0.6 };
       }
 
-      // Symmetrical triangle (both converging)
       if (peakTrend < -0.2 && troughTrend > 0.2) {
         return { pattern: 'ascending-triangle', strength: 0.5 };
       }
@@ -943,7 +870,6 @@ function StockChartAnalyzer() {
     return null;
   };
 
-  // Helper function to calculate trend
   const calculateTrend = (values) => {
     if (values.length < 2) return 0;
     
@@ -954,7 +880,6 @@ function StockChartAnalyzer() {
     return trend / (values.length - 1);
   };
 
-  // Detect cup and handle pattern (improved)
   const detectCupAndHandle = (closes) => {
     if (closes.length < 30) return false;
 
@@ -968,18 +893,15 @@ function StockChartAnalyzer() {
     const secondAvg = secondQuarter.reduce((a, b) => a + b) / secondQuarter.length;
     const thirdAvg = thirdQuarter.reduce((a, b) => a + b) / thirdQuarter.length;
 
-    // Cup: decline then recovery to similar level
     const hasCup = (secondAvg < firstAvg * 0.92) && 
                    (thirdAvg < firstAvg * 0.92) && 
                    (fourthQuarter.reduce((a, b) => a + b) / fourthQuarter.length > firstAvg * 0.95);
 
-    // Handle: slight pullback in recent period
     const hasHandle = fourthQuarter.reduce((a, b) => a + b) / fourthQuarter.length < firstAvg * 1.02;
 
     return hasCup && hasHandle;
   };
 
-  // Detect wedge patterns (improved)
   const detectWedgePatterns = (peaks, troughs, closes) => {
     if (peaks.length < 2 || troughs.length < 2) return null;
 
@@ -992,17 +914,14 @@ function StockChartAnalyzer() {
       const troughTrend = calculateTrend(recentTroughs.map(t => t.value));
       const overallTrend = ((recent30[recent30.length - 1] - recent30[0]) / recent30[0]) * 100;
 
-      // Rising wedge (both lines rising, bearish)
       if (peakTrend > 0.3 && troughTrend > 0.2 && troughTrend < peakTrend * 0.8) {
         return { pattern: 'wedge-rising', strength: 0.6 };
       }
 
-      // Falling wedge (both lines falling, bullish)
       if (peakTrend < -0.3 && troughTrend < -0.2 && Math.abs(troughTrend) < Math.abs(peakTrend) * 0.8) {
         return { pattern: 'wedge-falling', strength: 0.6 };
       }
 
-      // Additional wedge detection based on overall trend
       if (overallTrend > 5 && peakTrend < 0 && troughTrend > 0) {
         return { pattern: 'wedge-rising', strength: 0.5 };
       }
@@ -1014,45 +933,33 @@ function StockChartAnalyzer() {
     return null;
   };
 
-  // Calculate dynamic confidence based on multiple factors
   const calculateDynamicConfidence = (patternData, rsi, priceVsSMA20, priceVsSMA50) => {
     let baseConfidence = chartPatterns[patternData.pattern]?.reliability || 70;
     let patternStrength = patternData.strength || 0.5;
     
-    // Adjust confidence based on pattern strength
     let confidence = baseConfidence * patternStrength;
     
-    // Technical indicator adjustments
     if (patternData.pattern.includes('up') || patternData.pattern === 'ascending-triangle' || 
         patternData.pattern === 'inverse-head-and-shoulders' || patternData.pattern === 'double-bottom') {
-      // Bullish patterns
-      if (rsi > 30 && rsi < 70) confidence += 5; // Good RSI range
-      if (priceVsSMA20 > 0) confidence += 3; // Above 20-day MA
-      if (priceVsSMA50 > 0) confidence += 3; // Above 50-day MA
+      if (rsi > 30 && rsi < 70) confidence += 5;
+      if (priceVsSMA20 > 0) confidence += 3;
+      if (priceVsSMA50 > 0) confidence += 3;
     } else if (patternData.pattern.includes('down') || patternData.pattern === 'descending-triangle' ||
                patternData.pattern === 'head-and-shoulders' || patternData.pattern === 'double-top') {
-      // Bearish patterns
       if (rsi > 30 && rsi < 70) confidence += 5;
-      if (priceVsSMA20 < 0) confidence += 3; // Below 20-day MA
-      if (priceVsSMA50 < 0) confidence += 3; // Below 50-day MA
+      if (priceVsSMA20 < 0) confidence += 3;
+      if (priceVsSMA50 < 0) confidence += 3;
     }
-    
-    // Future: Consider adding adjustments based on volume confirmation
-    // or data quality metrics if available.
     
     return Math.max(45, Math.min(92, Math.round(confidence)));
   };
 
-  // Calculate Key Support and Resistance Levels
   const calculateKeyLevels = (prices) => {
-    if (!prices || prices.length < 10) return null; // Need enough data
+    if (!prices || prices.length < 10) return null;
 
-    const recentPrices = prices.slice(-60); // Analyze last 60 days
+    const recentPrices = prices.slice(-60);
     const lows = recentPrices.map(p => p.low);
     const highs = recentPrices.map(p => p.high);
-
-    // Simplified approach: find min low and max high in recent period for primary S/R
-    // More advanced: use findPeaksAndTroughs and cluster them.
 
     const supportLevels = findPeaksAndTroughs(lows, false).sort((a,b) => a.value - b.value).slice(0, 2);
     const resistanceLevels = findPeaksAndTroughs(highs, true).sort((a,b) => b.value - a.value).slice(0, 2);
@@ -1063,7 +970,6 @@ function StockChartAnalyzer() {
     };
   };
 
-  // Calculate breakout timing
   const calculateBreakoutTiming = (patternName, stockData, confidence) => {
     const pattern = chartPatterns[patternName];
     if (!pattern || !stockData) return null;
@@ -1073,21 +979,17 @@ function StockChartAnalyzer() {
     const minDays = parseInt(breakoutRange[0]);
     const maxDays = parseInt(breakoutRange[1]);
 
-    // Adjust timing based on confidence and market conditions
     let adjustedMin = minDays;
     let adjustedMax = maxDays;
 
     if (confidence > 80) {
-      // High confidence = faster breakout
       adjustedMin = Math.max(1, minDays - 1);
       adjustedMax = Math.max(adjustedMin + 1, maxDays - 2);
     } else if (confidence < 60) {
-      // Low confidence = slower breakout
       adjustedMin = minDays + 1;
       adjustedMax = maxDays + 3;
     }
 
-    // Calculate actual dates
     const today = new Date();
     const minBreakoutDate = new Date(today);
     const maxBreakoutDate = new Date(today);
@@ -1127,17 +1029,13 @@ function StockChartAnalyzer() {
     const actualTimeRangeYears = (lastDate - firstDate) / (1000 * 60 * 60 * 24 * 365.25);
     const timeRangeLabel = actualTimeRangeYears >= 1 ? `${actualTimeRangeYears.toFixed(1)} years` : `${(actualTimeRangeYears * 12).toFixed(0)} months`;
 
-
-    // Overall Trend
     let trend = 'stayed relatively flat';
     if (lastPrice > firstPrice * 1.1) trend = 'generally gone up';
     else if (lastPrice < firstPrice * 0.9) trend = 'generally gone down';
 
-    // Total Return
     const totalReturn = ((lastPrice - firstPrice) / firstPrice) * 100;
     const returnExample = (100 * (1 + totalReturn / 100)).toFixed(2);
 
-    // Major Highs/Lows
     let majorHigh = -Infinity;
     let majorLow = Infinity;
     let highDate = '';
@@ -1154,18 +1052,15 @@ function StockChartAnalyzer() {
       }
     });
 
-    // Simplified Volatility (Standard Deviation of monthly returns if enough data)
     let volatilityDescription = "The stock's price movement history can provide insights into its stability.";
-    if (prices.length > 12) { // Need at least a year of data for meaningful volatility
+    if (prices.length > 12) {
         const monthlyReturns = [];
-        // Assuming prices are sorted chronologically. Group by month approximately.
-        // This is a simplification; for true monthly returns, data needs to be end-of-month.
         const approxPointsPerMonth = Math.max(1, Math.floor(prices.length / (actualTimeRangeYears * 12)));
 
         for (let i = approxPointsPerMonth; i < prices.length; i += approxPointsPerMonth) {
             const prevPrice = prices[i - approxPointsPerMonth];
             const currentPrice = prices[i];
-            if (prevPrice > 0) { // Avoid division by zero
+            if (prevPrice > 0) {
                  monthlyReturns.push((currentPrice - prevPrice) / prevPrice);
             }
         }
@@ -1173,14 +1068,13 @@ function StockChartAnalyzer() {
             const meanReturn = monthlyReturns.reduce((a, b) => a + b, 0) / monthlyReturns.length;
             const variance = monthlyReturns.reduce((sum, ret) => sum + Math.pow(ret - meanReturn, 2), 0) / monthlyReturns.length;
             const stdDev = Math.sqrt(variance);
-            const annualizedStdDev = stdDev * Math.sqrt(12); // Annualize from monthly
+            const annualizedStdDev = stdDev * Math.sqrt(12);
 
             if (annualizedStdDev > 0.4) volatilityDescription = `This stock has shown high volatility, meaning its price has experienced significant swings.`;
             else if (annualizedStdDev > 0.2) volatilityDescription = `This stock has shown moderate volatility, with noticeable price fluctuations.`;
             else volatilityDescription = `This stock has shown relatively low volatility, indicating more stable price movements.`;
         }
     }
-
 
     const assessment = {
       trend: `Over the past ${timeRangeLabel}, ${stockData.symbol} has ${trend}.`,
@@ -1193,7 +1087,6 @@ function StockChartAnalyzer() {
     return assessment;
   };
 
-  // Type-ahead functionality with market support
   const filterSuggestions = (input) => {
     if (!input || input.length < 1) return [];
     
@@ -1205,33 +1098,27 @@ function StockChartAnalyzer() {
       stock.market.toLowerCase().includes(query)
     );
     
-    // Sort by relevance and market
     return matches.sort((a, b) => {
       const aSymbol = a.symbol.toLowerCase();
       const bSymbol = b.symbol.toLowerCase();
       const aName = a.name.toLowerCase();
       const bName = b.name.toLowerCase();
       
-      // Exact symbol match gets highest priority
       if (aSymbol === query) return -1;
       if (bSymbol === query) return 1;
       
-      // Symbol starts with query gets second priority
       if (aSymbol.startsWith(query) && !bSymbol.startsWith(query)) return -1;
       if (bSymbol.startsWith(query) && !aSymbol.startsWith(query)) return 1;
       
-      // Then by symbol length (shorter symbols first for same prefix)
       if (aSymbol.startsWith(query) && bSymbol.startsWith(query)) {
         return aSymbol.length - bSymbol.length;
       }
       
-      // Prefer US stocks if equal relevance (for common searches)
       if (aName.includes(query) && bName.includes(query)) {
         if (a.market === 'US' && b.market === 'India') return -1;
         if (a.market === 'India' && b.market === 'US') return 1;
       }
       
-      // Finally by name match
       if (aName.includes(query) && !bName.includes(query)) return -1;
       if (bName.includes(query) && !aName.includes(query)) return 1;
       
@@ -1282,7 +1169,7 @@ function StockChartAnalyzer() {
       case 'Escape':
         setShowSuggestions(false);
         setSelectedSuggestionIndex(-1);
-        inputRef.current?.blur();
+        if (inputRef.current) inputRef.current.blur();
         break;
       case 'Tab':
         setShowSuggestions(false);
@@ -1297,13 +1184,12 @@ function StockChartAnalyzer() {
     setStockSymbol(stock.symbol);
     setShowSuggestions(false);
     setSelectedSuggestionIndex(-1);
-    fetchStockData(stock.symbol, selectedTimeRange); // Pass current time range
+    fetchStockData(stock.symbol, selectedTimeRange);
   };
 
   const handleTimeRangeChange = (range) => {
     setSelectedTimeRange(range);
     if (stockSymbol.trim()) {
-      // Clear previous analysis data as it's for a different range now
       setPrediction(null);
       setPatternDetected(null);
       setConfidence(null);
@@ -1313,7 +1199,7 @@ function StockChartAnalyzer() {
       setBreakoutTiming(null);
       setKeyLevels(null);
       setLongTermAssessment(null);
-      setStockNews(null); // Clear news when changing time range
+      setStockNews(null);
       fetchStockData(stockSymbol.toUpperCase(), range);
     }
   };
@@ -1327,7 +1213,6 @@ function StockChartAnalyzer() {
   };
 
   const handleInputBlur = () => {
-    // Delay hiding suggestions to allow clicking on them
     setTimeout(() => {
       setShowSuggestions(false);
       setSelectedSuggestionIndex(-1);
@@ -1350,12 +1235,10 @@ function StockChartAnalyzer() {
     if (range === '5y' || range === '10y') {
       interval = '1mo';
     } else if (range === '1y') {
-      interval = '1wk'; // Weekly for 1 year might be better than daily for density
+      interval = '1wk';
     }
-    // For '3mo', default '1d' is fine.
 
     try {
-      // Using a CORS proxy service to bypass CORS restrictions
       const proxyUrl = 'https://api.allorigins.win/raw?url=';
       const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`);
       
@@ -1367,11 +1250,11 @@ function StockChartAnalyzer() {
       
       const data = await response.json();
       
-      if (data.chart?.error) {
+      if (data.chart && data.chart.error) {
         throw new Error(data.chart.error.description || 'Invalid stock symbol');
       }
       
-      if (!data.chart?.result?.[0]) {
+      if (!data.chart || !data.chart.result || !data.chart.result[0]) {
         throw new Error('No data found for this symbol');
       }
       
@@ -1404,7 +1287,6 @@ function StockChartAnalyzer() {
     } catch (error) {
       console.error('Yahoo Finance API Error:', error);
       
-      // Fallback: Generate realistic mock data if API fails
       if (error.message.includes('CORS') || error.message.includes('fetch')) {
         return generateMockStockData(symbol);
       }
@@ -1413,14 +1295,12 @@ function StockChartAnalyzer() {
     }
   };
 
-  // Generate realistic mock data as fallback
   const generateMockStockData = (symbol) => {
     const isIndianStock = symbol.includes('.NS');
-    const basePrice = isIndianStock ? Math.random() * 2000 + 500 : Math.random() * 200 + 50; // Higher base price for Indian stocks in INR
+    const basePrice = isIndianStock ? Math.random() * 2000 + 500 : Math.random() * 200 + 50;
     const prices = [];
     let currentPrice = basePrice;
     
-    // Generate 90 days of realistic price data
     for (let i = 89; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
@@ -1458,11 +1338,9 @@ function StockChartAnalyzer() {
     };
   };
 
-  // Fetch latest news for a stock symbol
   const fetchStockNews = async (symbol) => {
     setNewsLoading(true);
     try {
-      // Clean symbol for API call (remove .NS suffix for Indian stocks)
       const cleanSymbol = symbol.replace('.NS', '');
       
       const apiKey = '6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC';
@@ -1475,7 +1353,6 @@ function StockChartAnalyzer() {
       const newsData = await response.json();
       
       if (Array.isArray(newsData) && newsData.length > 0) {
-        // Filter and format news data
         const formattedNews = newsData.slice(0, 6).map(article => ({
           title: article.title || 'No title available',
           summary: article.text ? article.text.substring(0, 200) + '...' : 'No summary available',
@@ -1493,60 +1370,49 @@ function StockChartAnalyzer() {
         
         setStockNews(formattedNews);
       } else {
-        // No news available
         setStockNews([]);
       }
     } catch (error) {
       console.error('Error fetching stock news:', error);
-      // Set empty array on error to show "no news" message
       setStockNews([]);
     } finally {
       setNewsLoading(false);
     }
   };
 
-  // Create enhanced chart image from stock data
   const createChartFromData = (stockData, currentKeyLevels, currentTheme = 'light') => {
     const canvas = chartCanvasRef.current;
     const ctx = canvas.getContext('2d');
     const colors = chartThemeColors[currentTheme] || chartThemeColors.light;
     
-    // Set high resolution canvas
     canvas.width = 1000;
     canvas.height = 500;
     
-    // Clear and set background
     ctx.fillStyle = colors.background;
     ctx.fillRect(0, 0, canvas.width, canvas.height);
     
-    // Use all available prices for the chart, not just slice(-60)
     const prices = stockData.prices;
-    if (!prices || prices.length === 0) return null; // Should not happen if stockData is valid
+    if (!prices || prices.length === 0) return null;
 
     const margin = { top: 40, right: 60, bottom: 60, left: 80 };
     const chartWidth = canvas.width - margin.left - margin.right;
     const chartHeight = canvas.height - margin.top - margin.bottom;
     
-    // Find price range
     const allPrices = prices.flatMap(p => [p.high, p.low]);
     const minPrice = Math.min(...allPrices);
     const maxPrice = Math.max(...allPrices);
     const priceRange = maxPrice - minPrice;
     const padding = priceRange * 0.1;
     
-    // Scale functions
     const xScale = (index) => margin.left + (index / (prices.length - 1)) * chartWidth;
     const yScale = (price) => margin.top + ((maxPrice + padding - price) / (priceRange + 2 * padding)) * chartHeight;
     
-    // Determine currency and market info
     const isIndianStock = stockData.symbol.includes('.NS');
     const currencySymbol = isIndianStock ? '₹' : '$';
     
-    // Draw background grid
     ctx.strokeStyle = colors.grid;
     ctx.lineWidth = 1;
     
-    // Horizontal grid lines
     for (let i = 0; i <= 8; i++) {
       const y = margin.top + (i / 8) * chartHeight;
       ctx.beginPath();
@@ -1554,7 +1420,6 @@ function StockChartAnalyzer() {
       ctx.lineTo(margin.left + chartWidth, y);
       ctx.stroke();
       
-      // Price labels with correct currency
       const price = maxPrice + padding - (i / 8) * (priceRange + 2 * padding);
       ctx.fillStyle = colors.label;
       ctx.font = '12px Inter, Arial, sans-serif';
@@ -1562,8 +1427,7 @@ function StockChartAnalyzer() {
       ctx.fillText(currencySymbol + price.toFixed(2), margin.left - 10, y + 4);
     }
     
-    // Vertical grid lines and Date labels
-    const numVerticalGridLines = prices.length > 250 ? 5 : (prices.length > 60 ? 6 : 4); // Fewer lines for very long ranges
+    const numVerticalGridLines = prices.length > 250 ? 5 : (prices.length > 60 ? 6 : 4);
     for (let i = 0; i <= numVerticalGridLines; i++) {
       const x = margin.left + (i / numVerticalGridLines) * chartWidth;
       ctx.beginPath();
@@ -1575,12 +1439,11 @@ function StockChartAnalyzer() {
       if (priceIndex < prices.length) {
         const date = new Date(prices[priceIndex].date);
         let dateFormatOptions = { month: 'short', day: 'numeric' };
-        if (prices.length > 365 * 2) { // More than 2 years, show year
+        if (prices.length > 365 * 2) {
           dateFormatOptions = { year: 'numeric', month: 'short' };
-        } else if (prices.length > 90) { // More than 3 months, show month/day
+        } else if (prices.length > 90) {
            dateFormatOptions = { month: 'short', day: 'numeric' };
         }
-        // For very short ranges (default 3mo daily), current options are fine.
 
         ctx.fillStyle = colors.label;
         ctx.font = '11px Inter, Arial, sans-serif';
@@ -1589,7 +1452,6 @@ function StockChartAnalyzer() {
       }
     }
     
-    // Draw price line
     ctx.strokeStyle = colors.mainLine;
     ctx.lineWidth = 3;
     ctx.beginPath();
@@ -1604,7 +1466,6 @@ function StockChartAnalyzer() {
     });
     ctx.stroke();
     
-    // Draw candlesticks
     prices.forEach((price, index) => {
       const x = xScale(index);
       const openY = yScale(price.open);
@@ -1619,13 +1480,11 @@ function StockChartAnalyzer() {
       ctx.fillStyle = candleColor;
       ctx.lineWidth = 1;
       
-      // Draw wick (high-low line)
       ctx.beginPath();
       ctx.moveTo(x, highY);
       ctx.lineTo(x, lowY);
       ctx.stroke();
       
-      // Draw body (open-close rectangle)
       const bodyHeight = Math.abs(closeY - openY);
       const bodyY = Math.min(openY, closeY);
       const bodyWidth = 6;
@@ -1637,13 +1496,12 @@ function StockChartAnalyzer() {
       }
     });
     
-    // Draw Key Levels if available
     if (currentKeyLevels && currentKeyLevels.support && currentKeyLevels.resistance) {
       ctx.lineWidth = 1;
       ctx.font = 'bold 10px Inter, Arial, sans-serif';
 
       currentKeyLevels.support.forEach(level => {
-        if (level >= minPrice && level <= maxPrice) { // Draw only if within visible price range
+        if (level >= minPrice && level <= maxPrice) {
           const y = yScale(level);
           ctx.strokeStyle = colors.keyLevelSupport;
           ctx.fillStyle = colors.keyLevelSupport;
@@ -1658,7 +1516,7 @@ function StockChartAnalyzer() {
       });
 
       currentKeyLevels.resistance.forEach(level => {
-        if (level >= minPrice && level <= maxPrice) { // Draw only if within visible price range
+        if (level >= minPrice && level <= maxPrice) {
           const y = yScale(level);
           ctx.strokeStyle = colors.keyLevelResistance;
           ctx.fillStyle = colors.keyLevelResistance;
@@ -1673,60 +1531,46 @@ function StockChartAnalyzer() {
       });
     }
 
-    // Add title and info
     ctx.fillStyle = colors.text;
     ctx.font = 'bold 20px Inter, Arial, sans-serif';
     ctx.textAlign = 'left';
     ctx.fillText(`${stockData.symbol} - ${stockData.companyName}`, margin.left, 25);
     
     ctx.font = '14px Inter, Arial, sans-serif';
-    ctx.fillStyle = colors.label; // Using label color for secondary text
+    ctx.fillStyle = colors.label;
     const currentPrice = stockData.currentPrice || prices[prices.length - 1].close;
     ctx.fillText(`Current: ${currencySymbol}${currentPrice.toFixed(2)} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
     
     if (stockData.isMockData) {
-      // Consider using a themed warning color if available, or ensure this stands out
       ctx.fillStyle = (currentTheme === 'dark') ? chartThemeColors.dark.warningColor || '#f59e0b' : '#f59e0b';
       ctx.font = 'italic 12px Inter, Arial, sans-serif';
       ctx.fillText('Demo Data - API temporarily unavailable', margin.left + 300, 25);
     }
     
-    // Convert to data URL
     return canvas.toDataURL('image/png', 1.0);
   };
 
-  // Fetch stock data
   const fetchStockData = async (symbol, timeRange = '3mo') => {
     if (!symbol.trim()) return;
     
     setLoading(true);
     setError(null);
     setStockData(null);
-    setKeyLevels(null); // Clear key levels on new fetch
-    setStockNews(null); // Clear previous news
-    // setLongTermAssessment(null); // Clear long term assessment when fetching new data
+    setKeyLevels(null);
+    setStockNews(null);
     
     try {
       const data = await fetchYahooFinanceData(symbol.trim().toUpperCase(), timeRange);
       setStockData(data);
       
-      // Fetch news for the stock symbol
       fetchStockNews(symbol.trim().toUpperCase());
       
-      // Create chart image
       setTimeout(() => {
-        // Pass keyLevels to createChartFromData, it might be null initially if analyzeChart hasn't run yet
-        // or if the user just fetched data. For newly fetched data, keyLevels would be calculated in analyzeChart.
-        // For simplicity, we'll pass the current keyLevels state.
-        // A more robust approach might be to calculate keyLevels here if stockData is present and then pass.
-        // However, analyzeChart is the primary function for all calculations.
-        // For now, chart generation will use keyLevels if they are already computed and passed,
-        // or it will compute them on the fly if stockData is available.
         const tempKeyLevels = (data && data.prices) ? calculateKeyLevels(data.prices) : null;
         if (tempKeyLevels) {
-          setKeyLevels(tempKeyLevels); // Update state for UI section as well
+          setKeyLevels(tempKeyLevels);
         }
-        const chartImageUrl = createChartFromData(data, tempKeyLevels, theme); // Pass current theme
+        const chartImageUrl = createChartFromData(data, tempKeyLevels, theme);
         setUploadedImage(chartImageUrl);
       }, 100);
       
@@ -1738,7 +1582,6 @@ function StockChartAnalyzer() {
     }
   };
 
-  // Quick stock selection
   const selectStock = (symbol) => {
     setStockSymbol(symbol);
     setShowSuggestions(false);
@@ -1776,8 +1619,7 @@ function StockChartAnalyzer() {
       reader.onload = () => {
         setUploadedImage(reader.result);
         setStockData(null);
-        setStockNews(null); // Clear news when uploading manual image
-        // Clear previous results
+        setStockNews(null);
         setPrediction(null);
         setPatternDetected(null);
         setConfidence(null);
@@ -1785,7 +1627,7 @@ function StockChartAnalyzer() {
         setEntryExit(null);
         setTimeEstimate(null);
         setBreakoutTiming(null);
-        setKeyLevels(null); // Clear key levels
+        setKeyLevels(null);
         setLongTermAssessment(null);
       };
       reader.readAsDataURL(file);
@@ -1796,7 +1638,7 @@ function StockChartAnalyzer() {
     if (!uploadedImage) return;
     
     setLoading(true);
-    setLongTermAssessment(null); // Clear previous long-term assessment
+    setLongTermAssessment(null);
     
     setTimeout(() => {
       try {
@@ -1806,25 +1648,22 @@ function StockChartAnalyzer() {
         let currentLongTermAssessment = null;
 
         if (stockData && stockData.prices && stockData.prices.length > 0) {
-          calculatedKeyLevels = calculateKeyLevels(stockData.prices); // Calculate regardless of range for chart
+          calculatedKeyLevels = calculateKeyLevels(stockData.prices);
 
           if (selectedTimeRange === '1y' || selectedTimeRange === '5y' || selectedTimeRange === '10y') {
             currentLongTermAssessment = generateLongTermAssessment(stockData, selectedTimeRange);
-            // For long-term views, we might not want to show short-term patterns
-            // or we could make detectPatternFromPriceData aware of the range.
-            // For now, long-term assessment will be primary if range is long.
-            // We can skip short-term pattern detection for long ranges if desired.
-            // Let's assume for now if it's a long range, we don't run detectPatternFromPriceData.
-            // OR, we can run it but prioritize displaying longTermAssessment.
-            // For simplicity in this step, if it's a long range, we might only show long-term assessment.
             if (currentLongTermAssessment) {
                setLongTermAssessment(currentLongTermAssessment);
-               // Clear short-term pattern details if showing long-term assessment
-               setPatternDetected(null); setPrediction(null); setConfidence(null);
-               setRecommendation(null); setEntryExit(null); setTimeEstimate(null); setBreakoutTiming(null);
+               setPatternDetected(null); 
+               setPrediction(null); 
+               setConfidence(null);
+               setRecommendation(null); 
+               setEntryExit(null); 
+               setTimeEstimate(null); 
+               setBreakoutTiming(null);
             }
-          } else { // For short-term ranges like '3mo' or if stockData is present but not for long-term view
-            setLongTermAssessment(null); // Ensure long-term assessment is cleared
+          } else {
+            setLongTermAssessment(null);
             const analysis = detectPatternFromPriceData(stockData.prices);
             if (analysis) {
               detectedPattern = analysis.pattern;
@@ -1833,10 +1672,7 @@ function StockChartAnalyzer() {
           }
         }
         
-        // This block now primarily handles uploaded images OR if stockData was present but resulted in no specific analysis (short or long)
-        // If currentLongTermAssessment is set, we skip this to avoid overriding.
         if (!currentLongTermAssessment && !detectedPattern) {
-          // Create a weighted distribution instead of pure random
           const patternWeights = {
             'head-and-shoulders': 12,
             'inverse-head-and-shoulders': 12,
@@ -1850,7 +1686,6 @@ function StockChartAnalyzer() {
             'wedge-falling': 8
           };
           
-          // Create weighted array
           const weightedPatterns = [];
           Object.entries(patternWeights).forEach(([pattern, weight]) => {
             for (let i = 0; i < weight; i++) {
@@ -1860,7 +1695,7 @@ function StockChartAnalyzer() {
           
           const randomIndex = Math.floor(Math.random() * weightedPatterns.length);
           detectedPattern = weightedPatterns[randomIndex];
-          confidenceScore = Math.floor(Math.random() * 35) + 50; // 50-85%
+          confidenceScore = Math.floor(Math.random() * 35) + 50;
         }
         
         const selectedPattern = chartPatterns[detectedPattern];
@@ -1875,9 +1710,8 @@ function StockChartAnalyzer() {
         setConfidence(confidenceScore);
         setRecommendation(rec);
         setBreakoutTiming(breakout);
-        setKeyLevels(calculatedKeyLevels); // Set key levels state
+        setKeyLevels(calculatedKeyLevels);
         
-        // Generate time estimate
         let timeInfo = '';
         if (selectedPattern.prediction === 'up') {
           timeInfo = `Expected to rise for ${selectedPattern.daysUp}`;
@@ -1893,7 +1727,6 @@ function StockChartAnalyzer() {
         }
         setTimeEstimate(timeInfo);
         
-        // Set entry/exit points
         setEntryExit({
           entry: selectedPattern.entryStrategy,
           exit: selectedPattern.exitStrategy
@@ -1962,8 +1795,8 @@ function StockChartAnalyzer() {
                   fontWeight: '500', 
                   outline: 'none', 
                   transition: 'border-color 0.2s',
-                  backgroundColor: 'var(--background-color)', // Ensure input bg matches theme
-                  color: 'var(--text-color)', // Ensure input text matches theme
+                  backgroundColor: 'var(--background-color)',
+                  color: 'var(--text-color)',
                   borderBottom: showSuggestions ? '1px solid var(--input-border)' : '2px solid var(--input-border)'
                 }}
               />
@@ -2026,7 +1859,7 @@ function StockChartAnalyzer() {
                             <div style={{ 
                               fontSize: '11px', 
                               color: 'var(--text-color-muted)',
-                              backgroundColor: 'var(--app-border)', // Using app-border for a subtle background
+                              backgroundColor: 'var(--app-border)',
                               padding: '2px 6px', 
                               borderRadius: '4px',
                               fontWeight: '500'
@@ -2143,7 +1976,7 @@ function StockChartAnalyzer() {
                 }}
                 onMouseEnter={(e) => {
                   if (stockSymbol !== stock.symbol && !loading) {
-                    e.target.style.background = 'var(--input-background-hover)'; // Using input hover for consistency
+                    e.target.style.background = 'var(--input-background-hover)';
                   }
                 }}
                 onMouseLeave={(e) => {
@@ -2224,7 +2057,7 @@ function StockChartAnalyzer() {
               </div>
               <div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div>
               <div>
-                <strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |
+                <strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '}{stockData.currentPrice && stockData.currentPrice.toFixed(2)} {stockData.currency} |
                 <strong> Data Points:</strong> {stockData.prices.length} {
                   selectedTimeRange === '1y' ? 'weeks' :
                   (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'
@@ -2237,7 +2070,7 @@ function StockChartAnalyzer() {
           <button
             onClick={analyzeChart}
             disabled={loading}
-            style={{ width: '100%', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', padding: '18px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.3s', boxShadow: loading ? 'none' : `0 4px 20px ${'var(--primary-accent-light)'}` }}
+            style={{ width: '100%', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', padding: '18px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.3s', boxShadow: loading ? 'none' : `0 4px 20px var(--primary-accent-light)` }}
           >
             {loading ? (
               <span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
@@ -2457,7 +2290,7 @@ function StockChartAnalyzer() {
         </div>
       )}
 
-      {/* Short-Term Pattern Analysis Section (conditionally rendered) */}
+      {/* Short-Term Pattern Analysis Section */}
       {prediction && patternDetected && !longTermAssessment && (
         <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', marginBottom: '32px', overflow: 'hidden', boxShadow: `0 8px 32px var(--card-shadow)` }}>
           <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', padding: '24px 24px 0', textAlign: 'center' }}>
@@ -2603,7 +2436,7 @@ function StockChartAnalyzer() {
                       {confidence < 60 && (
                         <div style={{ marginTop: '12px', padding: '12px', background: 'var(--danger-background)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}>
                           <div style={{ fontWeight: '700', color: 'var(--danger-color)', marginBottom: '4px' }}>⚠️ Your Current Score: {confidence}%</div>
-                          <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--danger-color)' /* Adjusted for better contrast on dark theme with danger background */ }}>
+                          <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--danger-color)' }}>
                             This is a <strong>low confidence</strong> signal. Consider waiting for a clearer pattern with 70%+ confidence before making trading decisions.
                           </div>
                         </div>
@@ -2651,31 +2484,31 @@ function StockChartAnalyzer() {
           )}
 
           {/* Key Levels Section */}
-          {keyLevels && (keyLevels.support?.length > 0 || keyLevels.resistance?.length > 0) && (
+          {keyLevels && (keyLevels.support && keyLevels.support.length > 0 || keyLevels.resistance && keyLevels.resistance.length > 0) && (
             <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
               <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
-                <BarChart size={28} /> {/* Using BarChart icon as a placeholder, consider a more specific one if available */}
+                <BarChart size={28} />
                 <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Key Price Levels</h3>
               </div>
-              {keyLevels.support?.length > 0 && (
+              {keyLevels.support && keyLevels.support.length > 0 && (
                 <div style={{ marginBottom: '12px' }}>
                   <strong style={{ color: 'var(--success-color)' }}>Support Levels:</strong>
                   <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
                     {keyLevels.support.map((level, idx) => (
                       <li key={`s-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>
-                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '}{level.toFixed(2)}
+                        {stockData && stockData.currency === 'INR' || stockData && stockData.symbol && stockData.symbol.includes('.NS') ? '₹' : '}{level.toFixed(2)}
                       </li>
                     ))}
                   </ul>
                 </div>
               )}
-              {keyLevels.resistance?.length > 0 && (
+              {keyLevels.resistance && keyLevels.resistance.length > 0 && (
                 <div>
                   <strong style={{ color: 'var(--danger-color)' }}>Resistance Levels:</strong>
                   <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
                     {keyLevels.resistance.map((level, idx) => (
                       <li key={`r-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>
-                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '}{level.toFixed(2)}
+                        {stockData && stockData.currency === 'INR' || stockData && stockData.symbol && stockData.symbol.includes('.NS') ? '₹' : '}{level.toFixed(2)}
                       </li>
                     ))}
                   </ul>
