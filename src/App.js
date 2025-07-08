@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Upload, Activity, Globe, Database, Zap, BarChart3 } from 'lucide-react';
+import React, { useState } from 'react';
+import { Upload, Activity, Globe, Zap, BarChart3, Search, RefreshCw, Calendar, Clock, BarChart } from 'lucide-react';
 import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
 
@@ -8,45 +8,31 @@ function StockChartAnalyzer() {
   const stockDatabase = stocksData.stocks;
   const popularStocksData = stocksData.popularStocks;
 
-  // State management
+  // State management - only keep what we're actually using
   const [activeTab, setActiveTab] = useState('US');
   const [searchTerm, setSearchTerm] = useState('');
   const [uploadedFile, setUploadedFile] = useState(null);
-  const [uploadedImage, setUploadedImage] = useState(null);
   const [analysisResults, setAnalysisResults] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [stockData, setStockData] = useState(null);
-  const [prediction, setPrediction] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [patternDetected, setPatternDetected] = useState(null);
-  const [confidence, setConfidence] = useState(null);
-  const [recommendation, setRecommendation] = useState(null);
-  const [entryExit, setEntryExit] = useState(null);
-  const [timeEstimate, setTimeEstimate] = useState(null);
-  const [breakoutTiming, setBreakoutTiming] = useState(null);
-  const [error, setError] = useState(null);
-
-  // Your existing analysis functions (copy from original App.js)
-  // ... include all your pattern detection, stock fetching, and analysis logic here ...
 
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (file) {
       setUploadedFile(file);
       const reader = new FileReader();
-      reader.onload = (e) => {
-        setUploadedImage(e.target.result);
-        setStockData(null);
+      reader.onload = () => {
+        // Handle file upload logic here
+        console.log('File uploaded successfully');
       };
       reader.readAsDataURL(file);
     }
   };
 
   const handleAnalyze = () => {
-    if (!uploadedImage) return;
+    if (!uploadedFile) return;
     
     setIsAnalyzing(true);
-    // Include your existing analyzeChart logic here
     setTimeout(() => {
       setAnalysisResults({
         pattern: 'Ascending Triangle',
@@ -60,14 +46,18 @@ function StockChartAnalyzer() {
 
   const handleStockSearch = () => {
     if (searchTerm.trim()) {
-      // Include your existing fetchStockData logic here
-      console.log('Searching for:', searchTerm);
+      setLoading(true);
+      // Simulate API call
+      setTimeout(() => {
+        console.log('Searching for:', searchTerm);
+        setLoading(false);
+      }, 1000);
     }
   };
 
   const selectStock = (symbol) => {
     setSearchTerm(symbol);
-    // Include your existing stock selection logic here
+    handleStockSearch();
   };
 
   // Filter stocks by market
@@ -1062,9 +1052,6 @@ function StockChartAnalyzer() {
           </div>
         </div>
       )}
-
-      {/* Include your existing analysis results section here if needed */}
-      {/* Add all your original pattern analysis, confidence sections, etc. */}
 
       <style jsx>{`
         @keyframes spin {
