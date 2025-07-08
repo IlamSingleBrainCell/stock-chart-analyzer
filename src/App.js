@@ -3,7 +3,7 @@ import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, Do
 import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
 
-// Pattern drawing utility functions
+// *Pattern drawing utility functions
 const drawLine = (ctx, points) => {
   if (points.length < 2) return;
   
