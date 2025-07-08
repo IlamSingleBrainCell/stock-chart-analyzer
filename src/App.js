@@ -535,8 +535,8 @@ function StockChartAnalyzer() {
   const [entryExit, setEntryExit] = useState(null);
   const [breakoutTiming, setBreakoutTiming] = useState(null);
   const [error, setError] = useState(null);
+  const [keyLevels, setKeyLevels] = useState(null); // State for Support/Resistance
   
-  // Missing state variables for type-ahead functionality
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
@@ -574,27 +574,40 @@ function StockChartAnalyzer() {
     // Enhanced pattern recognition
     const patternData = analyzePatterns(peaks, troughs, closes, highs, lows);
     
-    // Add some randomization to prevent all stocks showing the same pattern
-    const patternVariants = {
-      'head-and-shoulders': ['head-and-shoulders', 'double-top'],
-      'inverse-head-and-shoulders': ['inverse-head-and-shoulders', 'double-bottom'],
-      'double-top': ['double-top', 'head-and-shoulders'],
-      'double-bottom': ['double-bottom', 'inverse-head-and-shoulders'],
-      'ascending-triangle': ['ascending-triangle', 'cup-and-handle'],
-      'descending-triangle': ['descending-triangle', 'wedge-falling'],
-      'flag': ['flag', 'ascending-triangle', 'descending-triangle'],
-      'cup-and-handle': ['cup-and-handle', 'ascending-triangle'],
-      'wedge-rising': ['wedge-rising', 'ascending-triangle'],
-      'wedge-falling': ['wedge-falling', 'descending-triangle']
-    };
-    
-    const variants = patternVariants[patternData.pattern] || [patternData.pattern];
-    const selectedPattern = variants[Math.floor(Math.random() * variants.length)];
+    // Prioritize detected pattern, with deterministic fallback if strength is low.
+    let determinedPattern = patternData.pattern;
+    const patternStrengthThreshold = 0.6; // Example threshold
+
+    if (!patternData.pattern || patternData.strength < patternStrengthThreshold) {
+      // Fallback logic: if primary pattern is weak or missing,
+      // try a related pattern or a default based on trend.
+      // This is a placeholder for more sophisticated deterministic fallback.
+      // For now, we can use the first variant if available, or stick to the original.
+      const patternVariants = {
+        'head-and-shoulders': ['head-and-shoulders', 'double-top'],
+        'inverse-head-and-shoulders': ['inverse-head-and-shoulders', 'double-bottom'],
+        'double-top': ['double-top', 'head-and-shoulders'],
+        'double-bottom': ['double-bottom', 'inverse-head-and-shoulders'],
+        'ascending-triangle': ['ascending-triangle', 'cup-and-handle'],
+        'descending-triangle': ['descending-triangle', 'wedge-falling'],
+        'flag': ['flag', 'ascending-triangle', 'descending-triangle'],
+        'cup-and-handle': ['cup-and-handle', 'ascending-triangle'],
+        'wedge-rising': ['wedge-rising', 'ascending-triangle'],
+        'wedge-falling': ['wedge-falling', 'descending-triangle']
+      };
+      const variants = patternVariants[patternData.pattern];
+      if (variants && variants.length > 0) {
+        // Simple deterministic choice: pick the first variant or the original pattern
+        determinedPattern = variants[0];
+      } else {
+        determinedPattern = patternData.pattern || 'flag'; // Default to 'flag' if no pattern
+      }
+    }
     
     return {
-      pattern: selectedPattern,
+      pattern: determinedPattern,
       confidence: calculateDynamicConfidence(
-        { ...patternData, pattern: selectedPattern }, 
+        { ...patternData, pattern: determinedPattern },
         currentRSI, 
         priceVsSMA20, 
         priceVsSMA50
@@ -967,10 +980,30 @@ function StockChartAnalyzer() {
       if (priceVsSMA50 < 0) confidence += 3; // Below 50-day MA
     }
     
-    // Volume and data quality adjustments
-    confidence += Math.random() * 10 - 5; // Add some variation
+    // Future: Consider adding adjustments based on volume confirmation
+    // or data quality metrics if available.
     
     return Math.max(45, Math.min(92, Math.round(confidence)));
+  };
+
+  // Calculate Key Support and Resistance Levels
+  const calculateKeyLevels = (prices) => {
+    if (!prices || prices.length < 10) return null; // Need enough data
+
+    const recentPrices = prices.slice(-60); // Analyze last 60 days
+    const lows = recentPrices.map(p => p.low);
+    const highs = recentPrices.map(p => p.high);
+
+    // Simplified approach: find min low and max high in recent period for primary S/R
+    // More advanced: use findPeaksAndTroughs and cluster them.
+
+    const supportLevels = findPeaksAndTroughs(lows, false).sort((a,b) => a.value - b.value).slice(0, 2);
+    const resistanceLevels = findPeaksAndTroughs(highs, true).sort((a,b) => b.value - a.value).slice(0, 2);
+
+    return {
+      support: supportLevels.map(s => parseFloat(s.value.toFixed(2))),
+      resistance: resistanceLevels.map(r => parseFloat(r.value.toFixed(2))),
+    };
   };
 
   // Calculate breakout timing
@@ -1261,7 +1294,7 @@ function StockChartAnalyzer() {
   };
 
   // Create enhanced chart image from stock data
-  const createChartFromData = (stockData) => {
+  const createChartFromData = (stockData, currentKeyLevels) => {
     const canvas = chartCanvasRef.current;
     const ctx = canvas.getContext('2d');
     
@@ -1380,6 +1413,42 @@ function StockChartAnalyzer() {
       }
     });
     
+    // Draw Key Levels if available
+    if (currentKeyLevels && currentKeyLevels.support && currentKeyLevels.resistance) {
+      ctx.lineWidth = 1;
+      ctx.font = 'bold 10px Inter, Arial, sans-serif';
+
+      currentKeyLevels.support.forEach(level => {
+        if (level >= minPrice && level <= maxPrice) { // Draw only if within visible price range
+          const y = yScale(level);
+          ctx.strokeStyle = '#22c55e'; // Green for support
+          ctx.fillStyle = '#22c55e';
+          ctx.beginPath();
+          ctx.setLineDash([4, 4]);
+          ctx.moveTo(margin.left, y);
+          ctx.lineTo(chartWidth + margin.left, y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillText(`S: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2);
+        }
+      });
+
+      currentKeyLevels.resistance.forEach(level => {
+        if (level >= minPrice && level <= maxPrice) { // Draw only if within visible price range
+          const y = yScale(level);
+          ctx.strokeStyle = '#ef4444'; // Red for resistance
+          ctx.fillStyle = '#ef4444';
+          ctx.beginPath();
+          ctx.setLineDash([4, 4]);
+          ctx.moveTo(margin.left, y);
+          ctx.lineTo(chartWidth + margin.left, y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          ctx.fillText(`R: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2);
+        }
+      });
+    }
+
     // Add title and info
     ctx.fillStyle = '#1f2937';
     ctx.font = 'bold 20px Inter, Arial, sans-serif';
@@ -1408,6 +1477,7 @@ function StockChartAnalyzer() {
     setLoading(true);
     setError(null);
     setStockData(null);
+    setKeyLevels(null); // Clear key levels on new fetch
     
     try {
       const data = await fetchYahooFinanceData(symbol.trim().toUpperCase());
@@ -1415,7 +1485,18 @@ function StockChartAnalyzer() {
       
       // Create chart image
       setTimeout(() => {
-        const chartImageUrl = createChartFromData(data);
+        // Pass keyLevels to createChartFromData, it might be null initially if analyzeChart hasn't run yet
+        // or if the user just fetched data. For newly fetched data, keyLevels would be calculated in analyzeChart.
+        // For simplicity, we'll pass the current keyLevels state.
+        // A more robust approach might be to calculate keyLevels here if stockData is present and then pass.
+        // However, analyzeChart is the primary function for all calculations.
+        // For now, chart generation will use keyLevels if they are already computed and passed,
+        // or it will compute them on the fly if stockData is available.
+        const tempKeyLevels = (data && data.prices) ? calculateKeyLevels(data.prices) : null;
+        if (tempKeyLevels) {
+          setKeyLevels(tempKeyLevels); // Update state for UI section as well
+        }
+        const chartImageUrl = createChartFromData(data, tempKeyLevels); // Pass potentially calculated levels for chart drawing
         setUploadedImage(chartImageUrl);
       }, 100);
       
@@ -1473,6 +1554,7 @@ function StockChartAnalyzer() {
         setEntryExit(null);
         setTimeEstimate(null);
         setBreakoutTiming(null);
+        setKeyLevels(null); // Clear key levels
       };
       reader.readAsDataURL(file);
     }
@@ -1488,6 +1570,7 @@ function StockChartAnalyzer() {
         let detectedPattern = null;
         let confidenceScore = 70;
         
+        let calculatedKeyLevels = null;
         // Use real stock data analysis if available
         if (stockData && stockData.prices && stockData.prices.length > 20) {
           const analysis = detectPatternFromPriceData(stockData.prices);
@@ -1495,6 +1578,7 @@ function StockChartAnalyzer() {
             detectedPattern = analysis.pattern;
             confidenceScore = analysis.confidence;
           }
+          calculatedKeyLevels = calculateKeyLevels(stockData.prices);
         }
         
         // Fallback to basic pattern detection for uploaded images
@@ -1538,6 +1622,7 @@ function StockChartAnalyzer() {
         setConfidence(confidenceScore);
         setRecommendation(rec);
         setBreakoutTiming(breakout);
+        setKeyLevels(calculatedKeyLevels); // Set key levels state
         
         // Generate time estimate
         let timeInfo = '';
@@ -1578,13 +1663,13 @@ function StockChartAnalyzer() {
       {/* Header */}
       <div style={{ textAlign: 'center', marginBottom: '32px' }}>
         <h1 style={{ fontSize: '36px', fontWeight: '800', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginBottom: '8px' }}>
-          AI-Powered Stock Pattern Recognition
+          Stock Chart Pattern Analyzer
         </h1>
         <p style={{ color: '#6b7280', fontSize: '16px', margin: '0' }}>
-          Analyze live stock charts with enhanced 3-month data analysis and breakout timing prediction
+          Get data-driven analysis from live stock charts (3-month data) or explore patterns with your own images.
           <br />
           <span style={{ fontSize: '14px', color: '#9ca3af' }}>
-            📊 Supporting {stockDatabase.length}+ stocks from US and Indian markets
+            📊 Supporting {stockDatabase.length}+ stocks from US & Indian markets with Key Level detection.
           </span>
         </p>
       </div>
@@ -1592,7 +1677,7 @@ function StockChartAnalyzer() {
       <div style={{ background: 'linear-gradient(135deg, rgba(34, 211, 238, 0.1), rgba(16, 185, 129, 0.1))', borderLeft: '4px solid #22d3ee', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid rgba(34, 211, 238, 0.3)' }}>
         <AlertTriangle size={20} style={{ color: '#22d3ee', marginRight: '16px', flexShrink: 0 }} />
         <div style={{ fontSize: '14px', color: '#0891b2', fontWeight: '600' }}>
-          <strong>🚀 Enhanced Analysis:</strong> Now featuring accurate pattern detection using 3-month price data, dynamic confidence scoring, and breakout timing predictions. Comprehensive database with {stockDatabase.length}+ stocks from both <FlagIcon country="US" size={12} />US and <FlagIcon country="India" size={12} />Indian markets!
+          <strong>🚀 Features:</strong> Pattern detection from 3-month price data, dynamic confidence, breakout timing, Key Support/Resistance levels. {stockDatabase.length}+ US & Indian stocks!
         </div>
       </div>
 
@@ -1805,9 +1890,12 @@ function StockChartAnalyzer() {
 
       {/* Manual Upload */}
       <div style={{ marginBottom: '32px' }}>
-        <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: '#1a202c', fontSize: '18px' }}>
-          📁 Upload Your Own Chart Image
+        <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: '#1a202c', fontSize: '18px' }}>
+          📁 Upload Your Own Chart Image (for Educational Exploration)
         </label>
+        <p style={{ fontSize: '13px', color: '#6b7280', marginBottom: '12px', marginTop: '0px' }}>
+          Note: Analysis for uploaded images provides an educational example of pattern types. For data-driven analysis, please use the live stock chart feature above.
+        </p>
         <input
           type="file"
           accept="image/*"
@@ -1853,8 +1941,10 @@ function StockChartAnalyzer() {
                 <RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />
                 Analyzing Pattern...
               </span>
+            ) : stockData ? (
+              '🔍 Analyze Live Chart Data'
             ) : (
-              '🔍 Analyze Chart Pattern'
+              '🔍 Explore Example Pattern'
             )}
           </button>
         </div>
@@ -2049,6 +2139,43 @@ function StockChartAnalyzer() {
               </div>
               <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(255, 248, 230, 0.8)', borderRadius: '6px', fontSize: '14px', color: '#92400e', fontWeight: '500' }}>
                 💡 <strong>Note:</strong> Breakout timing is based on pattern analysis and current market momentum. Monitor volume and price action for confirmation.
+              </div>
+            </div>
+          )}
+
+          {/* Key Levels Section */}
+          {keyLevels && (keyLevels.support?.length > 0 || keyLevels.resistance?.length > 0) && (
+            <div style={{ padding: '24px', background: 'rgba(255, 255, 255, 0.5)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid rgba(0, 0, 0, 0.1)' }}>
+              <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px' }}>
+                <BarChart size={28} /> {/* Using BarChart icon as a placeholder, consider a more specific one if available */}
+                <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: '#1a202c' }}>Key Price Levels</h3>
+              </div>
+              {keyLevels.support?.length > 0 && (
+                <div style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: '#22c55e' }}>Support Levels:</strong>
+                  <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
+                    {keyLevels.support.map((level, idx) => (
+                      <li key={`s-${idx}`} style={{ fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>
+                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              {keyLevels.resistance?.length > 0 && (
+                <div>
+                  <strong style={{ color: '#ef4444' }}>Resistance Levels:</strong>
+                  <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
+                    {keyLevels.resistance.map((level, idx) => (
+                      <li key={`r-${idx}`} style={{ fontSize: '16px', color: '#2d3748', fontWeight: '500' }}>
+                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+               <div style={{ marginTop: '12px', padding: '10px', background: 'rgba(243, 244, 246, 0.8)', borderRadius: '6px', fontSize: '13px', color: '#4b5563', fontWeight: '500' }}>
+                💡 These are automatically identified potential support (price floor) and resistance (price ceiling) levels from recent price action.
               </div>
             </div>
           )}
