@@ -4,7 +4,9 @@ import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
 import { ThemeContext } from './ThemeContext';
 
-const FMP_API_KEY = '6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC';
+// const FMP_API_KEY = '6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC'; // Removed
+const MARKETAUX_API_KEY = 'F8x0iPiyy2Rhe8LZsQJvmisOPwpr7xQ4Np7XF0o1';
+const MARKETAUX_BASE_URL = "https://api.marketaux.com/v1/news/all";
 
 const chartThemeColors = {
   light: {
@@ -905,15 +907,35 @@ function StockChartAnalyzer() {
     setNewsError(null);
     setStockNews([]); // Clear previous news
     try {
-      const response = await fetch(`https://financialmodelingprep.com/api/v3/stock_news?tickers=${symbol}&limit=5&apikey=${FMP_API_KEY}`);
+      const url = `${MARKETAUX_BASE_URL}?api_token=${MARKETAUX_API_KEY}&symbols=${symbol}&language=en&limit=5&filter_entities=true`;
+      const response = await fetch(url);
+
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.message || `Failed to fetch news for ${symbol}. Status: ${response.status}`);
+        // Marketaux error structure might be { error: { code: '...', message: '...' } }
+        const errorMessage = errorData?.error?.message || `Failed to fetch news for ${symbol}. Status: ${response.status}`;
+        throw new Error(errorMessage);
       }
-      const data = await response.json();
-      setStockNews(data || []);
+
+      const rawData = await response.json();
+
+      if (rawData && rawData.data) {
+        const formattedNews = rawData.data.map(item => ({
+          title: item.title,
+          url: item.url,
+          text: item.snippet || item.description || '', // Use snippet, fallback to description
+          publishedDate: item.published_at,
+          site: item.source,
+          image: item.image_url, // Keep image if available
+          // Marketaux specific fields if needed later: item.uuid, item.entities
+        }));
+        setStockNews(formattedNews);
+      } else {
+        setStockNews([]);
+      }
+
     } catch (error) {
-      console.error('FMP News API Error:', error);
+      console.error('Marketaux News API Error:', error);
       setNewsError(error.message);
       setStockNews([]); // Ensure news is cleared on error
     } finally {
