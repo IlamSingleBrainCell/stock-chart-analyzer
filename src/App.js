@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Newspaper } from 'lucide-react';
 import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
 import { ThemeContext } from './ThemeContext';
@@ -589,6 +589,8 @@ function StockChartAnalyzer() {
   const [keyLevels, setKeyLevels] = useState(null); // State for Support/Resistance
   const [selectedTimeRange, setSelectedTimeRange] = useState('3mo'); // Default to 3 months
   const [longTermAssessment, setLongTermAssessment] = useState(null);
+  const [stockNews, setStockNews] = useState(null);
+  const [newsLoading, setNewsLoading] = useState(false);
   
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -1311,6 +1313,7 @@ function StockChartAnalyzer() {
       setBreakoutTiming(null);
       setKeyLevels(null);
       setLongTermAssessment(null);
+      setStockNews(null); // Clear news when changing time range
       fetchStockData(stockSymbol.toUpperCase(), range);
     }
   };
@@ -1453,6 +1456,53 @@ function StockChartAnalyzer() {
       prices: prices,
       isMockData: true
     };
+  };
+
+  // Fetch latest news for a stock symbol
+  const fetchStockNews = async (symbol) => {
+    setNewsLoading(true);
+    try {
+      // Clean symbol for API call (remove .NS suffix for Indian stocks)
+      const cleanSymbol = symbol.replace('.NS', '');
+      
+      const apiKey = '6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC';
+      const response = await fetch(`https://financialmodelingprep.com/api/v3/stock_news?tickers=${cleanSymbol}&limit=8&apikey=${apiKey}`);
+      
+      if (!response.ok) {
+        throw new Error(`News API error! status: ${response.status}`);
+      }
+      
+      const newsData = await response.json();
+      
+      if (Array.isArray(newsData) && newsData.length > 0) {
+        // Filter and format news data
+        const formattedNews = newsData.slice(0, 6).map(article => ({
+          title: article.title || 'No title available',
+          summary: article.text ? article.text.substring(0, 200) + '...' : 'No summary available',
+          url: article.url || '#',
+          publishedDate: article.publishedDate ? new Date(article.publishedDate).toLocaleDateString('en-US', {
+            year: 'numeric',
+            month: 'short',
+            day: 'numeric',
+            hour: '2-digit',
+            minute: '2-digit'
+          }) : 'Date unavailable',
+          source: article.site || 'Unknown Source',
+          image: article.image || null
+        }));
+        
+        setStockNews(formattedNews);
+      } else {
+        // No news available
+        setStockNews([]);
+      }
+    } catch (error) {
+      console.error('Error fetching stock news:', error);
+      // Set empty array on error to show "no news" message
+      setStockNews([]);
+    } finally {
+      setNewsLoading(false);
+    }
   };
 
   // Create enhanced chart image from stock data
@@ -1653,11 +1703,15 @@ function StockChartAnalyzer() {
     setError(null);
     setStockData(null);
     setKeyLevels(null); // Clear key levels on new fetch
+    setStockNews(null); // Clear previous news
     // setLongTermAssessment(null); // Clear long term assessment when fetching new data
     
     try {
       const data = await fetchYahooFinanceData(symbol.trim().toUpperCase(), timeRange);
       setStockData(data);
+      
+      // Fetch news for the stock symbol
+      fetchStockNews(symbol.trim().toUpperCase());
       
       // Create chart image
       setTimeout(() => {
@@ -1722,6 +1776,7 @@ function StockChartAnalyzer() {
       reader.onload = () => {
         setUploadedImage(reader.result);
         setStockData(null);
+        setStockNews(null); // Clear news when uploading manual image
         // Clear previous results
         setPrediction(null);
         setPatternDetected(null);
@@ -2169,7 +2224,7 @@ function StockChartAnalyzer() {
               </div>
               <div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div>
               <div>
-                <strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |
+                <strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |
                 <strong> Data Points:</strong> {stockData.prices.length} {
                   selectedTimeRange === '1y' ? 'weeks' :
                   (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'
@@ -2229,6 +2284,176 @@ function StockChartAnalyzer() {
           <p style={{ fontSize: '13px', color: 'var(--text-color-muted)', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>
             {longTermAssessment.disclaimer}
           </p>
+        </div>
+      )}
+
+      {/* Latest News Section */}
+      {stockData && (stockNews !== null || newsLoading) && (
+        <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', marginBottom: '32px', overflow: 'hidden', boxShadow: `0 8px 32px var(--card-shadow)` }}>
+          <div style={{ padding: '24px 24px 0', borderBottom: '1px solid var(--card-border)' }}>
+            <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '16px', color: 'var(--text-color)', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '12px' }}>
+              <Newspaper size={28} style={{ color: 'var(--primary-accent)' }} />
+              Latest News for {stockData.symbol}
+              {newsLoading && <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--primary-accent)' }} />}
+            </h2>
+            <p style={{ color: 'var(--text-color-lighter)', textAlign: 'center', margin: '0 0 20px 0', fontSize: '14px' }}>
+              Stay updated with the latest market news and developments
+            </p>
+          </div>
+
+          <div style={{ padding: '24px' }}>
+            {newsLoading ? (
+              <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '40px', flexDirection: 'column', gap: '16px' }}>
+                <RefreshCw size={32} style={{ animation: 'spin 1s linear infinite', color: 'var(--primary-accent)' }} />
+                <span style={{ color: 'var(--text-color-lighter)', fontSize: '16px' }}>Loading latest news...</span>
+              </div>
+            ) : stockNews && stockNews.length > 0 ? (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(350px, 1fr))', gap: '20px' }}>
+                {stockNews.map((article, index) => (
+                  <div 
+                    key={index}
+                    style={{ 
+                      background: 'var(--background-color)', 
+                      border: '2px solid var(--card-border)', 
+                      borderRadius: '12px', 
+                      overflow: 'hidden',
+                      transition: 'all 0.3s ease',
+                      cursor: 'pointer',
+                      position: 'relative'
+                    }}
+                    onClick={() => article.url !== '#' && window.open(article.url, '_blank', 'noopener,noreferrer')}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.transform = 'translateY(-2px)';
+                      e.currentTarget.style.boxShadow = '0 8px 25px var(--card-shadow)';
+                      e.currentTarget.style.borderColor = 'var(--primary-accent-border)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.transform = 'translateY(0)';
+                      e.currentTarget.style.boxShadow = 'none';
+                      e.currentTarget.style.borderColor = 'var(--card-border)';
+                    }}
+                  >
+                    {article.image && (
+                      <div style={{ height: '120px', overflow: 'hidden', background: 'var(--primary-accent-light)' }}>
+                        <img 
+                          src={article.image} 
+                          alt={article.title}
+                          style={{ 
+                            width: '100%', 
+                            height: '100%', 
+                            objectFit: 'cover',
+                            transition: 'transform 0.3s ease'
+                          }}
+                          onError={(e) => {
+                            e.target.style.display = 'none';
+                            e.target.parentElement.style.display = 'none';
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div style={{ padding: '16px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px', gap: '8px' }}>
+                        <span style={{ 
+                          fontSize: '12px', 
+                          color: 'var(--primary-accent-darker)', 
+                          background: 'var(--primary-accent-light)', 
+                          padding: '4px 8px', 
+                          borderRadius: '12px',
+                          fontWeight: '600',
+                          border: '1px solid var(--primary-accent-border)'
+                        }}>
+                          {article.source}
+                        </span>
+                        <span style={{ 
+                          fontSize: '11px', 
+                          color: 'var(--text-color-muted)',
+                          fontWeight: '500'
+                        }}>
+                          {article.publishedDate}
+                        </span>
+                      </div>
+                      
+                      <h3 style={{ 
+                        fontSize: '16px', 
+                        fontWeight: '700', 
+                        color: 'var(--text-color)', 
+                        marginBottom: '8px', 
+                        lineHeight: '1.4',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {article.title}
+                      </h3>
+                      
+                      <p style={{ 
+                        fontSize: '14px', 
+                        color: 'var(--text-color-light)', 
+                        lineHeight: '1.5', 
+                        margin: '0',
+                        display: '-webkit-box',
+                        WebkitLineClamp: 3,
+                        WebkitBoxOrient: 'vertical',
+                        overflow: 'hidden'
+                      }}>
+                        {article.summary}
+                      </p>
+                      
+                      {article.url !== '#' && (
+                        <div style={{ 
+                          marginTop: '12px', 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '6px',
+                          color: 'var(--primary-accent)',
+                          fontSize: '13px',
+                          fontWeight: '600'
+                        }}>
+                          <span>Read full article</span>
+                          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                            <path d="M7 17L17 7" />
+                            <path d="M7 7h10v10" />
+                          </svg>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div style={{ 
+                textAlign: 'center', 
+                padding: '40px 20px',
+                color: 'var(--text-color-lighter)',
+                background: 'var(--primary-accent-light)',
+                borderRadius: '12px',
+                border: '2px solid var(--primary-accent-border)'
+              }}>
+                <div style={{ fontSize: '48px', marginBottom: '16px' }}>📰</div>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)' }}>
+                  No Recent News Available
+                </h3>
+                <p style={{ fontSize: '14px', margin: '0', maxWidth: '400px', marginLeft: 'auto', marginRight: 'auto' }}>
+                  We couldn't find any recent news articles for {stockData.symbol.replace('.NS', '')}. This might be due to limited coverage or API limitations.
+                </p>
+              </div>
+            )}
+
+            <div style={{ 
+              marginTop: '20px', 
+              padding: '12px', 
+              background: 'var(--info-background)', 
+              borderRadius: '8px', 
+              border: '1px solid var(--info-border)', 
+              fontSize: '13px', 
+              color: 'var(--info-color)', 
+              textAlign: 'center' 
+            }}>
+              💡 <strong>Note:</strong> News data is provided by Financial Modeling Prep API and may have a slight delay. Always verify information from multiple sources before making investment decisions.
+            </div>
+          </div>
         </div>
       )}
 
@@ -2438,7 +2663,7 @@ function StockChartAnalyzer() {
                   <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
                     {keyLevels.support.map((level, idx) => (
                       <li key={`s-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>
-                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}
+                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '}{level.toFixed(2)}
                       </li>
                     ))}
                   </ul>
@@ -2450,7 +2675,7 @@ function StockChartAnalyzer() {
                   <ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>
                     {keyLevels.resistance.map((level, idx) => (
                       <li key={`r-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>
-                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}
+                        {stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '}{level.toFixed(2)}
                       </li>
                     ))}
                   </ul>
