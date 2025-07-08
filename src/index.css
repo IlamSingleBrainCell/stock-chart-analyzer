@@ -1,8 +1,8 @@
 :root {
-  --background-color: #ffffff;
-  --text-color: #1a202c;
-  --text-color-light: #4a5568;
-  --text-color-lighter: #6b7280;
+  --background-color: #000000; /* Default background for elements if not specified otherwise */
+  --text-color: #f3f4f6; /* Default text to light gray/white for black background */
+  --text-color-light: #d1d5db; /* Lighter version of text */
+  --text-color-lighter: #9ca3af; /* Even lighter/muted */
   --text-color-muted: #9ca3af;
 
   --primary-accent: #6366f1; /* Indigo */
@@ -53,10 +53,10 @@
   --app-border: rgba(255, 255, 255, 0.4);
 
   /* Glassmorphism Variables - Light Theme */
-  --body-gradient-start-light: #667eea; /* Light purple-blue */
-  --body-gradient-end-light: #764ba2; /* Darker purple */
+  --body-gradient-start-light: #000000; /* Pure Black */
+  --body-gradient-end-light: #000000; /* Pure Black */
 
-  --sidebar-bg-light: rgba(255, 255, 255, 0.15);
+  --sidebar-bg-light: rgba(55, 65, 81, 0.25); /* Adjusted for better visibility on pure black, similar to dark theme's sidebar */
   --sidebar-blur-light: blur(12px);
   --sidebar-border-color-light: rgba(255, 255, 255, 0.25);
   --sidebar-shadow-light: 0 8px 32px 0 rgba(31, 38, 135, 0.25);
@@ -190,10 +190,10 @@ body.dark-mode {
   --app-border: rgba(55, 65, 81, 0.6); /* Gray 700 with opacity */
 
   /* Glassmorphism Variables - Dark Theme */
-  --body-gradient-start-dark: #1e293b; /* Dark Slate Blue */
-  --body-gradient-end-dark: #334155;   /* Medium Slate Gray */
+  --body-gradient-start-dark: #000000; /* Pure Black */
+  --body-gradient-end-dark: #000000;   /* Pure Black */
 
-  --sidebar-bg-dark: rgba(30, 41, 59, 0.25); /* Darker, more transparent */
+  --sidebar-bg-dark: rgba(55, 65, 81, 0.25); /* Slate-like, slightly transparent */
   --sidebar-blur-dark: blur(15px);
   --sidebar-border-color-dark: rgba(71, 85, 105, 0.4); /* Slate 600 with opacity */
   --sidebar-shadow-dark: 0 8px 32px 0 rgba(0, 0, 0, 0.35);
@@ -281,11 +281,12 @@ body {
   -moz-osx-font-smoothing: grayscale;
 
   /* Apply the gradient background to the body */
-  background: linear-gradient(135deg, var(--body-gradient-start) 0%, var(--body-gradient-end) 100%);
-  background-attachment: fixed; /* Keep gradient fixed during scroll */
+  background-color: #000000; /* Set body background to pure black */
+  /* background: linear-gradient(135deg, var(--body-gradient-start) 0%, var(--body-gradient-end) 100%); */
+  /* background-attachment: fixed; */ /* Keep gradient fixed during scroll - Not needed for solid color */
 
   color: var(--text-color); /* Default text color from theme */
-  transition: background 0.3s ease, color 0.3s ease; /* Transition for theme switch */
+  transition: background-color 0.3s ease, color 0.3s ease; /* Transition for theme switch */
   min-height: 100vh;
   overflow-x: hidden;
   line-height: 1.6;
