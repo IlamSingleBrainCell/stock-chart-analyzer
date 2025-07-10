@@ -1,76 +1,83 @@
-import React, { useContext } from 'react';
-import { ThemeContext } from '../ThemeContext';
+import React from 'react';
+
+// Removed ThemeContext as styles will use CSS variables
 
 const ProsConsTable = ({ financialData }) => {
-  const { theme } = useContext(ThemeContext);
+  // No need for theme context here anymore
 
   if (!financialData) {
-    return null; // Or a loading indicator if financialDataLoading is also passed
+    return null;
   }
 
   if (financialData.error) {
     return (
       <div style={{
-        padding: '15px',
-        margin: '20px 0',
-        border: `1px solid ${theme === 'dark' ? '#7f1d1d' : '#fecaca'}`,
-        backgroundColor: theme === 'dark' ? '#450a0a' : '#fee2e2',
-        color: theme === 'dark' ? '#fca5a5' : '#b91c1c',
-        borderRadius: '8px',
+        padding: 'var(--element-gap, 15px)', // Use CSS var with fallback
+        margin: 'var(--section-gap, 20px) 0',
+        border: '1px solid var(--danger-border)',
+        backgroundColor: 'var(--danger-background)',
+        color: 'var(--danger-color)',
+        borderRadius: 'var(--app-border-radius-small, 8px)',
         textAlign: 'center'
       }}>
-        <p>Could not load fundamental data: {financialData.error}</p>
+        <p style={{margin: 0}}>Could not load fundamental data: {financialData.error}</p>
       </div>
     );
   }
 
   const formatNumber = (num, isCurrency = false, isPercent = false) => {
     if (num === null || num === undefined || num === 'N/A' || num === 'Error fetching') return num;
-    if (typeof num === 'string' && !isPercent) return num; // Already formatted or textual like 'N/A'
+    if (typeof num === 'string' && !isPercent) return num;
 
     let number = parseFloat(num);
     if (isNaN(number)) return 'N/A';
 
     if (isCurrency) {
+      // Assuming USD for now, could be made dynamic if stockData.currency is available
       return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD', minimumFractionDigits: 0, maximumFractionDigits: 0 }).format(number);
     }
     if (isPercent) {
       return `${number.toFixed(2)}%`;
     }
-    return new Intl.NumberFormat('en-US').format(number);
+    return new Intl.NumberFormat('en-US', {minimumFractionDigits: 0, maximumFractionDigits: 2}).format(number);
   };
 
   const tableStyle = {
     width: '100%',
     borderCollapse: 'collapse',
-    marginTop: '20px',
-    fontSize: '14px',
-    backgroundColor: theme === 'dark' ? '#2d3748' : '#ffffff', // card-background
-    color: theme === 'dark' ? '#e2e8f0' : '#2d3748', // text-color
-    borderRadius: '8px',
-    overflow: 'hidden', // To make border-radius work on table
-    boxShadow: `0 4px 12px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'}`
+    marginTop: 'var(--element-gap, 15px)',
+    fontSize: 'clamp(0.875rem, 2vw, 0.95rem)', // Responsive font size
+    backgroundColor: 'var(--card-background)',
+    color: 'var(--text-color)',
+    borderRadius: 'var(--app-border-radius-small, 8px)',
+    overflow: 'hidden',
+    boxShadow: 'var(--card-shadow)'
   };
 
   const thStyle = {
-    borderBottom: `2px solid ${theme === 'dark' ? '#4a5568' : '#e2e8f0'}`, // separator-color
-    padding: '12px 15px',
+    borderBottom: '2px solid var(--separator-color)',
+    padding: '10px 12px', // Slightly reduced padding
     textAlign: 'left',
-    backgroundColor: theme === 'dark' ? '#374151' : '#f8fafc', // Slightly different header
+    backgroundColor: 'var(--background-color)', // Use a subtle bg for header
     fontWeight: '600',
     textTransform: 'uppercase',
-    letterSpacing: '0.05em'
+    letterSpacing: '0.05em',
+    fontSize: 'clamp(0.8rem, 1.8vw, 0.875rem)',
   };
 
   const tdStyle = {
-    borderBottom: `1px solid ${theme === 'dark' ? '#374151' : '#e2e8f0'}`, // separator-color
-    padding: '10px 15px',
+    borderBottom: '1px solid var(--separator-color)',
+    padding: '10px 12px',
   };
 
   const metricNameStyle = {
     fontWeight: '500',
-    color: theme === 'dark' ? '#a0aec0' : '#4a5568', // text-color-light
+    color: 'var(--text-color-light)',
   };
+
+  const evenRowBg = 'var(--background-color)'; // Or a specific --table-row-even-bg if defined
+  const oddRowBg = 'var(--card-background)';   // Or a specific --table-row-odd-bg if defined
+
 
   // Prepare sales history display
   let salesDisplay = 'N/A';
@@ -95,10 +102,10 @@ const ProsConsTable = ({ financialData }) => {
   ];
 
   return (
-    <div style={{ marginTop: '25px', marginBottom: '25px' }}>
+    <div style={{ marginTop: 'var(--section-gap, 25px)', marginBottom: 'var(--section-gap, 25px)', overflowX: 'auto' }}>
       <h3 style={{
         textAlign: 'center',
-        fontSize: '20px',
+        fontSize: 'clamp(1.1rem, 2.5vw, 1.25rem)', // Responsive title
         fontWeight: '700',
         color: theme === 'dark' ? '#cbd5e1' : '#334155',
         marginBottom: '15px'

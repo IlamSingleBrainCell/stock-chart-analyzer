@@ -1,10 +1,7 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { ThemeContext } from '../ThemeContext';
+import React, { useState, useEffect } from 'react';
 
 // Props are expected: PatternVisualization (component) and chartPatterns (object)
 const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
-  const { theme } = useContext(ThemeContext);
-
   const [gameStarted, setGameStarted] = useState(false);
   const [currentCorrectPattern, setCurrentCorrectPattern] = useState(null);
   const [options, setOptions] = useState([]);
@@ -13,10 +10,14 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   const [totalQuestions] = useState(10);
   const [feedback, setFeedback] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
-  const [feedbackType, setFeedbackType] = useState('');
+  const [feedbackType, setFeedbackType] = useState(''); // 'correct' or 'incorrect'
   const [gameOver, setGameOver] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
+
+  // Assuming theme is handled by global CSS variables now, so no direct theme context needed here for component's own styles.
+  // The 'theme' prop passed to PatternVisualization is for its internal canvas drawing logic if it still uses it.
+  // For this component, we'll rely on CSS variables set in index.css.
 
   const allPatternNames = chartPatterns ? Object.keys(chartPatterns) : [];
 
@@ -36,8 +37,6 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   };
 
   const loadNextQuestion = () => {
-    // This function prepares the data for the question at the current `questionNumber` index.
-    // It does not increment questionNumber itself.
     if (questionNumber >= totalQuestions) {
       setGameOver(true);
       return;
@@ -49,8 +48,8 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
     setFeedbackType('');
 
     if (allPatternNames.length === 0) {
-        console.error("Pattern Recognition Game: No patterns available to choose from in chartPatterns prop.");
-        setFeedback("Error: No patterns loaded for the game.");
+        console.error("Pattern Recognition Game: No patterns available.");
+        setFeedback("Error: No patterns loaded.");
         setShowFeedback(true);
         setFeedbackType('incorrect');
         setGameOver(true);
@@ -69,9 +68,15 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
         currentOptions.push(randomDistractorName);
       }
     }
-    while (currentOptions.length < 4 && allPatternNames.length > 0) { // Fill if not enough unique
-        currentOptions.push(allPatternNames[Math.max(0, currentOptions.length % allPatternNames.length)]);
+     while (currentOptions.length < 4 && currentOptions.length < allPatternNames.length) {
+        const distractor = allPatternNames.find(pn => !currentOptions.includes(pn));
+        if (distractor) currentOptions.push(distractor);
+        else break; // Should not happen if allPatternNames.length >=4
     }
+     while (currentOptions.length < 4 && allPatternNames.length > 0) { // Fallback if not enough unique
+        currentOptions.push(allPatternNames[0]); // Just push first one to fill, will be duplicates
+    }
+
     setOptions(shuffleArray(currentOptions));
   };
 
@@ -83,7 +88,7 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
     setFeedback('');
     setShowFeedback(false);
     setFeedbackType('');
-    loadNextQuestion(); // Load the first question (index 0)
+    loadNextQuestion();
   };
 
   const handleAnswer = (selectedOptionName) => {
@@ -101,10 +106,10 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
       setFeedbackType('incorrect');
     }
 
-    if (questionNumber >= totalQuestions - 1) {
+    if (questionNumber >= totalQuestions - 1) { // If it's the last question
         setTimeout(() => {
-            setGameOver(true);
-        }, 2500);
+            setGameOver(true); // Automatically go to game over after showing feedback
+        }, 2500); // Delay to allow user to see feedback
     }
   };
 
@@ -112,7 +117,6 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
     const nextQuestionIndex = questionNumber + 1;
     if (nextQuestionIndex < totalQuestions) {
         setQuestionNumber(nextQuestionIndex);
-        // The useEffect watching questionNumber will trigger loadNextQuestion
     } else {
         setGameOver(true);
     }
@@ -123,103 +127,130 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
       loadNextQuestion();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionNumber, gameStarted, gameOver]); // Trigger load when questionNumber changes while game is active
+  }, [questionNumber, gameStarted, gameOver]);
 
 
    const gameContainerStyle = {
-    padding: '30px',
-    margin: '20px auto',
+    padding: 'var(--container-padding, 30px)',
+    margin: 'var(--section-gap, 20px) auto',
     maxWidth: '700px',
-    backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
-    color: theme === 'dark' ? '#e5e7eb' : '#111827',
-    borderRadius: '16px',
-    boxShadow: theme === 'dark'
-        ? '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)'
-        : '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.07)',
-    border: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+    backgroundColor: 'var(--card-background)',
+    color: 'var(--text-color)',
+    borderRadius: 'var(--app-border-radius, 16px)',
+    boxShadow: 'var(--card-shadow)',
+    border: '1px solid var(--app-border)',
     textAlign: 'center',
-    fontFamily: "'Inter', sans-serif"
+    fontFamily: 'var(--font-family-sans-serif)'
   };
 
   const titleStyle = {
-    fontSize: '28px',
+    fontSize: 'clamp(1.5rem, 4vw, 1.75rem)',
     fontWeight: '700',
-    color: theme === 'dark' ? '#93c5fd' : '#3b82f6',
-    marginBottom: '10px'
+    color: 'var(--primary-accent-darker)',
+    marginBottom: 'var(--element-gap, 10px)'
   };
 
   const descriptionStyle = {
-    fontSize: '16px',
-    color: theme === 'dark' ? '#d1d5db' : '#4b5563',
-    marginBottom: '25px',
+    fontSize: 'clamp(0.9rem, 2vw, 1rem)',
+    color: 'var(--text-color-light)',
+    marginBottom: 'var(--section-gap, 25px)',
     lineHeight: '1.6'
   };
 
-  const buttonStyle = {
-    padding: '14px 28px',
-    fontSize: '18px',
+  const baseButtonStyle = {
+    padding: '12px 24px',
+    fontSize: 'clamp(0.9rem, 2.2vw, 1.1rem)',
     margin: '10px 5px',
     cursor: 'pointer',
-    backgroundColor: theme === 'dark' ? '#3b82f6' : '#2563eb',
-    color: 'white',
+    color: 'var(--button-primary-text)',
     border: 'none',
-    borderRadius: '10px',
-    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease',
+    borderRadius: 'var(--app-border-radius-small, 8px)',
+    transition: 'var(--app-transition, all 0.2s ease-in-out)',
     fontWeight: '600',
-    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
+    boxShadow: '0 2px 4px rgba(0,0,0,0.05)'
+  };
+
+  const primaryButtonStyle = { // For Start Game, Play Again
+    ...baseButtonStyle,
+    backgroundColor: 'var(--primary-accent)',
+  };
+   const primaryButtonHoverStyle = { // For JS-driven hover (not ideal, prefer CSS)
+    backgroundColor: 'var(--primary-accent-darker)',
+  };
+
+  const successButtonStyle = { // For "Next Question"
+    ...baseButtonStyle,
+    backgroundColor: 'var(--success-color)', // Solid color
+  };
+   const successButtonHoverStyle = {
+    backgroundColor: 'var(--success-darker, #12693E)', // Need to define --success-darker or use a calculated one
+  };
+
+  const warningButtonStyle = { // For "Show Final Score"
+    ...baseButtonStyle,
+    backgroundColor: 'var(--warning-color)', // Solid color
+    color: 'var(--warning-text-color)' // Ensure contrast if background is light
+  };
+   const warningButtonHoverStyle = {
+    backgroundColor: 'var(--warning-darker, #C79002)', // Need to define
   };
 
   const optionButtonStyle = (optionName) => {
-    let bgColor = theme === 'dark' ? '#4b5563' : '#9ca3af';
-    let textColor = 'white';
-    let border = `2px solid transparent`;
+    let currentBgColor = 'var(--primary-accent-light)';
+    let currentTextColor = 'var(--primary-accent-darker)';
+    let currentBorder = '1px solid var(--primary-accent-border)';
+    let currentBoxShadow = '0 1px 2px rgba(0,0,0,0.05)';
 
     if (isAnswerChecked) {
-        if (currentCorrectPattern && optionName === currentCorrectPattern.name) {
-            bgColor = theme === 'dark' ? '#10b981' : '#059669';
-        } else if (optionName === selectedAnswer) {
-            bgColor = theme === 'dark' ? '#ef4444' : '#dc2626';
-        } else {
-             bgColor = theme === 'dark' ? '#374151' : '#e5e7eb';
-             textColor = theme === 'dark' ? '#9ca3af' : '#6b7280';
+        if (currentCorrectPattern && optionName === currentCorrectPattern.name) { // Correctly selected
+            currentBgColor = 'var(--success-background)';
+            currentTextColor = 'var(--success-color)';
+            currentBorder = '1px solid var(--success-border)';
+        } else if (optionName === selectedAnswer) { // Incorrectly selected
+            currentBgColor = 'var(--danger-background)';
+            currentTextColor = 'var(--danger-color)';
+            currentBorder = '1px solid var(--danger-border)';
+        } else { // Other options after an answer is checked
+             currentBgColor = 'var(--background-color)';
+             currentTextColor = 'var(--text-color-muted)';
+             currentBorder = '1px solid var(--separator-color)';
         }
     }
     return {
-        ...buttonStyle,
-        backgroundColor: bgColor,
-        color: textColor,
+        ...baseButtonStyle, // Base for padding, font-size etc.
+        backgroundColor: currentBgColor,
+        color: currentTextColor,
+        border: currentBorder,
         width: 'calc(50% - 12px)',
-        minHeight: '70px',
+        minHeight: '60px',
         margin: '6px',
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
         fontWeight: '500',
-        fontSize: '15px',
+        fontSize: 'clamp(0.85rem, 1.9vw, 0.95rem)',
         lineHeight: '1.3',
-        border: border,
-        boxShadow: isAnswerChecked && currentCorrectPattern && (optionName === currentCorrectPattern.name || optionName === selectedAnswer)
-            ? `0 0 15px ${bgColor}`
-            : '0 2px 4px rgba(0,0,0,0.05)'
+        padding: '10px',
+        boxShadow: currentBoxShadow,
     };
   };
 
   const feedbackContainerStyle = {
-    marginTop: '25px',
-    padding: '15px',
-    borderRadius: '8px',
-    fontSize: '17px',
+    marginTop: 'var(--element-gap, 20px)',
+    padding: 'var(--element-gap, 15px)',
+    borderRadius: 'var(--app-border-radius-small, 8px)',
+    fontSize: 'clamp(0.95rem, 2.1vw, 1.05rem)',
     fontWeight: '600',
     minHeight: '50px',
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
-    color: theme === 'dark' ? '#111827' : '#ffffff',
+    color: 'var(--button-primary-text)', // Text should be light for dark backgrounds
     backgroundColor: feedbackType === 'correct'
-      ? (theme === 'dark' ? '#10b981' : '#059669')
+      ? 'var(--success-color)' // Solid success color
       : feedbackType === 'incorrect'
-      ? (theme === 'dark' ? '#ef4444' : '#dc2626')
-      : 'transparent',
+      ? 'var(--danger-color)' // Solid danger color
+      : 'transparent', // Should not happen if showFeedback is true
     transition: 'all 0.3s ease-in-out',
     opacity: showFeedback ? 1 : 0,
     transform: showFeedback ? 'translateY(0)' : 'translateY(10px)',
@@ -229,22 +260,23 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
     display: 'flex',
     justifyContent: 'space-between',
     alignItems: 'center',
-    padding: '10px 20px',
-    background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
-    borderRadius: '10px',
-    marginBottom: '25px'
+    padding: 'var(--element-gap, 10px) var(--container-padding, 20px)',
+    background: 'var(--background-color)',
+    borderRadius: 'var(--app-border-radius-small, 8px)',
+    marginBottom: 'var(--section-gap, 25px)',
+    border: '1px solid var(--separator-color)'
   };
 
   const scoreTextStyle = {
-    fontSize: '20px',
+    fontSize: 'clamp(1.1rem, 2.5vw, 1.25rem)',
     fontWeight: '700',
-    color: theme === 'dark' ? '#93c5fd' : '#3b82f6'
+    color: 'var(--primary-accent-darker)'
   };
 
   const progressTextStyle = {
-    fontSize: '16px',
+    fontSize: 'clamp(0.9rem, 2vw, 1rem)',
     fontWeight: '500',
-    color: theme === 'dark' ? '#d1d5db' : '#4b5563'
+    color: 'var(--text-color-light)'
   };
 
   if (!gameStarted) {
@@ -256,9 +288,9 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
           Your task is to identify it correctly from the given options. Good luck!
         </p>
         <button
-          style={buttonStyle}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#60a5fa' : '#3b82f6'}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#3b82f6' : '#2563eb'}
+          style={primaryButtonStyle}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = primaryButtonHoverStyle.backgroundColor}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = primaryButtonStyle.backgroundColor}
           onClick={startGame}
         >
           🚀 Start Game
@@ -270,17 +302,17 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   if (gameOver) {
     return (
       <div style={gameContainerStyle}>
-        <h2 style={{...titleStyle, fontSize: '32px', marginBottom: '20px'}}>🎉 Game Over! 🎉</h2>
-        <p style={{...descriptionStyle, fontSize: '22px', fontWeight: '600'}}>
-          Your final score: <span style={{color: theme === 'dark' ? '#86efac' : '#15803d'}}>{score}</span> / {totalQuestions}
+        <h2 style={{...titleStyle, fontSize: 'clamp(1.75rem, 4.5vw, 2rem)', marginBottom: 'var(--element-gap)'}}>🎉 Game Over! 🎉</h2>
+        <p style={{...descriptionStyle, fontSize: 'clamp(1.25rem, 3vw, 1.5rem)', fontWeight: '600'}}>
+          Your final score: <span style={{color: 'var(--success-color)'}}>{score}</span> / {totalQuestions}
         </p>
         <p style={descriptionStyle}>
             {score > totalQuestions / 2 ? "Great job! You've got a good eye for patterns." : "Keep practicing to improve your pattern recognition skills!"}
         </p>
         <button
-          style={buttonStyle}
-          onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#60a5fa' : '#3b82f6'}
-          onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#3b82f6' : '#2563eb'}
+          style={primaryButtonStyle}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = primaryButtonHoverStyle.backgroundColor}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = primaryButtonStyle.backgroundColor}
           onClick={startGame}
         >
           Play Again?
@@ -299,17 +331,17 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
       {currentCorrectPattern && PatternVisualization && (
         <PatternVisualization
             patternName={currentCorrectPattern.name}
-            theme={theme}
-            width={400}
-            height={220}
+            theme={'light'} // Keep passing theme if PatternVisualization expects it for canvas
+            width={Math.min(600, typeof window !== 'undefined' ? window.innerWidth * 0.8 : 600)}
+            height={Math.min(330, typeof window !== 'undefined' ? window.innerHeight * 0.4 : 330)}
         />
       )}
 
-      <p style={{...descriptionStyle, fontSize: '18px', fontWeight: '600', marginTop: '25px', marginBottom: '15px' }}>
+      <p style={{...descriptionStyle, fontSize: 'clamp(1rem, 2.5vw, 1.125rem)', fontWeight: '600', marginTop: 'var(--section-gap)', marginBottom: 'var(--element-gap)' }}>
         What pattern is this?
       </p>
 
-      <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0px' }}>
+      <div style={{ marginTop: 'var(--element-gap)', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0px' }}> {/* gap is handled by margin in optionButtonStyle */}
         {options.map((optionName, index) => (
           <button
             key={index}
@@ -330,9 +362,9 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
 
       {isAnswerChecked && !gameOver && questionNumber < totalQuestions - 1 && (
          <button
-            style={{...buttonStyle, marginTop: '25px', backgroundColor: theme === 'dark' ? '#16a34a' : '#15803d'}}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#22c55e' : '#16a34a'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#16a34a' : '#15803d'}
+            style={{...successButtonStyle, marginTop: 'var(--section-gap)'}}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = successButtonHoverStyle.backgroundColor}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = successButtonStyle.backgroundColor}
             onClick={handleNextQuestion}
         >
             Next Question ➔
@@ -341,9 +373,9 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
 
       {isAnswerChecked && questionNumber >= totalQuestions -1 && !gameOver && (
          <button
-            style={{...buttonStyle, marginTop: '25px', backgroundColor: theme === 'dark' ? '#f97316' : '#ea580c'}}
-            onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#fb923c' : '#f97316'}
-            onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#f97316' : '#ea580c'}
+            style={{...warningButtonStyle, marginTop: 'var(--section-gap)'}}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = warningButtonHoverStyle.backgroundColor}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = warningButtonStyle.backgroundColor}
             onClick={() => setGameOver(true)}
         >
             Show Final Score 🏁

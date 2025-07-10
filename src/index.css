@@ -1,136 +1,155 @@
+/* src/index.css */
 :root {
-  --background-color: #ffffff;
-  --text-color: #1a202c;
-  --text-color-light: #4a5568;
-  --text-color-lighter: #6b7280;
-  --text-color-muted: #9ca3af;
+  /* Base & Text */
+  --background-color: #f8f9fa; /* Lighter gray for a cleaner look */
+  --text-color: #212529; /* Darker text for better contrast */
+  --text-color-light: #495057;
+  --text-color-lighter: #6c757d;
+  --text-color-muted: #adb5bd;
 
-  --primary-accent: #6366f1; /* Indigo */
-  --primary-accent-darker: #4f46e5;
-  --primary-accent-light: rgba(99, 102, 241, 0.1);
-  --primary-accent-border: rgba(99, 102, 241, 0.3);
+  /* Primary Accent (Slightly desaturated for a calmer feel) */
+  --primary-accent: #5a67d8; /* Adjusted Indigo */
+  --primary-accent-darker: #4c51bf;
+  --primary-accent-light: rgba(90, 103, 216, 0.1);
+  --primary-accent-border: rgba(90, 103, 216, 0.3);
 
-  --secondary-accent: #8b5cf6; /* Violet */
+  /* Secondary Accent (Optional, use sparingly) */
+  --secondary-accent: #7f5ad5; /* Adjusted Violet */
 
-  --card-background: rgba(255, 255, 255, 0.95);
-  --card-border: rgba(0, 0, 0, 0.1);
-  --card-shadow: rgba(0, 0, 0, 0.1);
+  /* Card & Borders (Subtler shadows and borders) */
+  --card-background: #ffffff;
+  --card-border: #dee2e6; /* Softer border color */
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.07); /* Softer shadow */
 
-  --input-border: rgba(99, 102, 241, 0.2);
-  --input-border-focus: #6366f1;
-  --input-background: rgba(139, 92, 246, 0.05);
-  --input-background-hover: rgba(139, 92, 246, 0.1);
+  /* Inputs */
+  --input-border: #ced4da;
+  --input-border-focus: var(--primary-accent);
+  --input-background: #ffffff;
+  --input-background-hover: #f8f9fa;
 
+  /* Buttons */
   --button-primary-text: #ffffff;
 
-  --success-color: #059669; /* Green */
-  --success-background: rgba(16, 185, 129, 0.15);
-  --success-border: rgba(16, 185, 129, 0.3);
+  /* Semantic Colors (Slightly toned down for better harmony) */
+  --success-color: #198754; /* Bootstrap Green */
+  --success-background: rgba(25, 135, 84, 0.1);
+  --success-border: rgba(25, 135, 84, 0.3);
 
-  --danger-color: #dc2626; /* Red */
-  --danger-background: rgba(239, 68, 68, 0.15);
-  --danger-border: rgba(239, 68, 68, 0.3);
+  --danger-color: #dc3545; /* Bootstrap Red */
+  --danger-background: rgba(220, 53, 69, 0.1);
+  --danger-border: rgba(220, 53, 69, 0.3);
 
-  --warning-color: #d97706; /* Amber */
-  --warning-background: rgba(245, 158, 11, 0.1);
-  --warning-border: rgba(245, 158, 11, 0.3);
+  --warning-color: #ffc107; /* Bootstrap Yellow */
+  --warning-text-color: #4b3e05; /* Darker text for yellow background */
+  --warning-background: rgba(255, 193, 7, 0.15);
+  --warning-border: rgba(255, 193, 7, 0.4);
 
-  --info-color: #0891b2; /* Cyan */
-  --info-background: rgba(34, 211, 238, 0.1);
-  --info-border: rgba(34, 211, 238, 0.3);
+  --info-color: #0dcaf0; /* Bootstrap Cyan */
+  --info-text-color: #053740; /* Darker text for cyan background */
+  --info-background: rgba(13, 202, 240, 0.1);
+  --info-border: rgba(13, 202, 240, 0.3);
 
-  --link-color: #4f46e5;
-  --separator-color: rgba(107, 114, 128, 0.3);
-  --highlight-background: #fef3c7; /* For search term highlight */
+  /* Links & Separators */
+  --link-color: var(--primary-accent-darker);
+  --separator-color: #e9ecef; /* Lighter separator */
+  --highlight-background: #ffe082; /* Softer yellow for highlight */
 
-  --chart-grid-color: #f0f0f0;
-  --chart-label-color: #666666;
-  --chart-main-line-color: #2563eb;
-  --candlestick-green: #10b981;
-  --candlestick-red: #ef4444;
+  /* Chart Specific (Keep these clear) */
+  --chart-grid-color: #e9ecef;
+  --chart-label-color: #6c757d;
+  --chart-main-line-color: var(--primary-accent);
+  --candlestick-green: var(--success-color);
+  --candlestick-red: var(--danger-color);
 
-  --app-background-start: rgba(255, 255, 255, 0.98); /* For the main div background */
-  --app-border: rgba(255, 255, 255, 0.4);
+  /* App Container (Simplified background) */
+  --app-background-start: var(--background-color);
+  --app-border: var(--card-border);
+
+  /* Font */
+  --font-family-sans-serif: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol';
+  --font-family-monospace: SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
+
+  /* Transitions */
+  --app-transition: all 0.2s ease-in-out;
 }
 
 body.dark-mode {
-  --background-color: #111827; /* Gray 900 */
-  --text-color: #f3f4f6; /* Gray 100 */
-  --text-color-light: #d1d5db; /* Gray 300 */
-  --text-color-lighter: #9ca3af; /* Gray 400 */
-  --text-color-muted: #6b7280; /* Gray 500 */
+  --background-color: #1a202c; /* Darker base */
+  --text-color: #e2e8f0; /* Lighter text */
+  --text-color-light: #a0aec0;
+  --text-color-lighter: #718096;
+  --text-color-muted: #4a5568;
 
-  --primary-accent: #818cf8; /* Indigo 400 */
-  --primary-accent-darker: #6366f1; /* Indigo 500 */
-  --primary-accent-light: rgba(129, 140, 248, 0.15);
-  --primary-accent-border: rgba(129, 140, 248, 0.4);
+  --primary-accent: #7f9cf5; /* Lighter Indigo for dark mode */
+  --primary-accent-darker: #667eea;
+  --primary-accent-light: rgba(127, 156, 245, 0.15);
+  --primary-accent-border: rgba(127, 156, 245, 0.4);
 
-  --secondary-accent: #a78bfa; /* Violet 400 */
+  --secondary-accent: #9f7aea; /* Lighter Violet */
 
-  --card-background: #1f2937; /* Gray 800 */
-  --card-border: rgba(255, 255, 255, 0.15);
-  --card-shadow: rgba(0, 0, 0, 0.2);
+  --card-background: #2d3748; /* Darker card */
+  --card-border: #4a5568; /* Visible border for dark cards */
+  --card-shadow: 0 2px 10px rgba(0, 0, 0, 0.25); /* More pronounced shadow for dark */
 
-  --input-border: rgba(129, 140, 248, 0.3);
-  --input-border-focus: #818cf8;
-  --input-background: rgba(129, 140, 248, 0.1);
-  --input-background-hover: rgba(129, 140, 248, 0.2);
+  --input-border: #4a5568;
+  --input-border-focus: var(--primary-accent);
+  --input-background: #2d3748;
+  --input-background-hover: #4a5568;
 
-  /* --button-primary-text: #ffffff; */ /* Remains white or light gray */
+  /* Semantic Colors for Dark Mode */
+  --success-color: #48bb78; /* Brighter Green */
+  --success-background: rgba(72, 187, 120, 0.15);
+  --success-border: rgba(72, 187, 120, 0.4);
 
-  --success-color: #34d399; /* Green 400 */
-  --success-background: rgba(52, 211, 153, 0.15);
-  --success-border: rgba(52, 211, 153, 0.4);
+  --danger-color: #f56565; /* Brighter Red */
+  --danger-background: rgba(245, 101, 101, 0.15);
+  --danger-border: rgba(245, 101, 101, 0.4);
 
-  --danger-color: #f87171; /* Red 400 */
-  --danger-background: rgba(248, 113, 113, 0.15);
-  --danger-border: rgba(248, 113, 113, 0.4);
+  --warning-color: #ecc94b; /* Brighter Yellow */
+  --warning-text-color: #4b3e05; /* Keep dark text for contrast */
+  --warning-background: rgba(236, 201, 75, 0.15);
+  --warning-border: rgba(236, 201, 75, 0.4);
 
-  --warning-color: #fbbf24; /* Amber 400 */
-  --warning-background: rgba(251, 191, 36, 0.15);
-  --warning-border: rgba(251, 191, 36, 0.4);
+  --info-color: #4fd1c5; /* Brighter Cyan */
+  --info-text-color: #053740; /* Keep dark text for contrast */
+  --info-background: rgba(79, 209, 197, 0.1);
+  --info-border: rgba(79, 209, 197, 0.3);
 
-  --info-color: #67e8f9; /* Cyan 300 */
-  --info-background: rgba(103, 232, 249, 0.1);
-  --info-border: rgba(103, 232, 249, 0.3);
+  --link-color: var(--primary-accent);
+  --separator-color: #4a5568;
+  --highlight-background: #4a5568; /* Darker highlight */
 
-  --link-color: #818cf8;
-  --separator-color: rgba(107, 114, 128, 0.5);
-  --highlight-background: #4b5563; /* Gray 600 - for search term highlight on dark */
+  --chart-grid-color: #4a5568;
+  --chart-label-color: #a0aec0;
+  --chart-main-line-color: var(--primary-accent);
+  --candlestick-green: var(--success-color);
+  --candlestick-red: var(--danger-color);
 
-  --chart-grid-color: #374151; /* Gray 700 */
-  --chart-label-color: #9ca3af; /* Gray 400 */
-  --chart-main-line-color: #60a5fa; /* Blue 400 */
-  --candlestick-green: #34d399; /* Green 400 */
-  --candlestick-red: #f87171; /* Red 400 */
-
-  --app-background-start: #1f2937; /* For the main div background - Gray 800 */
-  --app-border: rgba(55, 65, 81, 0.6); /* Gray 700 with opacity */
+  --app-background-start: var(--background-color);
+  --app-border: var(--card-border);
 }
-
 
 body {
   margin: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
-    sans-serif;
+  font-family: var(--font-family-sans-serif);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   background-color: var(--background-color);
   color: var(--text-color);
-  transition: background-color 0.3s ease, color 0.3s ease;
+  transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+  font-size: 16px; /* Base font size */
+  line-height: 1.6; /* Improved line height */
 }
 
 code {
-  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
-    monospace;
+  font-family: var(--font-family-monospace);
   background-color: var(--primary-accent-light);
   padding: 0.2em 0.4em;
-  border-radius: 3px;
+  border-radius: 4px; /* Slightly larger radius */
   color: var(--primary-accent-darker);
+  font-size: 0.875em; /* Slightly smaller code font */
 }
 
 body.dark-mode code {
-  background-color: var(--primary-accent-light); /* Already good for dark from vars */
   color: var(--primary-accent);
 }
