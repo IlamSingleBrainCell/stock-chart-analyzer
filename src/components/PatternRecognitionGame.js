@@ -9,7 +9,7 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   const [currentCorrectPattern, setCurrentCorrectPattern] = useState(null);
   const [options, setOptions] = useState([]);
   const [score, setScore] = useState(0);
-  const [questionNumber, setQuestionNumber] = useState(0); // 0-indexed internally
+  const [questionNumber, setQuestionNumber] = useState(0); // 0-indexed internally, for logic
   const [totalQuestions] = useState(10);
   const [feedback, setFeedback] = useState('');
   const [showFeedback, setShowFeedback] = useState(false);
@@ -36,6 +36,8 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   };
 
   const loadNextQuestion = () => {
+    // This function prepares the data for the question at the current `questionNumber` index.
+    // It does not increment questionNumber itself.
     if (questionNumber >= totalQuestions) {
       setGameOver(true);
       return;
@@ -67,8 +69,8 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
         currentOptions.push(randomDistractorName);
       }
     }
-    while (currentOptions.length < 4 && allPatternNames.length > 0) {
-        currentOptions.push(allPatternNames[0]);
+    while (currentOptions.length < 4 && allPatternNames.length > 0) { // Fill if not enough unique
+        currentOptions.push(allPatternNames[Math.max(0, currentOptions.length % allPatternNames.length)]);
     }
     setOptions(shuffleArray(currentOptions));
   };
@@ -81,7 +83,7 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
     setFeedback('');
     setShowFeedback(false);
     setFeedbackType('');
-    loadNextQuestion();
+    loadNextQuestion(); // Load the first question (index 0)
   };
 
   const handleAnswer = (selectedOptionName) => {
@@ -108,23 +110,20 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
 
   const handleNextQuestion = () => {
     const nextQuestionIndex = questionNumber + 1;
-    if (nextQuestionIndex < totalQuestions) { // Check against totalQuestions, not totalQuestions - 1
+    if (nextQuestionIndex < totalQuestions) {
         setQuestionNumber(nextQuestionIndex);
-        // loadNextQuestion(); // useEffect will handle this due to questionNumber change
+        // The useEffect watching questionNumber will trigger loadNextQuestion
     } else {
         setGameOver(true);
     }
   };
 
   useEffect(() => {
-    if (gameStarted && !gameOver ) {
-      // This will load the question when questionNumber changes, including the initial one if startGame sets questionNumber.
-      // startGame calls loadNextQuestion directly for the first question (index 0).
-      // handleNextQuestion updates questionNumber, and this effect loads the new question.
+    if (gameStarted && !gameOver) {
       loadNextQuestion();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionNumber, gameStarted, gameOver]);
+  }, [questionNumber, gameStarted, gameOver]); // Trigger load when questionNumber changes while game is active
 
 
    const gameContainerStyle = {

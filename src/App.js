@@ -4,9 +4,13 @@ import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
 import { ThemeContext } from './ThemeContext';
 import PatternRecognitionGame from './components/PatternRecognitionGame';
+import ProsConsTable from './components/ProsConsTable'; // Import the new table component
 
 const MARKETAUX_API_KEY = 'F8x0iPiyy2Rhe8LZsQJvmisOPwpr7xQ4Np7XF0o1';
 const MARKETAUX_BASE_URL = "https://api.marketaux.com/v1/news/all";
+
+const FMP_API_KEY = "YOUR_FMP_API_KEY"; // Replace with your actual key
+const FMP_BASE_URL = "https://financialmodelingprep.com/api/v3";
 
 const chartThemeColors = {
   light: {
@@ -199,6 +203,13 @@ export const chartPatterns = {
   'wedge-falling': { description: 'A bullish reversal pattern with converging downward trending lines', prediction: 'up', timeframe: '14-28 days', daysDown: '0 days', daysUp: '14-35 days', reliability: 77, recommendation: 'buy', entryStrategy: 'Buy on upper trendline break', exitStrategy: 'Target: Wedge height above break', breakoutDays: '5-10 days' }
 };
 
+// Helper function to calculate CAGR
+const calculateCAGR = (endValue, startValue, periods) => {
+    if (startValue === 0 || periods <= 0 || !endValue || !startValue) return null;
+    const cagr = (Math.pow(endValue / startValue, 1 / periods) - 1) * 100;
+    return parseFloat(cagr.toFixed(2));
+};
+
 function StockChartAnalyzer() {
   const stockDatabase = stocksData.stocks;
   const popularStocksData = stocksData.popularStocks;
@@ -220,7 +231,7 @@ function StockChartAnalyzer() {
   const [stockNews, setStockNews] = useState([]);
   const [newsLoading, setNewsLoading] = useState(false);
   const [newsError, setNewsError] = useState(null);
-  const [currentView, setCurrentView] = useState('analyzer'); // 'analyzer' or 'game'
+  const [currentView, setCurrentView] = useState('analyzer');
   const [filteredSuggestions, setFilteredSuggestions] = useState([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
@@ -229,6 +240,129 @@ function StockChartAnalyzer() {
   const chartCanvasRef = useRef(null);
   const inputRef = useRef(null);
   const { theme, toggleTheme } = useContext(ThemeContext);
+
+  // State for Pros/Cons data
+  const [financialData, setFinancialData] = useState(null);
+  const [financialDataLoading, setFinancialDataLoading] = useState(false);
+  const [financialDataError, setFinancialDataError] = useState(null);
+
+
+  const fetchFinancialDataForProsCons = async (symbol) => {
+    if (!symbol || FMP_API_KEY === "YOUR_FMP_API_KEY") {
+      setFinancialDataError("FMP API key not configured or symbol missing for financial data.");
+      console.warn("FMP API key not configured or symbol missing. Financial data fetch skipped.");
+      setFinancialData({ error: "API key not configured or symbol missing." });
+      return;
+    }
+
+    setFinancialDataLoading(true);
+    setFinancialDataError(null);
+    setFinancialData(null); // Clear previous data
+
+    let fetchedProsConsData = {
+      currentDebt: 'N/A',
+      nextQuarterExpectation: 'N/A',
+      profitCAGR5Y: null, // Will be number or null
+      salesHistory10Y: [],
+      error: null
+    };
+
+    try {
+      // 1. Fetch Balance Sheet (latest annual for current debt)
+      const balanceSheetUrl = `${FMP_BASE_URL}/balance-sheet-statement/${symbol}?period=annual&limit=1&apikey=${FMP_API_KEY}`;
+      const bsResponse = await fetch(balanceSheetUrl);
+      if (!bsResponse.ok) {
+        console.warn(`Pros/Cons: Failed to fetch balance sheet for ${symbol}. Status: ${bsResponse.status}`);
+         fetchedProsConsData.currentDebt = 'Error fetching';
+      } else {
+        const bsData = await bsResponse.json();
+        if (bsData && bsData.length > 0) {
+          const latestBs = bsData[0];
+          fetchedProsConsData.currentDebt = latestBs.totalDebt !== undefined ? latestBs.totalDebt : (parseFloat(latestBs.shortTermDebt || 0) + parseFloat(latestBs.longTermDebt || 0));
+        } else {
+          fetchedProsConsData.currentDebt = 'Not Available';
+        }
+      }
+
+      // 2. Fetch Analyst Estimates (for next quarter expectation)
+      const estimatesUrl = `${FMP_BASE_URL}/analyst-estimates/${symbol}?apikey=${FMP_API_KEY}`;
+      const estResponse = await fetch(estimatesUrl);
+      if (!estResponse.ok) {
+        console.warn(`Pros/Cons: Failed to fetch analyst estimates for ${symbol}. Status: ${estResponse.status}`);
+        fetchedProsConsData.nextQuarterExpectation = 'Error fetching';
+      } else {
+        const estData = await estResponse.json();
+        if (estData && estData.length > 0) {
+          // Find the most recent estimate that has a future date for earnings release
+          const futureEstimates = estData.filter(e => e.date && new Date(e.date) > new Date() && e.estimatedEpsAvg !== null);
+          let targetEstimate = null;
+          if (futureEstimates.length > 0) {
+            // Sort by date to get the soonest future estimate
+            futureEstimates.sort((a,b) => new Date(a.date) - new Date(b.date));
+            targetEstimate = futureEstimates[0];
+          } else {
+            // Fallback: find the most recent estimate overall if no future ones
+            estData.sort((a,b) => new Date(b.date) - new Date(a.date)); // most recent first
+            targetEstimate = estData[0];
+          }
+
+          if (targetEstimate) {
+            fetchedProsConsData.nextQuarterExpectation = `Est. EPS: ${targetEstimate.estimatedEpsAvg || 'N/A'} (for period ending ${targetEstimate.date || 'N/A'})`;
+          } else {
+            fetchedProsConsData.nextQuarterExpectation = 'Not Available';
+          }
+        } else {
+          fetchedProsConsData.nextQuarterExpectation = 'Not Available';
+        }
+      }
+
+      // 3. Fetch Annual Income Statements (for Sales and Profit CAGR)
+      const incomeStatementUrl = `${FMP_BASE_URL}/income-statement/${symbol}?period=annual&limit=10&apikey=${FMP_API_KEY}`;
+      const isResponse = await fetch(incomeStatementUrl);
+      if (!isResponse.ok) {
+         console.warn(`Pros/Cons: Failed to fetch income statements for ${symbol}. Status: ${isResponse.status}`);
+         fetchedProsConsData.salesHistory10Y = [{ year: 'Error', revenue: 'Error fetching'}];
+         fetchedProsConsData.profitCAGR5Y = null; // Error state
+      } else {
+        const isData = await isResponse.json();
+        if (isData && isData.length > 0) {
+          fetchedProsConsData.salesHistory10Y = isData.slice(0, 10).map(report => ({
+            year: new Date(report.date).getFullYear(),
+            revenue: report.revenue
+          })).reverse();
+
+          if (isData.length >= 2) {
+              const relevantNetIncomes = isData.slice(0, 6).map(report => parseFloat(report.netIncome)).filter(ni => !isNaN(ni) && ni !== null);
+              if (relevantNetIncomes.length >= 2) {
+                  const reversedIncomes = [...relevantNetIncomes].reverse();
+                  const startValue = reversedIncomes[0];
+                  const endValue = reversedIncomes[reversedIncomes.length - 1];
+                  const years = reversedIncomes.length - 1;
+                  if (years > 0 && startValue !== null && endValue !== null && startValue !== 0) {
+                      fetchedProsConsData.profitCAGR5Y = calculateCAGR(endValue, startValue, years);
+                  } else {
+                    fetchedProsConsData.profitCAGR5Y = null; // Or 'N/A' if prefer string
+                  }
+              } else {
+                fetchedProsConsData.profitCAGR5Y = null;
+              }
+          } else {
+             fetchedProsConsData.profitCAGR5Y = null;
+          }
+        } else {
+            fetchedProsConsData.salesHistory10Y = [{year: 'N/A', revenue: 'Not Available'}];
+            fetchedProsConsData.profitCAGR5Y = null;
+        }
+      }
+    } catch (e) {
+      console.error("Error in fetchFinancialDataForProsCons:", e);
+      fetchedProsConsData.error = e.message;
+      setFinancialDataError(e.message);
+    } finally {
+      setFinancialData(fetchedProsConsData);
+      setFinancialDataLoading(false);
+    }
+  };
 
   const detectPatternFromPriceData = (prices) => {
     if (!prices || prices.length < 20) return null;
@@ -268,7 +402,7 @@ function StockChartAnalyzer() {
         if (isPeak) { if (data[j] >= data[i]) { isSignificant = false; break; } maxDiff = Math.max(maxDiff, data[i] - data[j]);
         } else { if (data[j] <= data[i]) { isSignificant = false; break; } maxDiff = Math.max(maxDiff, data[j] - data[i]); }
       }
-      const changePercent = maxDiff / data[i];
+      const changePercent = data[i] !== 0 ? maxDiff / data[i] : 0; // Avoid division by zero
       if (isSignificant && changePercent >= minChangePercent) { results.push({ index: i, value: data[i] }); }
     }
     if (results.length < 2) {
@@ -307,7 +441,8 @@ function StockChartAnalyzer() {
     const recentData = closes.slice(-30); const fullData = closes.slice(-60);
     const priceRange = Math.max(...recentData) - Math.min(...recentData); const tolerance = priceRange * 0.05;
     const startPrice = fullData[0]; const endPrice = fullData[fullData.length - 1];
-    const priceChange = ((endPrice - startPrice) / startPrice) * 100; const volatility = calculateVolatility(recentData);
+    const priceChange = startPrice !== 0 ? ((endPrice - startPrice) / startPrice) * 100 : 0; // Avoid division by zero
+    const volatility = calculateVolatility(recentData);
     if (peaks.length >= 3) { const lastThreePeaks = peaks.slice(-3); const [left, head, right] = lastThreePeaks; if (head.value > left.value && head.value > right.value) { const leftRightDiff = Math.abs(left.value - right.value); const headHeight = Math.min(head.value - left.value, head.value - right.value); if (leftRightDiff <= tolerance * 2 && headHeight > tolerance) { return { pattern: 'head-and-shoulders', strength: 0.75 }; } } }
     if (troughs.length >= 3) { const lastThreeTroughs = troughs.slice(-3); const [left, head, right] = lastThreeTroughs; if (head.value < left.value && head.value < right.value) { const leftRightDiff = Math.abs(left.value - right.value); const headDepth = Math.min(left.value - head.value, right.value - head.value); if (leftRightDiff <= tolerance * 2 && headDepth > tolerance) { return { pattern: 'inverse-head-and-shoulders', strength: 0.75 }; } } }
     if (peaks.length >= 2) { const lastTwoPeaks = peaks.slice(-2); const [first, second] = lastTwoPeaks; if (Math.abs(first.value - second.value) <= tolerance * 1.5) { return { pattern: 'double-top', strength: 0.7 }; } }
@@ -337,7 +472,8 @@ function StockChartAnalyzer() {
 
   const calculateVolatility = (prices) => {
     if (prices.length < 2) return 0; const returns = [];
-    for (let i = 1; i < prices.length; i++) { returns.push(((prices[i] - prices[i-1]) / prices[i-1]) * 100); }
+    for (let i = 1; i < prices.length; i++) { if(prices[i-1] === 0) continue; returns.push(((prices[i] - prices[i-1]) / prices[i-1]) * 100); } // Avoid division by zero
+    if (returns.length === 0) return 0; // Handle cases where all previous prices were zero
     const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
     const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length;
     return Math.sqrt(variance);
@@ -351,7 +487,7 @@ function StockChartAnalyzer() {
       const peakTrend = calculateTrend(peakValues); const troughTrend = calculateTrend(troughValues);
       if (Math.abs(peakTrend) < 1 && troughTrend > 0.5) { return { pattern: 'ascending-triangle', strength: 0.6 }; }
       if (peakTrend < -0.5 && Math.abs(troughTrend) < 1) { return { pattern: 'descending-triangle', strength: 0.6 }; }
-      if (peakTrend < -0.2 && troughTrend > 0.2) { return { pattern: 'ascending-triangle', strength: 0.5 }; }
+      if (peakTrend < -0.2 && troughTrend > 0.2) { return { pattern: 'ascending-triangle', strength: 0.5 }; } // Simplified symmetrical
     }
     return null;
   };
@@ -365,6 +501,7 @@ function StockChartAnalyzer() {
   const detectCupAndHandle = (closes) => {
     if (closes.length < 30) return false;
     const recent30 = closes.slice(-30); const firstQuarter = recent30.slice(0, 7); const secondQuarter = recent30.slice(7, 15); const thirdQuarter = recent30.slice(15, 22); const fourthQuarter = recent30.slice(22);
+    if(firstQuarter.length === 0 || secondQuarter.length === 0 || thirdQuarter.length === 0 || fourthQuarter.length === 0) return false; // Ensure slices are not empty
     const firstAvg = firstQuarter.reduce((a, b) => a + b) / firstQuarter.length; const secondAvg = secondQuarter.reduce((a, b) => a + b) / secondQuarter.length; const thirdAvg = thirdQuarter.reduce((a, b) => a + b) / thirdQuarter.length;
     const hasCup = (secondAvg < firstAvg * 0.92) && (thirdAvg < firstAvg * 0.92) && (fourthQuarter.reduce((a, b) => a + b) / fourthQuarter.length > firstAvg * 0.95);
     const hasHandle = fourthQuarter.reduce((a, b) => a + b) / fourthQuarter.length < firstAvg * 1.02;
@@ -374,9 +511,9 @@ function StockChartAnalyzer() {
   const detectWedgePatterns = (peaks, troughs, closes) => {
     if (peaks.length < 2 || troughs.length < 2) return null;
     const recentPeaks = peaks.slice(-4); const recentTroughs = troughs.slice(-4); const recent30 = closes.slice(-30);
-    if (recentPeaks.length >= 2 && recentTroughs.length >= 2) {
+    if (recentPeaks.length >= 2 && recentTroughs.length >= 2 && recent30.length > 0) { // Ensure recent30 is not empty
       const peakTrend = calculateTrend(recentPeaks.map(p => p.value)); const troughTrend = calculateTrend(recentTroughs.map(t => t.value));
-      const overallTrend = ((recent30[recent30.length - 1] - recent30[0]) / recent30[0]) * 100;
+      const overallTrend = recent30[0] !== 0 ? ((recent30[recent30.length - 1] - recent30[0]) / recent30[0]) * 100 : 0; // Avoid division by zero
       if (peakTrend > 0.3 && troughTrend > 0.2 && troughTrend < peakTrend * 0.8) { return { pattern: 'wedge-rising', strength: 0.6 }; }
       if (peakTrend < -0.3 && troughTrend < -0.2 && Math.abs(troughTrend) < Math.abs(peakTrend) * 0.8) { return { pattern: 'wedge-falling', strength: 0.6 }; }
       if (overallTrend > 5 && peakTrend < 0 && troughTrend > 0) { return { pattern: 'wedge-rising', strength: 0.5 }; }
@@ -429,8 +566,8 @@ function StockChartAnalyzer() {
     let majorHigh = -Infinity; let majorLow = Infinity; let highDate = ''; let lowDate = '';
     stockData.prices.forEach(p => { if (p.high > majorHigh) { majorHigh = p.high; highDate = new Date(p.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }); } if (p.low < majorLow) { majorLow = p.low; lowDate = new Date(p.date).toLocaleDateString('en-US', { year: 'numeric', month: 'short' }); } });
     let volatilityDescription = "The stock's price movement history can provide insights into its stability.";
-    if (prices.length > 12) {
-        const monthlyReturns = []; const approxPointsPerMonth = Math.max(1, Math.floor(prices.length / (actualTimeRangeYears * 12)));
+    if (prices.length > 12 && actualTimeRangeYears > 0) { // Added actualTimeRangeYears > 0 check
+        const monthlyReturns = []; const approxPointsPerMonth = Math.max(1, Math.floor(prices.length / (actualTimeRangeYears * 12 || 1))); // Avoid division by zero
         for (let i = approxPointsPerMonth; i < prices.length; i += approxPointsPerMonth) { const prevPrice = prices[i - approxPointsPerMonth]; const currentPrice = prices[i]; if (prevPrice > 0) { monthlyReturns.push((currentPrice - prevPrice) / prevPrice); } }
         if (monthlyReturns.length > 1) { const meanReturn = monthlyReturns.reduce((a, b) => a + b, 0) / monthlyReturns.length; const variance = monthlyReturns.reduce((sum, ret) => sum + Math.pow(ret - meanReturn, 2), 0) / monthlyReturns.length; const stdDev = Math.sqrt(variance); const annualizedStdDev = stdDev * Math.sqrt(12); if (annualizedStdDev > 0.4) volatilityDescription = `This stock has shown high volatility, meaning its price has experienced significant swings.`; else if (annualizedStdDev > 0.2) volatilityDescription = `This stock has shown moderate volatility, with noticeable price fluctuations.`; else volatilityDescription = `This stock has shown relatively low volatility, indicating more stable price movements.`; }
     }
@@ -468,7 +605,7 @@ function StockChartAnalyzer() {
 
   const handleTimeRangeChange = (range) => {
     setSelectedTimeRange(range);
-    if (stockSymbol.trim()) { setPrediction(null); setPatternDetected(null); setConfidence(null); setRecommendation(null); setEntryExit(null); setTimeEstimate(null); setBreakoutTiming(null); setKeyLevels(null); setLongTermAssessment(null); fetchStockData(stockSymbol.toUpperCase(), range); }
+    if (stockSymbol.trim()) { setPrediction(null); setPatternDetected(null); setConfidence(null); setRecommendation(null); setEntryExit(null); setTimeEstimate(null); setBreakoutTiming(null); setKeyLevels(null); setLongTermAssessment(null); setFinancialData(null); setFinancialDataError(null); fetchStockData(stockSymbol.toUpperCase(), range); }
   };
 
   const handleInputFocus = () => { if (stockSymbol.length >= 1) { const suggestions = filterSuggestions(stockSymbol); setFilteredSuggestions(suggestions); setShowSuggestions(true); } };
@@ -496,37 +633,52 @@ function StockChartAnalyzer() {
   };
 
   const createChartFromData = (stockData, currentKeyLevels, currentTheme = 'light') => {
-    const canvas = chartCanvasRef.current; const ctx = canvas.getContext('2d'); const colors = chartThemeColors[currentTheme] || chartThemeColors.light;
+    const canvas = chartCanvasRef.current; if(!canvas) return null; const ctx = canvas.getContext('2d'); const colors = chartThemeColors[currentTheme] || chartThemeColors.light;
     canvas.width = 1000; canvas.height = 500; ctx.fillStyle = colors.background; ctx.fillRect(0, 0, canvas.width, canvas.height);
     const prices = stockData.prices; if (!prices || prices.length === 0) return null;
     const margin = { top: 40, right: 60, bottom: 60, left: 80 }; const chartWidth = canvas.width - margin.left - margin.right; const chartHeight = canvas.height - margin.top - margin.bottom;
-    const allPrices = prices.flatMap(p => [p.high, p.low]); const minPrice = Math.min(...allPrices); const maxPrice = Math.max(...allPrices); const priceRange = maxPrice - minPrice; const padding = priceRange * 0.1;
-    const xScale = (index) => margin.left + (index / (prices.length - 1)) * chartWidth; const yScale = (price) => margin.top + ((maxPrice + padding - price) / (priceRange + 2 * padding)) * chartHeight;
+    const allPrices = prices.flatMap(p => [p.high, p.low]).filter(p => p != null); if(allPrices.length === 0) return null; // Ensure there are prices to calculate min/max
+    const minPrice = Math.min(...allPrices); const maxPrice = Math.max(...allPrices); const priceRange = maxPrice - minPrice; const padding = priceRange * 0.1;
+    const xScale = (index) => margin.left + (index / (prices.length > 1 ? prices.length - 1 : 1)) * chartWidth; // Avoid division by zero for single data point
+    const yScale = (price) => margin.top + ((maxPrice + padding - price) / (priceRange + 2 * padding || 1)) * chartHeight; // Avoid division by zero
     const isIndianStock = stockData.symbol.includes('.NS'); const currencySymbol = isIndianStock ? '₹' : '$';
     ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
     for (let i = 0; i <= 8; i++) { const y = margin.top + (i / 8) * chartHeight; ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left + chartWidth, y); ctx.stroke(); const price = maxPrice + padding - (i / 8) * (priceRange + 2 * padding); ctx.fillStyle = colors.label; ctx.font = '12px Inter, Arial, sans-serif'; ctx.textAlign = 'right'; ctx.fillText(currencySymbol + price.toFixed(2), margin.left - 10, y + 4); }
     const numVerticalGridLines = prices.length > 250 ? 5 : (prices.length > 60 ? 6 : 4);
-    for (let i = 0; i <= numVerticalGridLines; i++) { const x = margin.left + (i / numVerticalGridLines) * chartWidth; ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + chartHeight); ctx.stroke(); const priceIndex = Math.floor((i / numVerticalGridLines) * (prices.length - 1)); if (priceIndex < prices.length) { const date = new Date(prices[priceIndex].date); let dateFormatOptions = { month: 'short', day: 'numeric' }; if (prices.length > 365 * 2) { dateFormatOptions = { year: 'numeric', month: 'short' }; } else if (prices.length > 90) { dateFormatOptions = { month: 'short', day: 'numeric' }; } ctx.fillStyle = colors.label; ctx.font = '11px Inter, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(date.toLocaleDateString('en-US', dateFormatOptions), x, canvas.height - 20); } }
+    for (let i = 0; i <= numVerticalGridLines; i++) { const x = margin.left + (i / numVerticalGridLines) * chartWidth; ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + chartHeight); ctx.stroke(); const priceIndex = Math.floor((i / numVerticalGridLines) * (prices.length - 1)); if (priceIndex < prices.length && prices[priceIndex]) { const date = new Date(prices[priceIndex].date); let dateFormatOptions = { month: 'short', day: 'numeric' }; if (prices.length > 365 * 2) { dateFormatOptions = { year: 'numeric', month: 'short' }; } else if (prices.length > 90) { dateFormatOptions = { month: 'short', day: 'numeric' }; } ctx.fillStyle = colors.label; ctx.font = '11px Inter, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(date.toLocaleDateString('en-US', dateFormatOptions), x, canvas.height - 20); } }
     ctx.strokeStyle = colors.mainLine; ctx.lineWidth = 3; ctx.beginPath();
-    prices.forEach((price, index) => { const x = xScale(index); const y = yScale(price.close); if (index === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); } }); ctx.stroke();
-    prices.forEach((price, index) => { const x = xScale(index); const openY = yScale(price.open); const closeY = yScale(price.close); const highY = yScale(price.high); const lowY = yScale(price.low); const isGreen = price.close >= price.open; const candleColor = isGreen ? colors.candlestickGreen : colors.candlestickRed; ctx.strokeStyle = candleColor; ctx.fillStyle = candleColor; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, highY); ctx.lineTo(x, lowY); ctx.stroke(); const bodyHeight = Math.abs(closeY - openY); const bodyY = Math.min(openY, closeY); const bodyWidth = 6; if (isGreen) { ctx.fillRect(x - bodyWidth/2, bodyY, bodyWidth, bodyHeight || 1); } else { ctx.strokeRect(x - bodyWidth/2, bodyY, bodyWidth, bodyHeight || 1); } });
+    prices.forEach((price, index) => { if(price && price.close !== null) {const x = xScale(index); const y = yScale(price.close); if (index === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }} }); ctx.stroke();
+    prices.forEach((price, index) => { if(price && price.open !== null && price.close !== null && price.high !== null && price.low !== null) {const x = xScale(index); const openY = yScale(price.open); const closeY = yScale(price.close); const highY = yScale(price.high); const lowY = yScale(price.low); const isGreen = price.close >= price.open; const candleColor = isGreen ? colors.candlestickGreen : colors.candlestickRed; ctx.strokeStyle = candleColor; ctx.fillStyle = candleColor; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, highY); ctx.lineTo(x, lowY); ctx.stroke(); const bodyHeight = Math.abs(closeY - openY); const bodyY = Math.min(openY, closeY); const bodyWidth = Math.max(2, chartWidth / prices.length * 0.6); ctx.fillRect(x - bodyWidth/2, bodyY, bodyWidth, bodyHeight || 1);}});
     if (currentKeyLevels && currentKeyLevels.support && currentKeyLevels.resistance) { ctx.lineWidth = 1; ctx.font = 'bold 10px Inter, Arial, sans-serif'; currentKeyLevels.support.forEach(level => { if (level >= minPrice && level <= maxPrice) { const y = yScale(level); ctx.strokeStyle = colors.keyLevelSupport; ctx.fillStyle = colors.keyLevelSupport; ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.moveTo(margin.left, y); ctx.lineTo(chartWidth + margin.left, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`S: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2); } }); currentKeyLevels.resistance.forEach(level => { if (level >= minPrice && level <= maxPrice) { const y = yScale(level); ctx.strokeStyle = colors.keyLevelResistance; ctx.fillStyle = colors.keyLevelResistance; ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.moveTo(margin.left, y); ctx.lineTo(chartWidth + margin.left, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`R: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2); } }); }
     ctx.fillStyle = colors.text; ctx.font = 'bold 20px Inter, Arial, sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`${stockData.symbol} - ${stockData.companyName}`, margin.left, 25);
-    ctx.font = '14px Inter, Arial, sans-serif'; ctx.fillStyle = colors.label; const currentPriceText = stockData.currentPrice || prices[prices.length - 1].close; ctx.fillText(`Current: ${currencySymbol}${currentPriceText.toFixed(2)} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
-    if (stockData.isMockData) { ctx.fillStyle = (currentTheme === 'dark') ? chartThemeColors.dark.warningColor || '#f59e0b' : '#f59e0b'; ctx.font = 'italic 12px Inter, Arial, sans-serif'; ctx.fillText('Demo Data - API temporarily unavailable', margin.left + 300, 25); }
+    ctx.font = '14px Inter, Arial, sans-serif'; ctx.fillStyle = colors.label; const currentPriceText = stockData.currentPrice !== undefined && stockData.currentPrice !== null ? stockData.currentPrice : (prices[prices.length -1]?.close); ctx.fillText(`Current: ${currencySymbol}${currentPriceText ? currentPriceText.toFixed(2) : 'N/A'} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
+    if (stockData.isMockData) { ctx.fillStyle = (currentTheme === 'dark') ? chartThemeColors.dark.danger || '#f59e0b' : '#f59e0b'; ctx.font = 'italic 12px Inter, Arial, sans-serif'; ctx.fillText('Demo Data - API temporarily unavailable', margin.left + 300, 25); }
     return canvas.toDataURL('image/png', 1.0);
   };
 
   const fetchStockData = async (symbol, timeRange = '3mo') => {
-    if (!symbol.trim()) return; setLoading(true); setError(null); setStockData(null); setKeyLevels(null);
+    if (!symbol.trim()) return; setLoading(true); setError(null); setStockData(null); setKeyLevels(null); setFinancialData(null); setFinancialDataError(null);
     try {
       const data = await fetchYahooFinanceData(symbol.trim().toUpperCase(), timeRange); setStockData(data);
-      setTimeout(() => { const tempKeyLevels = (data && data.prices) ? calculateKeyLevels(data.prices) : null; if (tempKeyLevels) { setKeyLevels(tempKeyLevels); } const chartImageUrl = createChartFromData(data, tempKeyLevels, theme); setUploadedImage(chartImageUrl); fetchStockNews(data.symbol); }, 100);
-    } catch (error) { setError(error.message); console.error('Stock data fetch error:', error); } finally { setLoading(false); }
+      if (data && data.symbol) { // Ensure data is valid before proceeding
+        fetchFinancialDataForProsCons(data.symbol); // Fetch financial data after stock price data
+        fetchStockNews(data.symbol);
+         // Delay chart creation slightly to ensure canvas is ready if view just switched
+        setTimeout(() => {
+          if (chartCanvasRef.current) { // Check if canvas is available
+            const tempKeyLevels = (data && data.prices) ? calculateKeyLevels(data.prices) : null;
+            if (tempKeyLevels) { setKeyLevels(tempKeyLevels); }
+            const chartImageUrl = createChartFromData(data, tempKeyLevels, theme);
+            setUploadedImage(chartImageUrl);
+          }
+        }, 100);
+      } else {
+        throw new Error("No valid stock data received from Yahoo Finance.");
+      }
+    } catch (error) { setError(error.message); console.error('Stock data fetch error:', error); setFinancialData(null); } finally { setLoading(false); }
   };
 
-  const selectStock = (symbol) => { setStockSymbol(symbol); setShowSuggestions(false); setSelectedSuggestionIndex(-1); fetchStockData(symbol); fetchStockNews(symbol); };
-
+  const selectStock = (symbol) => { setStockSymbol(symbol); setShowSuggestions(false); setSelectedSuggestionIndex(-1); fetchStockData(symbol); /* Financial data is fetched within fetchStockData */ };
   const generateRecommendation = (pattern, confidence) => {
     const { recommendation, prediction } = pattern; let action = recommendation.toUpperCase(); let reasoning = '';
     switch (recommendation) {
@@ -540,30 +692,44 @@ function StockChartAnalyzer() {
 
   const handleImageUpload = (e) => {
     const file = e.target.files[0];
-    if (file) { const reader = new FileReader(); reader.onload = () => { setUploadedImage(reader.result); setStockData(null); setPrediction(null); setPatternDetected(null); setConfidence(null); setRecommendation(null); setEntryExit(null); setTimeEstimate(null); setBreakoutTiming(null); setKeyLevels(null); setLongTermAssessment(null); }; reader.readAsDataURL(file); }
+    if (file) { const reader = new FileReader(); reader.onload = () => { setUploadedImage(reader.result); setStockData(null); setPrediction(null); setPatternDetected(null); setConfidence(null); setRecommendation(null); setEntryExit(null); setTimeEstimate(null); setBreakoutTiming(null); setKeyLevels(null); setLongTermAssessment(null); setFinancialData(null); setFinancialDataError(null);}; reader.readAsDataURL(file); }
   };
 
   const analyzeChart = () => {
     if (!uploadedImage) return; setLoading(true); setLongTermAssessment(null);
+    // If it's from a live stock, ensure financial data is fetched or being fetched
+    if (stockData && stockData.symbol && !financialData && !financialDataLoading && !financialDataError) {
+        fetchFinancialDataForProsCons(stockData.symbol);
+    }
     setTimeout(() => {
       try {
-        let detectedPattern = null; let confidenceScore = 70; let calculatedKeyLevels = null; let currentLongTermAssessment = null;
+        let detectedPatternName = null; let confidenceScore = 70; let calculatedKeyLevels = null; let currentLongTermAssessment = null;
         if (stockData && stockData.prices && stockData.prices.length > 0) {
           calculatedKeyLevels = calculateKeyLevels(stockData.prices);
           if (selectedTimeRange === '1y' || selectedTimeRange === '5y' || selectedTimeRange === '10y') {
             currentLongTermAssessment = generateLongTermAssessment(stockData, selectedTimeRange);
             if (currentLongTermAssessment) { setLongTermAssessment(currentLongTermAssessment); setPatternDetected(null); setPrediction(null); setConfidence(null); setRecommendation(null); setEntryExit(null); setTimeEstimate(null); setBreakoutTiming(null); }
-          } else { setLongTermAssessment(null); const analysis = detectPatternFromPriceData(stockData.prices); if (analysis) { detectedPattern = analysis.pattern; confidenceScore = analysis.confidence; } }
+          } else { setLongTermAssessment(null); const analysis = detectPatternFromPriceData(stockData.prices); if (analysis) { detectedPatternName = analysis.pattern; confidenceScore = analysis.confidence; } }
         }
-        if (!currentLongTermAssessment && !detectedPattern) {
+        if (!currentLongTermAssessment && !detectedPatternName) {
           const patternWeights = {'head-and-shoulders': 12,'inverse-head-and-shoulders': 12,'double-top': 15,'double-bottom': 15,'cup-and-handle': 10,'ascending-triangle': 15,'descending-triangle': 15,'flag': 8,'wedge-rising': 8,'wedge-falling': 8};
           const weightedPatterns = []; Object.entries(patternWeights).forEach(([pattern, weight]) => { for (let i = 0; i < weight; i++) { weightedPatterns.push(pattern); } });
-          const randomIndex = Math.floor(Math.random() * weightedPatterns.length); detectedPattern = weightedPatterns[randomIndex]; confidenceScore = Math.floor(Math.random() * 35) + 50;
+          const randomIndex = Math.floor(Math.random() * weightedPatterns.length); detectedPatternName = weightedPatterns[randomIndex]; confidenceScore = Math.floor(Math.random() * 35) + 50;
         }
-        const selectedPattern = chartPatterns[detectedPattern]; const rec = generateRecommendation(selectedPattern, confidenceScore); const breakout = calculateBreakoutTiming(detectedPattern, stockData, confidenceScore);
-        setPatternDetected({ name: detectedPattern, ...selectedPattern }); setPrediction(selectedPattern.prediction); setConfidence(confidenceScore); setRecommendation(rec); setBreakoutTiming(breakout); setKeyLevels(calculatedKeyLevels);
-        let timeInfo = ''; if (selectedPattern.prediction === 'up') { timeInfo = `Expected to rise for ${selectedPattern.daysUp}`; } else if (selectedPattern.prediction === 'down') { timeInfo = `Expected to decline for ${selectedPattern.daysDown}`; } else if (selectedPattern.prediction === 'continuation') { const isUptrend = Math.random() > 0.5; timeInfo = isUptrend ? `Current uptrend likely to continue for ${selectedPattern.daysUp}` : `Current downtrend likely to continue for ${selectedPattern.daysDown}`; } else { timeInfo = `Pattern suggests movement within ${selectedPattern.timeframe}`; }
-        setTimeEstimate(timeInfo); setEntryExit({ entry: selectedPattern.entryStrategy, exit: selectedPattern.exitStrategy });
+
+        if (detectedPatternName && chartPatterns[detectedPatternName]) { // Ensure pattern exists before accessing
+            const selectedPatternDetails = chartPatterns[detectedPatternName];
+            const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
+            const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
+            setPatternDetected({ name: detectedPatternName, ...selectedPatternDetails });
+            setPrediction(selectedPatternDetails.prediction);
+            setConfidence(confidenceScore); setRecommendation(rec); setBreakoutTiming(breakout); setKeyLevels(calculatedKeyLevels);
+            let timeInfo = ''; if (selectedPatternDetails.prediction === 'up') { timeInfo = `Expected to rise for ${selectedPatternDetails.daysUp}`; } else if (selectedPatternDetails.prediction === 'down') { timeInfo = `Expected to decline for ${selectedPatternDetails.daysDown}`; } else if (selectedPatternDetails.prediction === 'continuation') { const isUptrend = Math.random() > 0.5; timeInfo = isUptrend ? `Current uptrend likely to continue for ${selectedPatternDetails.daysUp}` : `Current downtrend likely to continue for ${selectedPatternDetails.daysDown}`; } else { timeInfo = `Pattern suggests movement within ${selectedPatternDetails.timeframe}`; }
+            setTimeEstimate(timeInfo); setEntryExit({ entry: selectedPatternDetails.entryStrategy, exit: selectedPatternDetails.exitStrategy });
+        } else if (!currentLongTermAssessment) { // If no pattern was determined and not long-term
+            setError("Could not determine a specific pattern. Analysis might be inconclusive.");
+        }
+
       } catch (error) { console.error('Error analyzing chart:', error); setError('Analysis failed. Please try uploading a clearer chart image.'); } finally { setLoading(false); }
     }, 1800);
   };
@@ -584,6 +750,7 @@ function StockChartAnalyzer() {
 
       {currentView === 'analyzer' && (
         <>
+          {/* ... (rest of the analyzer JSX remains the same) ... */}
           <div style={{ textAlign: 'center', marginBottom: '32px' }}>
             <h1 style={{ fontSize: '36px', fontWeight: '800', background: 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', letterSpacing: '-0.02em', marginBottom: '8px' }}>
               Stock Chart Pattern Analyzer
@@ -628,9 +795,9 @@ function StockChartAnalyzer() {
                       ) : null}
                     </div>)}
                 </div>
-                <button onClick={() => { if (stockSymbol.trim()) { const symbolToFetch = stockSymbol.toUpperCase(); fetchStockData(symbolToFetch, selectedTimeRange); fetchStockNews(symbolToFetch); } }} disabled={loading || !stockSymbol.trim()} style={{ padding: '14px 24px', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
-                  {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
-                  {loading ? 'Fetching...' : 'Get Chart'}
+                <button onClick={() => { if (stockSymbol.trim()) { const symbolToFetch = stockSymbol.toUpperCase(); fetchStockData(symbolToFetch, selectedTimeRange); } }} disabled={loading || !stockSymbol.trim()} style={{ padding: '14px 24px', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
+                  {loading && !financialDataLoading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
+                  {loading && !financialDataLoading ? 'Fetching Chart...' : (financialDataLoading ? 'Fetching Financials...' : 'Get Chart & Financials')}
                 </button>
               </div>
             </div>
@@ -651,7 +818,9 @@ function StockChartAnalyzer() {
             </div>
           </div>
 
-          {error && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Error:</strong> {error}</div>)}
+          {error && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Chart Error:</strong> {error}</div>)}
+          {financialDataError && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Financial Data Error:</strong> {financialDataError}</div>)}
+
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, transparent, var(--separator-color), transparent)' }}></div><span style={{ color: 'var(--text-color-lighter)', fontWeight: '600', fontSize: '14px', background: 'var(--card-background)', padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--card-border)' }}>OR</span><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, var(--separator-color), transparent)' }}></div></div>
 
@@ -686,6 +855,18 @@ function StockChartAnalyzer() {
             </div>)}
           {patternDetected && (<div style={{ background: 'var(--card-background)', padding: '32px', borderRadius: '20px', marginBottom: '32px', border: '2px solid var(--card-border)', boxShadow: `0 8px 32px var(--card-shadow)` }}><h3 style={{ fontWeight: '700', fontSize: '24px', marginTop: '0', marginBottom: '20px', color: 'var(--text-color)', textAlign: 'center' }}>📚 Pattern Education</h3><h4 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '12px', color: 'var(--text-color)' }}>Description:</h4><p style={{ marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>{patternDetected.description}</p><div style={{ padding: '24px', border: '2px solid var(--card-border)', background: 'var(--primary-accent-light)', borderRadius: '12px' }}><h4 style={{ fontWeight: '700', fontSize: '18px', color: 'var(--primary-accent-darker)', marginTop: '0', marginBottom: '16px' }}>🔍 What to look for:</h4><ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: 'var(--text-color-light)' }}><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Look for clear pattern formation with multiple confirmation points</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Check volume patterns that support the chart pattern</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Confirm breakout direction before making decisions</li><li style={{ marginBottom: '0', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Consider overall market conditions and sentiment</li></ul></div></div>)}
           <StockNewsDisplay newsItems={stockNews} loading={newsLoading} error={newsError} />
+
+          {/* Pros and Cons Table Integration */}
+          {financialDataLoading && !financialData && (
+            <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-color-light)' }}>
+              <RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px', color: 'var(--primary-accent)' }} />
+              <p>Loading Financial Metrics...</p>
+            </div>
+          )}
+          {financialData && !financialDataLoading && (
+            <ProsConsTable financialData={financialData} />
+          )}
+          {/* End Pros and Cons Table Integration */}
         </>
       )}
 
