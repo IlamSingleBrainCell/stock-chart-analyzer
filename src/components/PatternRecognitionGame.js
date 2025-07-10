@@ -1,256 +1,9 @@
-import React, { useState, useEffect, useContext } from 'react';
-import { ThemeContext } from '../ThemeContext'; // Assuming ThemeContext is in src for access to theme
-
+import React, { useState, useEffect, useContext, useRef } from 'react';
+// Corrected: Only one import for ThemeContext
 import { ThemeContext } from '../ThemeContext';
-import { useRef } from 'react'; // Added for canvasRef in PatternVisualization
 
-
-// --- COPIED FROM App.js for now - START ---
-// Will be refactored for shared use in a later step.
-
-const chartThemeColors = {
-  light: {
-    background: '#ffffff',
-    grid: '#f0f0f0',
-    label: '#666666',
-    text: '#1f2937',
-    mainLine: '#2563eb',
-    success: '#10b981',
-    danger: '#dc2626',
-    candlestickGreen: '#10b981',
-    candlestickRed: '#ef4444',
-    keyLevelSupport: '#22c55e',
-    keyLevelResistance: '#ef4444',
-  },
-  dark: {
-    background: '#1f2937',
-    grid: '#374151',
-    label: '#9ca3af',
-    text: '#f3f4f6',
-    mainLine: '#60a5fa',
-    success: '#34d399',
-    danger: '#f87171',
-    candlestickGreen: '#34d399',
-    candlestickRed: '#f87171',
-    keyLevelSupport: '#34d399',
-    keyLevelResistance: '#f87171',
-  }
-};
-
-const drawLine = (ctx, points) => {
-  if (points.length < 2) return;
-  ctx.beginPath();
-  ctx.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i][0], points[i][1]);
-  }
-  ctx.stroke();
-};
-
-const drawHeadAndShoulders = (ctx, margin, w, h) => {
-  const points = [
-    [margin, margin + h * 0.7], [margin + w * 0.2, margin + h * 0.4],
-    [margin + w * 0.35, margin + h * 0.6], [margin + w * 0.5, margin + h * 0.1],
-    [margin + w * 0.65, margin + h * 0.6], [margin + w * 0.8, margin + h * 0.4],
-    [margin + w, margin + h * 0.8]
-  ];
-  drawLine(ctx, points);
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.danger; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.35, margin + h * 0.6); ctx.lineTo(margin + w * 0.65, margin + h * 0.6); ctx.stroke(); ctx.setLineDash([]);
-};
-
-const drawInverseHeadAndShoulders = (ctx, margin, w, h) => {
-  const points = [
-    [margin, margin + h * 0.3], [margin + w * 0.2, margin + h * 0.6],
-    [margin + w * 0.35, margin + h * 0.4], [margin + w * 0.5, margin + h * 0.9],
-    [margin + w * 0.65, margin + h * 0.4], [margin + w * 0.8, margin + h * 0.6],
-    [margin + w, margin + h * 0.2]
-  ];
-  drawLine(ctx, points);
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.success; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.35, margin + h * 0.4); ctx.lineTo(margin + w * 0.65, margin + h * 0.4); ctx.stroke(); ctx.setLineDash([]);
-};
-
-const drawDoubleTop = (ctx, margin, w, h) => {
-  const points = [
-    [margin, margin + h * 0.7], [margin + w * 0.25, margin + h * 0.2],
-    [margin + w * 0.4, margin + h * 0.6], [margin + w * 0.6, margin + h * 0.2],
-    [margin + w, margin + h * 0.8]
-  ];
-  drawLine(ctx, points);
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.danger; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.4, margin + h * 0.6); ctx.lineTo(margin + w * 0.8, margin + h * 0.6); ctx.stroke(); ctx.setLineDash([]);
-};
-
-const drawDoubleBottom = (ctx, margin, w, h) => {
-  const points = [
-    [margin, margin + h * 0.3], [margin + w * 0.25, margin + h * 0.8],
-    [margin + w * 0.4, margin + h * 0.4], [margin + w * 0.6, margin + h * 0.8],
-    [margin + w, margin + h * 0.2]
-  ];
-  drawLine(ctx, points);
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.success; ctx.lineWidth = 2; ctx.setLineDash([5, 5]);
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.4, margin + h * 0.4); ctx.lineTo(margin + w * 0.8, margin + h * 0.4); ctx.stroke(); ctx.setLineDash([]);
-};
-
-const drawCupAndHandle = (ctx, margin, w, h) => {
-  ctx.beginPath(); ctx.moveTo(margin, margin + h * 0.3);
-  ctx.quadraticCurveTo(margin + w * 0.35, margin + h * 0.8, margin + w * 0.7, margin + h * 0.3); ctx.stroke();
-  const points = [
-    [margin + w * 0.7, margin + h * 0.3], [margin + w * 0.8, margin + h * 0.45],
-    [margin + w * 0.9, margin + h * 0.4], [margin + w, margin + h * 0.2]
-  ];
-  drawLine(ctx, points);
-};
-
-const drawAscendingTriangle = (ctx, margin, w, h) => {
-  const points = [
-    [margin, margin + h * 0.8], [margin + w * 0.3, margin + h * 0.6],
-    [margin + w * 0.5, margin + h * 0.4], [margin + w * 0.7, margin + h * 0.5],
-    [margin + w * 0.85, margin + h * 0.35], [margin + w, margin + h * 0.2]
-  ];
-  drawLine(ctx, points);
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.danger; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.3, margin + h * 0.3); ctx.lineTo(margin + w, margin + h * 0.3); ctx.stroke();
-  ctx.strokeStyle = colors.success; ctx.beginPath();
-  ctx.moveTo(margin, margin + h * 0.8); ctx.lineTo(margin + w * 0.85, margin + h * 0.35); ctx.stroke(); ctx.setLineDash([]);
-};
-
-const drawDescendingTriangle = (ctx, margin, w, h) => {
-  const points = [
-    [margin, margin + h * 0.2], [margin + w * 0.3, margin + h * 0.4],
-    [margin + w * 0.5, margin + h * 0.6], [margin + w * 0.7, margin + h * 0.5],
-    [margin + w * 0.85, margin + h * 0.65], [margin + w, margin + h * 0.8]
-  ];
-  drawLine(ctx, points);
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.success; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.3, margin + h * 0.7); ctx.lineTo(margin + w, margin + h * 0.7); ctx.stroke();
-  ctx.strokeStyle = colors.danger; ctx.beginPath();
-  ctx.moveTo(margin, margin + h * 0.2); ctx.lineTo(margin + w * 0.85, margin + h * 0.65); ctx.stroke(); ctx.setLineDash([]);
-};
-
-const drawRisingWedge = (ctx, margin, w, h) => {
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.success; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(margin, margin + h * 0.8); ctx.lineTo(margin + w, margin + h * 0.4); ctx.stroke();
-  ctx.strokeStyle = colors.danger; ctx.beginPath();
-  ctx.moveTo(margin, margin + h * 0.3); ctx.lineTo(margin + w, margin + h * 0.2); ctx.stroke(); ctx.setLineDash([]);
-  ctx.strokeStyle = colors.mainLine; ctx.lineWidth = 3;
-  const points = [
-    [margin, margin + h * 0.6], [margin + w * 0.2, margin + h * 0.7],
-    [margin + w * 0.4, margin + h * 0.5], [margin + w * 0.6, margin + h * 0.6],
-    [margin + w * 0.8, margin + h * 0.4], [margin + w, margin + h * 0.3]
-  ];
-  drawLine(ctx, points);
-};
-
-const drawFallingWedge = (ctx, margin, w, h) => {
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.danger; ctx.lineWidth = 2; ctx.setLineDash([3, 3]);
-  ctx.beginPath(); ctx.moveTo(margin, margin + h * 0.2); ctx.lineTo(margin + w, margin + h * 0.6); ctx.stroke();
-  ctx.strokeStyle = colors.success; ctx.beginPath();
-  ctx.moveTo(margin, margin + h * 0.7); ctx.lineTo(margin + w, margin + h * 0.8); ctx.stroke(); ctx.setLineDash([]);
-  ctx.strokeStyle = colors.mainLine; ctx.lineWidth = 3;
-  const points = [
-    [margin, margin + h * 0.4], [margin + w * 0.2, margin + h * 0.3],
-    [margin + w * 0.4, margin + h * 0.5], [margin + w * 0.6, margin + h * 0.4],
-    [margin + w * 0.8, margin + h * 0.6], [margin + w, margin + h * 0.7]
-  ];
-  drawLine(ctx, points);
-};
-
-const drawFlag = (ctx, margin, w, h) => {
-  const points1 = [[margin, margin + h * 0.9], [margin + w * 0.4, margin + h * 0.2]]; drawLine(ctx, points1);
-  const points2 = [
-    [margin + w * 0.4, margin + h * 0.2], [margin + w * 0.5, margin + h * 0.3],
-    [margin + w * 0.6, margin + h * 0.25], [margin + w * 0.7, margin + h * 0.35],
-    [margin + w * 0.8, margin + h * 0.3], [margin + w, margin + h * 0.1]
-  ];
-  drawLine(ctx, points2);
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-  ctx.strokeStyle = colors.danger; ctx.lineWidth = 1; ctx.setLineDash([2, 2]);
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.4, margin + h * 0.2); ctx.lineTo(margin + w * 0.8, margin + h * 0.25); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(margin + w * 0.4, margin + h * 0.35); ctx.lineTo(margin + w * 0.8, margin + h * 0.4); ctx.stroke(); ctx.setLineDash([]);
-};
-
-const drawGenericPattern = (ctx, margin, w, h) => {
-  const points = [
-    [margin, margin + h * 0.5], [margin + w * 0.2, margin + h * 0.3],
-    [margin + w * 0.4, margin + h * 0.7], [margin + w * 0.6, margin + h * 0.4],
-    [margin + w * 0.8, margin + h * 0.6], [margin + w, margin + h * 0.2]
-  ];
-  drawLine(ctx, points);
-};
-
-const drawPattern = (ctx, pattern, w, h) => {
-  const margin = 20;
-  const chartW = w - 2 * margin;
-  const chartH = h - 2 * margin;
-  const colors = chartThemeColors[ctx.theme] || chartThemeColors.light;
-
-  ctx.fillStyle = colors.background; ctx.fillRect(0, 0, w, h);
-  ctx.strokeStyle = colors.mainLine; ctx.lineWidth = 3; ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
-  for (let i = 0; i <= 4; i++) {
-    const y = margin + (i / 4) * chartH;
-    ctx.beginPath(); ctx.moveTo(margin, y); ctx.lineTo(w - margin, y); ctx.stroke();
-  }
-  ctx.strokeStyle = colors.mainLine; ctx.lineWidth = 3;
-
-  switch (pattern) {
-    case 'head-and-shoulders': drawHeadAndShoulders(ctx, margin, chartW, chartH); break;
-    case 'inverse-head-and-shoulders': drawInverseHeadAndShoulders(ctx, margin, chartW, chartH); break;
-    case 'double-top': drawDoubleTop(ctx, margin, chartW, chartH); break;
-    case 'double-bottom': drawDoubleBottom(ctx, margin, chartW, chartH); break;
-    case 'cup-and-handle': drawCupAndHandle(ctx, margin, chartW, chartH); break;
-    case 'ascending-triangle': drawAscendingTriangle(ctx, margin, chartW, chartH); break;
-    case 'descending-triangle': drawDescendingTriangle(ctx, margin, chartW, chartH); break;
-    case 'wedge-rising': drawRisingWedge(ctx, margin, chartW, chartH); break;
-    case 'wedge-falling': drawFallingWedge(ctx, margin, chartW, chartH); break;
-    case 'flag': drawFlag(ctx, margin, chartW, chartH); break;
-    default: drawGenericPattern(ctx, margin, chartW, chartH);
-  }
-  ctx.fillStyle = colors.text; ctx.font = 'bold 12px Inter, Arial, sans-serif'; ctx.textAlign = 'center';
-  ctx.fillText(pattern.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '), w / 2, h - 5);
-};
-
-const PatternVisualization = ({ patternName, theme = 'light', width = 300, height = 150 }) => {
-  const canvasRef = useRef(null);
-  useEffect(() => {
-    if (!canvasRef.current || !patternName) return;
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    canvas.width = width; canvas.height = height;
-    ctx.theme = theme; // Pass theme to context
-    drawPattern(ctx, patternName, width, height);
-  }, [patternName, width, height, theme]);
-  return <canvas ref={canvasRef} style={{ border: '1px solid var(--card-border)', borderRadius: '8px', background: 'var(--background-color)', maxWidth: '100%', height: 'auto', margin: '20px auto' }} />;
-};
-
-const chartPatterns = {
-  'head-and-shoulders': { description: 'A bearish reversal pattern with three peaks, the middle being the highest', prediction: 'down', timeframe: '7-21 days' },
-  'inverse-head-and-shoulders': { description: 'A bullish reversal pattern with three troughs, the middle being the lowest', prediction: 'up', timeframe: '7-21 days' },
-  'double-top': { description: 'A bearish reversal pattern showing two distinct peaks at similar price levels', prediction: 'down', timeframe: '14-28 days' },
-  'double-bottom': { description: 'A bullish reversal pattern showing two distinct troughs at similar price levels', prediction: 'up', timeframe: '14-28 days' },
-  'cup-and-handle': { description: 'A bullish continuation pattern resembling a cup followed by a short downward trend', prediction: 'up', timeframe: '30-60 days' },
-  'ascending-triangle': { description: 'A bullish continuation pattern with a flat upper resistance and rising lower support', prediction: 'up', timeframe: '21-35 days' },
-  'descending-triangle': { description: 'A bearish continuation pattern with a flat lower support and falling upper resistance', prediction: 'down', timeframe: '21-35 days' },
-  'flag': { description: 'A short-term consolidation pattern that typically continues the prior trend', prediction: 'continuation', timeframe: '7-14 days' },
-  'wedge-rising': { description: 'A bearish reversal pattern with converging upward trending lines', prediction: 'down', timeframe: '14-28 days' },
-  'wedge-falling': { description: 'A bullish reversal pattern with converging downward trending lines', prediction: 'up', timeframe: '14-28 days' }
-};
-const allPatternNames = Object.keys(chartPatterns);
-
-// --- COPIED FROM App.js - END ---
-
-
-const PatternRecognitionGame = () => {
+// Props are expected: PatternVisualization (component) and chartPatterns (object)
+const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   const { theme } = useContext(ThemeContext);
 
   const [gameStarted, setGameStarted] = useState(false);
@@ -266,7 +19,11 @@ const PatternRecognitionGame = () => {
   const [selectedAnswer, setSelectedAnswer] = useState(null); // The pattern name string of the selected option
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
 
-    // Function to shuffle an array (Fisher-Yates shuffle)
+  // Use allPatternNames derived from the passed chartPatterns prop
+  // Ensure chartPatterns is defined before trying to get its keys
+  const allPatternNames = chartPatterns ? Object.keys(chartPatterns) : [];
+
+  // Function to shuffle an array (Fisher-Yates shuffle)
   const shuffleArray = (array) => {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
@@ -278,10 +35,14 @@ const PatternRecognitionGame = () => {
   };
 
   const formatPatternName = (name) => {
+    // Add a check for undefined or null name, which can happen if a pattern is not found
+    if (!name) return "Unknown Pattern";
     return name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   const loadNextQuestion = () => {
+    // questionNumber is 0-indexed internally for logic (0 to totalQuestions-1)
+    // This condition means if we've already processed `totalQuestions` number of questions.
     if (questionNumber >= totalQuestions) {
       setGameOver(true);
       return;
@@ -290,8 +51,18 @@ const PatternRecognitionGame = () => {
     setSelectedAnswer(null);
     setIsAnswerChecked(false);
     setFeedback('');
+    setShowFeedback(false);
+    setFeedbackType('');
 
     // 1. Select a random correct pattern
+    if (allPatternNames.length === 0) {
+        console.error("Pattern Recognition Game: No patterns available to choose from in chartPatterns prop.");
+        setFeedback("Error: No patterns loaded for the game.");
+        setShowFeedback(true);
+        setFeedbackType('incorrect'); // Treat as an error state
+        setGameOver(true);
+        return;
+    }
     const correctPatternName = allPatternNames[Math.floor(Math.random() * allPatternNames.length)];
     setCurrentCorrectPattern({
         name: correctPatternName,
@@ -307,13 +78,14 @@ const PatternRecognitionGame = () => {
       }
     }
     setOptions(shuffleArray(currentOptions));
-    setQuestionNumber(prev => prev + 1);
+    // `questionNumber` state is updated by `handleNextQuestion` or `startGame` for the first question.
+    // Here, we are just loading the data for the question index `questionNumber`.
   };
 
   const startGame = () => {
     setGameStarted(true);
     setScore(0);
-    setQuestionNumber(0); // Will be incremented by loadNextQuestion
+    setQuestionNumber(0); // Reset to the first question index
     setGameOver(false);
     setFeedback('');
     loadNextQuestion();
@@ -325,31 +97,44 @@ const PatternRecognitionGame = () => {
     setSelectedAnswer(selectedOptionName);
     setIsAnswerChecked(true);
 
-    if (selectedOptionName === currentCorrectPattern.name) {
+    if (currentCorrectPattern && selectedOptionName === currentCorrectPattern.name) {
       setScore(prevScore => prevScore + 1);
-      setFeedback(`Correct! It's a ${formatPatternName(currentCorrectPattern.name)}.`);
+      setFeedback(`Correct! This is a ${formatPatternName(currentCorrectPattern.name)}.`);
+      setFeedbackType('correct');
     } else {
-      setFeedback(`Incorrect. The correct answer was ${formatPatternName(currentCorrectPattern.name)}. This is a ${formatPatternName(selectedOptionName)}.`);
+      setFeedback(`Not quite! This is a ${formatPatternName(selectedOptionName)}. The correct answer was ${currentCorrectPattern ? formatPatternName(currentCorrectPattern.name) : 'N/A'}.`);
+      setFeedbackType('incorrect');
     }
 
-    // If it's the last question, game over immediately after feedback
-    if (questionNumber >= totalQuestions) {
-        // Wait a bit before setting game over to show feedback
+    // If it's the last question (e.g. questionNumber is 9 for 10 questions)
+    // (questionNumber is 0-indexed, so compare with totalQuestions - 1)
+    if (questionNumber >= totalQuestions - 1) {
         setTimeout(() => {
             setGameOver(true);
-        }, 2000);
+        }, 2500); // Allow time to read feedback
     }
   };
 
-  // Initial effect to start game or show start screen
+  const handleNextQuestion = () => {
+    if (questionNumber < totalQuestions - 1) {
+        setQuestionNumber(prev => prev + 1); // Move to next question index
+        // loadNextQuestion will be triggered by useEffect watching questionNumber, or call directly
+        loadNextQuestion();
+    } else {
+        setGameOver(true);
+    }
+  };
+
+  // Load question data when questionNumber changes (and game has started)
   useEffect(() => {
-    // startGame will call loadNextQuestion, so this might not be needed here
-    // or could be adjusted if we want to auto-start.
-    // For now, user clicks "Start Game" button.
-  }, []);
+    if (gameStarted && !gameOver && questionNumber < totalQuestions) {
+      // This effect might be redundant if loadNextQuestion is called directly by startGame and handleNextQuestion
+      // However, it ensures that if questionNumber changes externally, the question loads.
+      // For now, let's rely on direct calls.
+    }
+  }, [questionNumber, gameStarted, gameOver, totalQuestions]);
 
-
-  // Styles (basic inline for now, can be moved to CSS or styled-components later)
+  // Styles
   const gameContainerStyle = {
     padding: '20px',
     margin: '20px auto',
