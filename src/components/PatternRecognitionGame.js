@@ -1,5 +1,4 @@
-import React, { useState, useEffect, useContext, useRef } from 'react';
-// Corrected: Only one import for ThemeContext
+import React, { useState, useEffect, useContext } from 'react'; // Removed unused useRef
 import { ThemeContext } from '../ThemeContext';
 
 // Props are expected: PatternVisualization (component) and chartPatterns (object)
@@ -8,22 +7,19 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
 
   const [gameStarted, setGameStarted] = useState(false);
   const [currentCorrectPattern, setCurrentCorrectPattern] = useState(null);
-  const [options, setOptions] = useState([]);
+  const [options, setOptions] = useState([]); // This will be used by the buttons
   const [score, setScore] = useState(0);
-  const [questionNumber, setQuestionNumber] = useState(0); // Current question index (0-9 for 10 questions)
+  const [questionNumber, setQuestionNumber] = useState(0); // 0-indexed internally
   const [totalQuestions] = useState(10);
   const [feedback, setFeedback] = useState('');
-  const [showFeedback, setShowFeedback] = useState(false); // Control visibility of feedback
-  const [feedbackType, setFeedbackType] = useState(''); // 'correct' or 'incorrect'
+  const [showFeedback, setShowFeedback] = useState(false);
+  const [feedbackType, setFeedbackType] = useState('');
   const [gameOver, setGameOver] = useState(false);
-  const [selectedAnswer, setSelectedAnswer] = useState(null); // The pattern name string of the selected option
+  const [selectedAnswer, setSelectedAnswer] = useState(null);
   const [isAnswerChecked, setIsAnswerChecked] = useState(false);
 
-  // Use allPatternNames derived from the passed chartPatterns prop
-  // Ensure chartPatterns is defined before trying to get its keys
   const allPatternNames = chartPatterns ? Object.keys(chartPatterns) : [];
 
-  // Function to shuffle an array (Fisher-Yates shuffle)
   const shuffleArray = (array) => {
     let currentIndex = array.length, randomIndex;
     while (currentIndex !== 0) {
