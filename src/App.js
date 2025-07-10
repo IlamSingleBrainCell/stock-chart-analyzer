@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react'; // Added Zap, Award
 import stocksData from './stocks.json';
 import FlagIcon from './components/FlagIcon';
 import { ThemeContext } from './ThemeContext';
+import PatternRecognitionGame from './components/PatternRecognitionGame'; // Import the game
 
 // const FMP_API_KEY = '6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC'; // Removed
 const MARKETAUX_API_KEY = 'F8x0iPiyy2Rhe8LZsQJvmisOPwpr7xQ4Np7XF0o1';
