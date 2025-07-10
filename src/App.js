@@ -9,8 +9,12 @@ import ProsConsTable from './components/ProsConsTable'; // Import the new table 
 const MARKETAUX_API_KEY = 'F8x0iPiyy2Rhe8LZsQJvmisOPwpr7xQ4Np7XF0o1';
 const MARKETAUX_BASE_URL = "https://api.marketaux.com/v1/news/all";
 
-const FMP_API_KEY = "YOUR_FMP_API_KEY"; // Replace with your actual key
-const FMP_BASE_URL = "https://financialmodelingprep.com/api/v3";
+// const FMP_API_KEY = "YOUR_FMP_API_KEY"; // Replace with your actual key
+// const FMP_BASE_URL = "https://financialmodelingprep.com/api/v3";
+
+// Alpha Vantage API Configuration
+const ALPHA_VANTAGE_API_KEY = "UBMMSZ177X8CO4G3"; // User-provided key
+const ALPHA_VANTAGE_BASE_URL = "https://www.alphavantage.co/query";
 
 const chartThemeColors = {
   light: {
@@ -248,118 +252,144 @@ function StockChartAnalyzer() {
 
 
   const fetchFinancialDataForProsCons = async (symbol) => {
-    if (!symbol || FMP_API_KEY === "YOUR_FMP_API_KEY") {
-      setFinancialDataError("FMP API key not configured or symbol missing for financial data.");
-      console.warn("FMP API key not configured or symbol missing. Financial data fetch skipped.");
-      setFinancialData({ error: "API key not configured or symbol missing." });
-      return;
+    if (!symbol || ALPHA_VANTAGE_API_KEY === "YOUR_AV_API_KEY" || ALPHA_VANTAGE_API_KEY === "") {
+      // If it's the user's key and it fails, it will be caught by the API call errors.
+      // If it's a placeholder, we show the setup message.
+      // Note: The original code had "UBMMSZ177X8CO4G3" hardcoded here for the check, which is incorrect.
+      // It should check against the placeholder "YOUR_AV_API_KEY" or empty string.
+      if (ALPHA_VANTAGE_API_KEY === "YOUR_AV_API_KEY" || ALPHA_VANTAGE_API_KEY === "") {
+        setFinancialDataError("Alpha Vantage API key not configured or symbol missing for financial data.");
+        console.warn("Alpha Vantage API key not configured or symbol missing. Financial data fetch skipped.");
+        setFinancialData({
+          currentDebt: 'Setup Required',
+          nextQuarterExpectation: 'Setup Required',
+          profitCAGR5Y: null,
+          salesHistory10Y: [],
+          error: "API key not configured."
+        });
+        return;
+      }
     }
 
     setFinancialDataLoading(true);
     setFinancialDataError(null);
-    setFinancialData(null); // Clear previous data
+    setFinancialData(null);
 
-    let fetchedProsConsData = {
+    let fetchedData = {
       currentDebt: 'N/A',
       nextQuarterExpectation: 'N/A',
-      profitCAGR5Y: null, // Will be number or null
+      profitCAGR5Y: null,
       salesHistory10Y: [],
       error: null
     };
 
     try {
-      // 1. Fetch Balance Sheet (latest annual for current debt)
-      const balanceSheetUrl = `${FMP_BASE_URL}/balance-sheet-statement/${symbol}?period=annual&limit=1&apikey=${FMP_API_KEY}`;
-      const bsResponse = await fetch(balanceSheetUrl);
-      if (!bsResponse.ok) {
-        console.warn(`Pros/Cons: Failed to fetch balance sheet for ${symbol}. Status: ${bsResponse.status}`);
-         fetchedProsConsData.currentDebt = 'Error fetching';
-      } else {
-        const bsData = await bsResponse.json();
-        if (bsData && bsData.length > 0) {
-          const latestBs = bsData[0];
-          fetchedProsConsData.currentDebt = latestBs.totalDebt !== undefined ? latestBs.totalDebt : (parseFloat(latestBs.shortTermDebt || 0) + parseFloat(latestBs.longTermDebt || 0));
-        } else {
-          fetchedProsConsData.currentDebt = 'Not Available';
-        }
-      }
-
-      // 2. Fetch Analyst Estimates (for next quarter expectation)
-      const estimatesUrl = `${FMP_BASE_URL}/analyst-estimates/${symbol}?apikey=${FMP_API_KEY}`;
-      const estResponse = await fetch(estimatesUrl);
-      if (!estResponse.ok) {
-        console.warn(`Pros/Cons: Failed to fetch analyst estimates for ${symbol}. Status: ${estResponse.status}`);
-        fetchedProsConsData.nextQuarterExpectation = 'Error fetching';
-      } else {
-        const estData = await estResponse.json();
-        if (estData && estData.length > 0) {
-          // Find the most recent estimate that has a future date for earnings release
-          const futureEstimates = estData.filter(e => e.date && new Date(e.date) > new Date() && e.estimatedEpsAvg !== null);
-          let targetEstimate = null;
-          if (futureEstimates.length > 0) {
-            // Sort by date to get the soonest future estimate
-            futureEstimates.sort((a,b) => new Date(a.date) - new Date(b.date));
-            targetEstimate = futureEstimates[0];
-          } else {
-            // Fallback: find the most recent estimate overall if no future ones
-            estData.sort((a,b) => new Date(b.date) - new Date(a.date)); // most recent first
-            targetEstimate = estData[0];
-          }
-
-          if (targetEstimate) {
-            fetchedProsConsData.nextQuarterExpectation = `Est. EPS: ${targetEstimate.estimatedEpsAvg || 'N/A'} (for period ending ${targetEstimate.date || 'N/A'})`;
-          } else {
-            fetchedProsConsData.nextQuarterExpectation = 'Not Available';
-          }
-        } else {
-          fetchedProsConsData.nextQuarterExpectation = 'Not Available';
-        }
-      }
-
-      // 3. Fetch Annual Income Statements (for Sales and Profit CAGR)
-      const incomeStatementUrl = `${FMP_BASE_URL}/income-statement/${symbol}?period=annual&limit=10&apikey=${FMP_API_KEY}`;
+      // 1. Income Statement (for Sales and Net Income for CAGR)
+      const incomeStatementUrl = `${ALPHA_VANTAGE_BASE_URL}?function=INCOME_STATEMENT&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
       const isResponse = await fetch(incomeStatementUrl);
-      if (!isResponse.ok) {
-         console.warn(`Pros/Cons: Failed to fetch income statements for ${symbol}. Status: ${isResponse.status}`);
-         fetchedProsConsData.salesHistory10Y = [{ year: 'Error', revenue: 'Error fetching'}];
-         fetchedProsConsData.profitCAGR5Y = null; // Error state
-      } else {
-        const isData = await isResponse.json();
-        if (isData && isData.length > 0) {
-          fetchedProsConsData.salesHistory10Y = isData.slice(0, 10).map(report => ({
-            year: new Date(report.date).getFullYear(),
-            revenue: report.revenue
-          })).reverse();
+      const isData = await isResponse.json();
 
-          if (isData.length >= 2) {
-              const relevantNetIncomes = isData.slice(0, 6).map(report => parseFloat(report.netIncome)).filter(ni => !isNaN(ni) && ni !== null);
-              if (relevantNetIncomes.length >= 2) {
-                  const reversedIncomes = [...relevantNetIncomes].reverse();
-                  const startValue = reversedIncomes[0];
-                  const endValue = reversedIncomes[reversedIncomes.length - 1];
-                  const years = reversedIncomes.length - 1;
-                  if (years > 0 && startValue !== null && endValue !== null && startValue !== 0) {
-                      fetchedProsConsData.profitCAGR5Y = calculateCAGR(endValue, startValue, years);
-                  } else {
-                    fetchedProsConsData.profitCAGR5Y = null; // Or 'N/A' if prefer string
-                  }
-              } else {
-                fetchedProsConsData.profitCAGR5Y = null;
-              }
-          } else {
-             fetchedProsConsData.profitCAGR5Y = null;
-          }
-        } else {
-            fetchedProsConsData.salesHistory10Y = [{year: 'N/A', revenue: 'Not Available'}];
-            fetchedProsConsData.profitCAGR5Y = null;
-        }
+      if (isData.Information) { // Alpha Vantage rate limit message or other API info
+        throw new Error(`Financial Data (Income Statement): ${isData.Information}`);
       }
+      if (!isResponse.ok && !isData.Information) { // Handle other fetch errors if no specific AV info
+         const errorText = isResponse.statusText || `Status code ${isResponse.status}`;
+         console.warn(`Financial Data: Failed to fetch income statement for ${symbol}. ${errorText}`);
+         fetchedData.salesHistory10Y = [{ year: 'Error', revenue: 'Fetch Failed' }];
+      } else if (isData.annualReports && isData.annualReports.length > 0) {
+        fetchedData.salesHistory10Y = isData.annualReports.slice(0, 10).map(report => ({
+          year: new Date(report.fiscalDateEnding).getFullYear(),
+          revenue: parseFloat(report.totalRevenue)
+        })).filter(item => !isNaN(item.revenue)).reverse();
+
+        if (isData.annualReports.length >= 2) {
+          const netIncomes = isData.annualReports.slice(0, 6) // Max 5 years for CAGR (needs 6 reports for 5 periods)
+            .map(report => parseFloat(report.netIncome))
+            .filter(ni => !isNaN(ni) && ni !== null);
+
+          if (netIncomes.length >= 2) {
+            const reversedIncomes = [...netIncomes].reverse(); // Oldest to newest
+            const startValue = reversedIncomes[0];
+            const endValue = reversedIncomes[reversedIncomes.length - 1];
+            const years = reversedIncomes.length - 1;
+            if (years > 0 && startValue !== 0 && startValue !== null && endValue !== null) {
+              fetchedData.profitCAGR5Y = calculateCAGR(endValue, startValue, years);
+            }
+          }
+        }
+      } else if (!isData.Information) { // If no annual reports and no API info message
+          fetchedData.salesHistory10Y = [{year: 'N/A', revenue: 'Not Available'}];
+      }
+
+
+      // 2. Balance Sheet (for Current Debt)
+      await new Promise(resolve => setTimeout(resolve, 1200)); // Increased delay for AV free tier
+      const balanceSheetUrl = `${ALPHA_VANTAGE_BASE_URL}?function=BALANCE_SHEET&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
+      const bsResponse = await fetch(balanceSheetUrl);
+      const bsData = await bsResponse.json();
+
+      if (bsData.Information) { throw new Error(`Financial Data (Balance Sheet): ${bsData.Information}`); }
+      if (!bsResponse.ok && !bsData.Information) {
+        const errorText = bsResponse.statusText || `Status code ${bsResponse.status}`;
+        console.warn(`Financial Data: Failed to fetch balance sheet for ${symbol}. ${errorText}`);
+        fetchedData.currentDebt = 'Error fetching';
+      } else if (bsData.annualReports && bsData.annualReports.length > 0) {
+        const latestBs = bsData.annualReports[0];
+        fetchedData.currentDebt = latestBs.shortLongTermDebtTotal || latestBs.longTermDebt || latestBs.totalLiabilities || 'Not Available';
+      } else if (bsData.quarterlyReports && bsData.quarterlyReports.length > 0) { // Fallback to quarterly
+        const latestQuarterlyBs = bsData.quarterlyReports[0];
+        fetchedData.currentDebt = latestQuarterlyBs.shortLongTermDebtTotal || latestQuarterlyBs.longTermDebt || latestQuarterlyBs.totalLiabilities || 'Not Available';
+      } else if (!bsData.Information) {
+        fetchedData.currentDebt = 'Not Available';
+      }
+
+      // 3. Earnings (for Next Quarter Expectation)
+      await new Promise(resolve => setTimeout(resolve, 1200)); // Increased delay
+      const earningsUrl = `${ALPHA_VANTAGE_BASE_URL}?function=EARNINGS&symbol=${symbol}&apikey=${ALPHA_VANTAGE_API_KEY}`;
+      const earningsResponse = await fetch(earningsUrl);
+      const earningsData = await earningsResponse.json();
+
+      if (earningsData.Information) { throw new Error(`Financial Data (Earnings): ${earningsData.Information}`); }
+      if (!earningsResponse.ok && !earningsData.Information) {
+        const errorText = earningsResponse.statusText || `Status code ${earningsResponse.status}`;
+        console.warn(`Financial Data: Failed to fetch earnings for ${symbol}. ${errorText}`);
+        fetchedData.nextQuarterExpectation = 'Error fetching';
+      } else if (earningsData.quarterlyEarnings && earningsData.quarterlyEarnings.length > 0) {
+        // Try to find the next *future* quarter with an estimate
+        const futureEarnings = earningsData.quarterlyEarnings.filter(e =>
+            e.fiscalDateEnding && new Date(e.fiscalDateEnding) > new Date() &&
+            e.estimatedEPS && e.estimatedEPS !== 'None'
+        );
+
+        if (futureEarnings.length > 0) {
+          futureEarnings.sort((a,b) => new Date(a.fiscalDateEnding) - new Date(b.fiscalDateEnding)); // Sort by date to get the soonest
+          fetchedData.nextQuarterExpectation = `Est. EPS: ${futureEarnings[0].estimatedEPS} (Q ending ${futureEarnings[0].fiscalDateEnding})`;
+        } else {
+          // Fallback: find the most recent reported quarter that *had* an estimate, or just reported EPS
+          const sortedPastEarnings = earningsData.quarterlyEarnings.sort((a,b) => new Date(b.reportedDate) - new Date(a.reportedDate)); // most recent first
+          if(sortedPastEarnings.length > 0) {
+            const latestReported = sortedPastEarnings[0];
+            if (latestReported.estimatedEPS && latestReported.estimatedEPS !== 'None') {
+                 fetchedData.nextQuarterExpectation = `Last Est. EPS: ${latestReported.estimatedEPS} (Reported ${latestReported.reportedDate})`;
+            } else if (latestReported.reportedEPS && latestReported.reportedEPS !== 'None') {
+                 fetchedData.nextQuarterExpectation = `Last Reported EPS: ${latestReported.reportedEPS} (Reported ${latestReported.reportedDate})`;
+            } else {
+                 fetchedData.nextQuarterExpectation = 'Not Available';
+            }
+          } else {
+            fetchedData.nextQuarterExpectation = 'Not Available';
+          }
+        }
+      } else if (!earningsData.Information) {
+        fetchedData.nextQuarterExpectation = 'Not Available';
+      }
+
     } catch (e) {
-      console.error("Error in fetchFinancialDataForProsCons:", e);
-      fetchedProsConsData.error = e.message;
-      setFinancialDataError(e.message);
+      console.error("Error in fetchFinancialDataForProsCons (Alpha Vantage):", e);
+      fetchedData.error = e.message; // Store error message in the object
+      setFinancialDataError(e.message); // Set top-level error for UI
     } finally {
-      setFinancialData(fetchedProsConsData);
+      setFinancialData(fetchedData); // Set the data (even if partial or with error messages)
       setFinancialDataLoading(false);
     }
   };
