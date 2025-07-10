@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react'; // Removed Search
 import stocksData from './stocks.json';
-import FlagIcon from './components/FlagIcon';
+// import FlagIcon from './components/FlagIcon'; // Removed FlagIcon import
 import { ThemeContext } from './ThemeContext';
 import PatternRecognitionGame from './components/PatternRecognitionGame';
 import ProsConsTable from './components/ProsConsTable';

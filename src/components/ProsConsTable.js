@@ -1,8 +1,9 @@
-import React, { useContext } from 'react';
-import { ThemeContext } from '../ThemeContext';
+import React from 'react';
+// import { ThemeContext } from '../ThemeContext'; // No longer needed
+// import { useContext } from 'react'; // No longer needed
 
 const ProsConsTable = ({ financialData }) => {
-  // const { theme } = useContext(ThemeContext); // Theme context might not be needed if CSS handles it
+  // const { theme } = useContext(ThemeContext); // Theme context is not used as styles are class-based
 
   if (!financialData) {
     return null;
