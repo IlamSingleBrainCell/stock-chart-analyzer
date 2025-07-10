@@ -107,8 +107,8 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   };
 
   const handleNextQuestion = () => {
-    const nextQuestionIndex = questionNumber + 1; // Calculate next index before setting state
-    if (nextQuestionIndex < totalQuestions) {
+    const nextQuestionIndex = questionNumber + 1;
+    if (nextQuestionIndex < totalQuestions) { // Check against totalQuestions, not totalQuestions - 1
         setQuestionNumber(nextQuestionIndex);
         // loadNextQuestion(); // useEffect will handle this due to questionNumber change
     } else {
@@ -117,14 +117,16 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   };
 
   useEffect(() => {
-    if (gameStarted && !gameOver ) { // Removed questionNumber > 0 to allow initial load if startGame didn't complete it
+    if (gameStarted && !gameOver ) {
+      // This will load the question when questionNumber changes, including the initial one if startGame sets questionNumber.
+      // startGame calls loadNextQuestion directly for the first question (index 0).
+      // handleNextQuestion updates questionNumber, and this effect loads the new question.
       loadNextQuestion();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [questionNumber, gameStarted, gameOver]); // Removed currentCorrectPattern, allPatternNames to avoid loops if they are stable.
+  }, [questionNumber, gameStarted, gameOver]);
 
 
-  // Styles
    const gameContainerStyle = {
     padding: '30px',
     margin: '20px auto',
