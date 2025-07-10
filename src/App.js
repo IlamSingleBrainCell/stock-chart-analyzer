@@ -6,7 +6,7 @@ import { ThemeContext } from './ThemeContext';
 import PatternRecognitionGame from './components/PatternRecognitionGame';
 import ProsConsTable from './components/ProsConsTable';
 import Header from './components/Header';
-import InputSection from './components/InputSection'; // Import the new InputSection component
+import InputSection from './components/InputSection';
 
 const MARKETAUX_API_KEY = 'F8x0iPiyy2Rhe8LZsQJvmisOPwpr7xQ4Np7XF0o1';
 const MARKETAUX_BASE_URL = "https://api.marketaux.com/v1/news/all";
@@ -660,6 +660,7 @@ function StockChartAnalyzer() {
             popularStocksData={popularStocksData}
             selectStock={selectStock}
             stockDatabase={stockDatabase}
+            setSelectedSuggestionIndex={setSelectedSuggestionIndex} // Ensure this is passed
           />
 
           {error && (<div className="data-card" style={{ background: 'var(--danger-background)', color: 'var(--danger-color)' }}><strong>⚠️ Chart Error:</strong> {error}</div>)}
