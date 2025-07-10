@@ -1,147 +1,117 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-
 :root {
-  /* Semrush Inspired Palette - Light Mode */
-  --rgb-semrush-blue: 0, 115, 229; /* For box-shadow */
-  --rgb-primary-accent: 99, 102, 241; /* For box-shadow, maps to old primary accent */
-  --semrush-blue: #0073E5; /* Primary blue */
-  --semrush-blue-darker: #0052CC;
-  --semrush-blue-lighter: #E5F1FC;
-  --semrush-gray-bg: #F7F8FA; /* Light page background */
-  --semrush-gray-border: #DDE1E6;
-  --semrush-gray-text: #5A6B82;
-  --semrush-dark-text: #1A2B42;
-  --semrush-green: #00A854;
-  --semrush-red: #D42E00;
-  --semrush-orange: #FF7F00;
+  --background-color: #ffffff;
+  --text-color: #1a202c;
+  --text-color-light: #4a5568;
+  --text-color-lighter: #6b7280;
+  --text-color-muted: #9ca3af;
 
-  --background-color: var(--semrush-gray-bg);
-  --text-color: var(--semrush-dark-text);
-  --text-color-light: var(--semrush-gray-text);
-  --text-color-lighter: #6b7280; /* Keep for now, can be aliased to semrush gray */
-  --text-color-muted: #9ca3af; /* Keep for now */
+  --primary-accent: #6366f1; /* Indigo */
+  --primary-accent-darker: #4f46e5;
+  --primary-accent-light: rgba(99, 102, 241, 0.1);
+  --primary-accent-border: rgba(99, 102, 241, 0.3);
 
-  --primary-accent: var(--semrush-blue);
-  --primary-accent-darker: var(--semrush-blue-darker);
-  --primary-accent-light: var(--semrush-blue-lighter);
-  --primary-accent-border: var(--semrush-blue); /* Semrush uses solid borders often */
+  --secondary-accent: #8b5cf6; /* Violet */
 
-  --secondary-accent: #8b5cf6; /* Violet - Can be replaced or kept for secondary actions if needed */
+  --card-background: rgba(255, 255, 255, 0.95);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --card-shadow: rgba(0, 0, 0, 0.1);
 
-  --card-background: #ffffff; /* Semrush cards are typically white */
-  --card-border: var(--semrush-gray-border);
-  --card-shadow: rgba(0, 0, 0, 0.05); /* Softer shadow */
-
-  --input-border: var(--semrush-gray-border);
-  --input-border-focus: var(--semrush-blue);
-  --input-background: #ffffff; /* Semrush inputs are typically white */
-  --input-background-hover: #ffffff;
+  --input-border: rgba(99, 102, 241, 0.2);
+  --input-border-focus: #6366f1;
+  --input-background: rgba(139, 92, 246, 0.05);
+  --input-background-hover: rgba(139, 92, 246, 0.1);
 
   --button-primary-text: #ffffff;
 
-  --success-color: var(--semrush-green);
-  --success-background: rgba(0, 168, 84, 0.1);
-  --success-border: var(--semrush-green);
+  --success-color: #059669; /* Green */
+  --success-background: rgba(16, 185, 129, 0.15);
+  --success-border: rgba(16, 185, 129, 0.3);
 
-  --danger-color: var(--semrush-red);
-  --danger-background: rgba(212, 46, 0, 0.1);
-  --danger-border: var(--semrush-red);
+  --danger-color: #dc2626; /* Red */
+  --danger-background: rgba(239, 68, 68, 0.15);
+  --danger-border: rgba(239, 68, 68, 0.3);
 
-  --warning-color: var(--semrush-orange);
-  --warning-background: rgba(255, 127, 0, 0.1);
-  --warning-border: var(--semrush-orange);
+  --warning-color: #d97706; /* Amber */
+  --warning-background: rgba(245, 158, 11, 0.1);
+  --warning-border: rgba(245, 158, 11, 0.3);
 
-  --info-color: #0891b2; /* Existing Cyan, looks okay */
+  --info-color: #0891b2; /* Cyan */
   --info-background: rgba(34, 211, 238, 0.1);
-  --info-border: #0891b2;
+  --info-border: rgba(34, 211, 238, 0.3);
 
-  --link-color: var(--semrush-blue-darker);
-  --separator-color: var(--semrush-gray-border);
-  --highlight-background: #FFF3CD; /* Semrush-like highlight */
+  --link-color: #4f46e5;
+  --separator-color: rgba(107, 114, 128, 0.3);
+  --highlight-background: #fef3c7; /* For search term highlight */
 
-  /* Chart colors can remain specific or be themed if desired */
-  --chart-grid-color: #E0E0E0;
+  --chart-grid-color: #f0f0f0;
   --chart-label-color: #666666;
-  --chart-main-line-color: var(--semrush-blue);
-  --candlestick-green: var(--semrush-green);
-  --candlestick-red: var(--semrush-red);
+  --chart-main-line-color: #2563eb;
+  --candlestick-green: #10b981;
+  --candlestick-red: #ef4444;
 
-  --app-background-start: var(--semrush-gray-bg); /* Main page background */
-  --app-border: var(--semrush-gray-border); /* General border for containers if needed */
+  --app-background-start: rgba(255, 255, 255, 0.98); /* For the main div background */
+  --app-border: rgba(255, 255, 255, 0.4);
 }
 
 body.dark-mode {
-  /* Semrush Inspired Palette - Dark Mode */
-  --rgb-semrush-blue: 56, 155, 255; /* For box-shadow */
-  --rgb-primary-accent: 129, 140, 248; /* For box-shadow */
-  --semrush-blue: #389BFF;
-  --semrush-blue-darker: #1F88FF;
-  --semrush-blue-lighter: #2C3A4F; /* Darker blue for backgrounds */
-  --semrush-gray-bg: #1A2B42; /* Dark page background */
-  --semrush-gray-border: #3A4C63;
-  --semrush-gray-text: #A7BBD4;
-  --semrush-dark-text: #E5F1FC; /* Light text for dark mode */
-  --semrush-green: #00C27A;
-  --semrush-red: #FF5C5C;
-  --semrush-orange: #FFA53D;
+  --background-color: #111827; /* Gray 900 */
+  --text-color: #f3f4f6; /* Gray 100 */
+  --text-color-light: #d1d5db; /* Gray 300 */
+  --text-color-lighter: #9ca3af; /* Gray 400 */
+  --text-color-muted: #6b7280; /* Gray 500 */
 
-  --background-color: var(--semrush-gray-bg);
-  --text-color: var(--semrush-dark-text);
-  --text-color-light: var(--semrush-gray-text);
-  --text-color-lighter: #9ca3af; /* Keep for now */
-  --text-color-muted: #6b7280; /* Keep for now */
+  --primary-accent: #818cf8; /* Indigo 400 */
+  --primary-accent-darker: #6366f1; /* Indigo 500 */
+  --primary-accent-light: rgba(129, 140, 248, 0.15);
+  --primary-accent-border: rgba(129, 140, 248, 0.4);
 
-  --primary-accent: var(--semrush-blue);
-  --primary-accent-darker: var(--semrush-blue-darker);
-  --primary-accent-light: var(--semrush-blue-lighter);
-  --primary-accent-border: var(--semrush-blue);
+  --secondary-accent: #a78bfa; /* Violet 400 */
 
-  --secondary-accent: #a78bfa; /* Keep for now */
-
-  --card-background: #233650; /* Darker card background */
-  --card-border: var(--semrush-gray-border);
+  --card-background: #1f2937; /* Gray 800 */
+  --card-border: rgba(255, 255, 255, 0.15);
   --card-shadow: rgba(0, 0, 0, 0.2);
 
-  --input-border: var(--semrush-gray-border);
-  --input-border-focus: var(--semrush-blue);
-  --input-background: #1A2B42; /* Dark input background */
-  --input-background-hover: #233650;
+  --input-border: rgba(129, 140, 248, 0.3);
+  --input-border-focus: #818cf8;
+  --input-background: rgba(129, 140, 248, 0.1);
+  --input-background-hover: rgba(129, 140, 248, 0.2);
 
-  /* --button-primary-text: #ffffff; */
+  /* --button-primary-text: #ffffff; */ /* Remains white or light gray */
 
-  --success-color: var(--semrush-green);
-  --success-background: rgba(0, 194, 122, 0.15);
-  --success-border: var(--semrush-green);
+  --success-color: #34d399; /* Green 400 */
+  --success-background: rgba(52, 211, 153, 0.15);
+  --success-border: rgba(52, 211, 153, 0.4);
 
-  --danger-color: var(--semrush-red);
-  --danger-background: rgba(255, 92, 92, 0.15);
-  --danger-border: var(--semrush-red);
+  --danger-color: #f87171; /* Red 400 */
+  --danger-background: rgba(248, 113, 113, 0.15);
+  --danger-border: rgba(248, 113, 113, 0.4);
 
-  --warning-color: var(--semrush-orange);
-  --warning-background: rgba(255, 165, 61, 0.15);
-  --warning-border: var(--semrush-orange);
+  --warning-color: #fbbf24; /* Amber 400 */
+  --warning-background: rgba(251, 191, 36, 0.15);
+  --warning-border: rgba(251, 191, 36, 0.4);
 
-  --info-color: #67e8f9; /* Keep */
+  --info-color: #67e8f9; /* Cyan 300 */
   --info-background: rgba(103, 232, 249, 0.1);
-  --info-border: #67e8f9;
+  --info-border: rgba(103, 232, 249, 0.3);
 
-  --link-color: var(--semrush-blue);
-  --separator-color: var(--semrush-gray-border);
-  --highlight-background: #4b5563; /* Keep */
+  --link-color: #818cf8;
+  --separator-color: rgba(107, 114, 128, 0.5);
+  --highlight-background: #4b5563; /* Gray 600 - for search term highlight on dark */
 
-  --chart-grid-color: #3A4C63;
-  --chart-label-color: var(--semrush-gray-text);
-  --chart-main-line-color: var(--semrush-blue);
-  --candlestick-green: var(--semrush-green);
-  --candlestick-red: var(--semrush-red);
+  --chart-grid-color: #374151; /* Gray 700 */
+  --chart-label-color: #9ca3af; /* Gray 400 */
+  --chart-main-line-color: #60a5fa; /* Blue 400 */
+  --candlestick-green: #34d399; /* Green 400 */
+  --candlestick-red: #f87171; /* Red 400 */
 
-  --app-background-start: var(--semrush-gray-bg);
-  --app-border: var(--semrush-gray-border);
+  --app-background-start: #1f2937; /* For the main div background - Gray 800 */
+  --app-border: rgba(55, 65, 81, 0.6); /* Gray 700 with opacity */
 }
+
 
 body {
   margin: 0;
-  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
     'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
     sans-serif;
   -webkit-font-smoothing: antialiased;
