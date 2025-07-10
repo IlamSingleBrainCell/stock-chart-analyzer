@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useContext } from 'react'; // Removed unused useRef
+import React, { useState, useEffect, useContext } from 'react';
 import { ThemeContext } from '../ThemeContext';
 
 // Props are expected: PatternVisualization (component) and chartPatterns (object)
@@ -7,7 +7,7 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
 
   const [gameStarted, setGameStarted] = useState(false);
   const [currentCorrectPattern, setCurrentCorrectPattern] = useState(null);
-  const [options, setOptions] = useState([]); // This will be used by the buttons
+  const [options, setOptions] = useState([]);
   const [score, setScore] = useState(0);
   const [questionNumber, setQuestionNumber] = useState(0); // 0-indexed internally
   const [totalQuestions] = useState(10);
@@ -31,67 +31,64 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   };
 
   const formatPatternName = (name) => {
-    // Add a check for undefined or null name, which can happen if a pattern is not found
     if (!name) return "Unknown Pattern";
     return name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ');
   };
 
   const loadNextQuestion = () => {
-    // questionNumber is 0-indexed internally for logic (0 to totalQuestions-1)
-    // This condition means if we've already processed `totalQuestions` number of questions.
     if (questionNumber >= totalQuestions) {
       setGameOver(true);
       return;
     }
-
     setSelectedAnswer(null);
     setIsAnswerChecked(false);
     setFeedback('');
     setShowFeedback(false);
     setFeedbackType('');
 
-    // 1. Select a random correct pattern
     if (allPatternNames.length === 0) {
         console.error("Pattern Recognition Game: No patterns available to choose from in chartPatterns prop.");
         setFeedback("Error: No patterns loaded for the game.");
         setShowFeedback(true);
-        setFeedbackType('incorrect'); // Treat as an error state
+        setFeedbackType('incorrect');
         setGameOver(true);
         return;
     }
     const correctPatternName = allPatternNames[Math.floor(Math.random() * allPatternNames.length)];
     setCurrentCorrectPattern({
         name: correctPatternName,
-        ...chartPatterns[correctPatternName]
+        ...(chartPatterns ? chartPatterns[correctPatternName] : {})
     });
 
-    // 2. Generate multiple-choice options (3 distractors + 1 correct)
     let currentOptions = [correctPatternName];
-    while (currentOptions.length < 4) {
+    while (currentOptions.length < 4 && allPatternNames.length > currentOptions.length) {
       const randomDistractorName = allPatternNames[Math.floor(Math.random() * allPatternNames.length)];
       if (!currentOptions.includes(randomDistractorName)) {
         currentOptions.push(randomDistractorName);
       }
     }
+    while (currentOptions.length < 4 && allPatternNames.length > 0) {
+        currentOptions.push(allPatternNames[0]);
+    }
     setOptions(shuffleArray(currentOptions));
-    // `questionNumber` state is updated by `handleNextQuestion` or `startGame` for the first question.
-    // Here, we are just loading the data for the question index `questionNumber`.
   };
 
   const startGame = () => {
     setGameStarted(true);
     setScore(0);
-    setQuestionNumber(0); // Reset to the first question index
+    setQuestionNumber(0);
     setGameOver(false);
     setFeedback('');
+    setShowFeedback(false);
+    setFeedbackType('');
     loadNextQuestion();
   };
 
   const handleAnswer = (selectedOptionName) => {
-    if (isAnswerChecked) return; // Prevent multiple checks for the same question
-
+    if (isAnswerChecked) return;
     setSelectedAnswer(selectedOptionName);
     setIsAnswerChecked(true);
+    setShowFeedback(true);
 
     if (currentCorrectPattern && selectedOptionName === currentCorrectPattern.name) {
       setScore(prevScore => prevScore + 1);
@@ -102,80 +99,169 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
       setFeedbackType('incorrect');
     }
 
-    // If it's the last question (e.g. questionNumber is 9 for 10 questions)
-    // (questionNumber is 0-indexed, so compare with totalQuestions - 1)
     if (questionNumber >= totalQuestions - 1) {
         setTimeout(() => {
             setGameOver(true);
-        }, 2500); // Allow time to read feedback
+        }, 2500);
     }
   };
 
   const handleNextQuestion = () => {
-    if (questionNumber < totalQuestions - 1) {
-        setQuestionNumber(prev => prev + 1); // Move to next question index
-        // loadNextQuestion will be triggered by useEffect watching questionNumber, or call directly
-        loadNextQuestion();
+    const nextQuestionIndex = questionNumber + 1; // Calculate next index before setting state
+    if (nextQuestionIndex < totalQuestions) {
+        setQuestionNumber(nextQuestionIndex);
+        // loadNextQuestion(); // useEffect will handle this due to questionNumber change
     } else {
         setGameOver(true);
     }
   };
 
-  // Load question data when questionNumber changes (and game has started)
   useEffect(() => {
-    if (gameStarted && !gameOver && questionNumber < totalQuestions) {
-      // This effect might be redundant if loadNextQuestion is called directly by startGame and handleNextQuestion
-      // However, it ensures that if questionNumber changes externally, the question loads.
-      // For now, let's rely on direct calls.
+    if (gameStarted && !gameOver ) { // Removed questionNumber > 0 to allow initial load if startGame didn't complete it
+      loadNextQuestion();
     }
-  }, [questionNumber, gameStarted, gameOver, totalQuestions]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [questionNumber, gameStarted, gameOver]); // Removed currentCorrectPattern, allPatternNames to avoid loops if they are stable.
+
 
   // Styles
-  const gameContainerStyle = {
-    padding: '20px',
+   const gameContainerStyle = {
+    padding: '30px',
     margin: '20px auto',
     maxWidth: '700px',
-    backgroundColor: theme === 'dark' ? '#2c3e50' : '#ffffff',
-    color: theme === 'dark' ? '#ecf0f1' : '#2c3e50',
-    borderRadius: '12px',
-    boxShadow: '0 6px 20px rgba(0,0,0,0.1)',
-    border: `1px solid ${theme === 'dark' ? '#34495e' : '#e0e0e0'}`,
-    textAlign: 'center'
+    backgroundColor: theme === 'dark' ? '#1f2937' : '#f9fafb',
+    color: theme === 'dark' ? '#e5e7eb' : '#111827',
+    borderRadius: '16px',
+    boxShadow: theme === 'dark'
+        ? '0 10px 25px -5px rgba(0, 0, 0, 0.3), 0 8px 10px -6px rgba(0, 0, 0, 0.2)'
+        : '0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.07)',
+    border: `1px solid ${theme === 'dark' ? '#374151' : '#e5e7eb'}`,
+    textAlign: 'center',
+    fontFamily: "'Inter', sans-serif"
+  };
+
+  const titleStyle = {
+    fontSize: '28px',
+    fontWeight: '700',
+    color: theme === 'dark' ? '#93c5fd' : '#3b82f6',
+    marginBottom: '10px'
+  };
+
+  const descriptionStyle = {
+    fontSize: '16px',
+    color: theme === 'dark' ? '#d1d5db' : '#4b5563',
+    marginBottom: '25px',
+    lineHeight: '1.6'
   };
 
   const buttonStyle = {
-    padding: '12px 24px',
-    fontSize: '16px',
+    padding: '14px 28px',
+    fontSize: '18px',
     margin: '10px 5px',
     cursor: 'pointer',
-    backgroundColor: theme === 'dark' ? '#3498db' : '#2980b9',
+    backgroundColor: theme === 'dark' ? '#3b82f6' : '#2563eb',
     color: 'white',
     border: 'none',
-    borderRadius: '8px',
-    transition: 'background-color 0.2s',
+    borderRadius: '10px',
+    transition: 'background-color 0.2s ease-in-out, transform 0.1s ease',
+    fontWeight: '600',
+    boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1)'
   };
 
-  const optionButtonStyle = (isSelected) => ({
-    ...buttonStyle,
-    backgroundColor: isSelected ? (theme === 'dark' ? '#8e44ad' : '#9b59b6') : (theme === 'dark' ? '#566573' : '#7f8c8d'),
-    width: 'calc(50% - 10px)', // Two buttons per row
-    minHeight: '60px'
-  });
+  const optionButtonStyle = (optionName) => {
+    let bgColor = theme === 'dark' ? '#4b5563' : '#9ca3af';
+    let textColor = 'white';
+    let border = `2px solid transparent`;
 
-  const feedbackStyle = {
-    marginTop: '15px',
+    if (isAnswerChecked) {
+        if (currentCorrectPattern && optionName === currentCorrectPattern.name) {
+            bgColor = theme === 'dark' ? '#10b981' : '#059669';
+        } else if (optionName === selectedAnswer) {
+            bgColor = theme === 'dark' ? '#ef4444' : '#dc2626';
+        } else {
+             bgColor = theme === 'dark' ? '#374151' : '#e5e7eb';
+             textColor = theme === 'dark' ? '#9ca3af' : '#6b7280';
+        }
+    }
+    return {
+        ...buttonStyle,
+        backgroundColor: bgColor,
+        color: textColor,
+        width: 'calc(50% - 12px)',
+        minHeight: '70px',
+        margin: '6px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        fontWeight: '500',
+        fontSize: '15px',
+        lineHeight: '1.3',
+        border: border,
+        boxShadow: isAnswerChecked && currentCorrectPattern && (optionName === currentCorrectPattern.name || optionName === selectedAnswer)
+            ? `0 0 15px ${bgColor}`
+            : '0 2px 4px rgba(0,0,0,0.05)'
+    };
+  };
+
+  const feedbackContainerStyle = {
+    marginTop: '25px',
+    padding: '15px',
+    borderRadius: '8px',
+    fontSize: '17px',
+    fontWeight: '600',
+    minHeight: '50px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    color: theme === 'dark' ? '#111827' : '#ffffff',
+    backgroundColor: feedbackType === 'correct'
+      ? (theme === 'dark' ? '#10b981' : '#059669')
+      : feedbackType === 'incorrect'
+      ? (theme === 'dark' ? '#ef4444' : '#dc2626')
+      : 'transparent',
+    transition: 'all 0.3s ease-in-out',
+    opacity: showFeedback ? 1 : 0,
+    transform: showFeedback ? 'translateY(0)' : 'translateY(10px)',
+  };
+
+  const scoreHeaderStyle = {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: '10px 20px',
+    background: theme === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)',
+    borderRadius: '10px',
+    marginBottom: '25px'
+  };
+
+  const scoreTextStyle = {
+    fontSize: '20px',
+    fontWeight: '700',
+    color: theme === 'dark' ? '#93c5fd' : '#3b82f6'
+  };
+
+  const progressTextStyle = {
     fontSize: '16px',
-    fontWeight: 'bold',
-    minHeight: '24px'
+    fontWeight: '500',
+    color: theme === 'dark' ? '#d1d5db' : '#4b5563'
   };
 
   if (!gameStarted) {
     return (
       <div style={gameContainerStyle}>
-        <h2>Welcome to the Pattern Recognition Game!</h2>
-        <p>Test your knowledge of stock chart patterns.</p>
-        <p>You will be shown a pattern and you need to select the correct name from the options.</p>
-        <button style={buttonStyle} onClick={startGame}>Start Game</button>
+        <h2 style={titleStyle}>Pattern Recognition Challenge!</h2>
+        <p style={descriptionStyle}>
+          Welcome! Sharpen your technical analysis skills. You'll be shown a stock chart pattern.
+          Your task is to identify it correctly from the given options. Good luck!
+        </p>
+        <button
+          style={buttonStyle}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#60a5fa' : '#3b82f6'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#3b82f6' : '#2563eb'}
+          onClick={startGame}
+        >
+          🚀 Start Game
+        </button>
       </div>
     );
   }
@@ -183,58 +269,85 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
   if (gameOver) {
     return (
       <div style={gameContainerStyle}>
-        <h2>Game Over!</h2>
-        <p>Your final score: {score} / {totalQuestions}</p>
-        <button style={buttonStyle} onClick={startGame}>Play Again</button>
+        <h2 style={{...titleStyle, fontSize: '32px', marginBottom: '20px'}}>🎉 Game Over! 🎉</h2>
+        <p style={{...descriptionStyle, fontSize: '22px', fontWeight: '600'}}>
+          Your final score: <span style={{color: theme === 'dark' ? '#86efac' : '#15803d'}}>{score}</span> / {totalQuestions}
+        </p>
+        <p style={descriptionStyle}>
+            {score > totalQuestions / 2 ? "Great job! You've got a good eye for patterns." : "Keep practicing to improve your pattern recognition skills!"}
+        </p>
+        <button
+          style={buttonStyle}
+          onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#60a5fa' : '#3b82f6'}
+          onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#3b82f6' : '#2563eb'}
+          onClick={startGame}
+        >
+          Play Again?
+        </button>
       </div>
     );
   }
 
   return (
     <div style={gameContainerStyle}>
-      <div style={{ marginBottom: '20px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0 10px' }}>
-        <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Score: {score}</span>
-        <span style={{ fontSize: '18px', fontWeight: 'bold' }}>Question: {questionNumber + 1} / {totalQuestions}</span>
+      <div style={scoreHeaderStyle}>
+        <span style={scoreTextStyle}>Score: {score}</span>
+        <span style={progressTextStyle}>Question: {questionNumber + 1} / {totalQuestions}</span>
       </div>
 
-      {/* Current Pattern Visualization - Placeholder */}
-      {/* <PatternVisualization patternName={currentQuestion ? currentQuestion.name : "loading..."} theme={theme} width={300} height={150} /> */}
-      <div>Pattern Visualization will appear here.</div>
+      {currentCorrectPattern && PatternVisualization && (
+        <PatternVisualization
+            patternName={currentCorrectPattern.name}
+            theme={theme}
+            width={400}
+            height={220}
+        />
+      )}
 
+      <p style={{...descriptionStyle, fontSize: '18px', fontWeight: '600', marginTop: '25px', marginBottom: '15px' }}>
+        What pattern is this?
+      </p>
 
-      <div style={{ marginTop: '20px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center' }}>
-        {/* Options Buttons - Placeholder */}
-        {/* {options.map((option, index) => (
+      <div style={{ marginTop: '10px', display: 'flex', flexWrap: 'wrap', justifyContent: 'center', gap: '0px' }}>
+        {options.map((optionName, index) => (
           <button
             key={index}
-            style={optionButtonStyle(selectedAnswer === option)}
-            onClick={() => handleAnswer(option)}
-            disabled={selectedAnswer !== null}
+            style={optionButtonStyle(optionName)}
+            onClick={() => handleAnswer(optionName)}
+            disabled={isAnswerChecked}
           >
-            {option}
+            {formatPatternName(optionName)}
           </button>
-        ))} */}
-        <p>Option buttons will appear here.</p>
+        ))}
       </div>
 
-      {feedback && (
-        <div style={{...feedbackStyle, color: feedback.startsWith("Correct") ? (theme === 'dark' ? '#2ecc71' : '#27ae60') : (theme === 'dark' ? '#e74c3c' : '#c0392b')}}>
+      {showFeedback && (
+        <div style={feedbackContainerStyle}>
           {feedback}
         </div>
       )}
 
-      {selectedAnswer !== null && !gameOver && (
-        // <button style={buttonStyle} onClick={loadNextQuestion}>Next Question</button> // Placeholder
-        // This was replaced by the more specific "Next Question" or "Show Final Score" buttons
-        // based on the UI refinement logic.
-        // The actual "Next Question" button is rendered conditionally later.
-        // For clarity, this placeholder paragraph can be removed or kept if it helps visualize structure.
-        // Let's remove it as the actual buttons are implemented.
-        null
+      {isAnswerChecked && !gameOver && questionNumber < totalQuestions - 1 && (
+         <button
+            style={{...buttonStyle, marginTop: '25px', backgroundColor: theme === 'dark' ? '#16a34a' : '#15803d'}}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#22c55e' : '#16a34a'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#16a34a' : '#15803d'}
+            onClick={handleNextQuestion}
+        >
+            Next Question ➔
+        </button>
       )}
 
-      {/* The "Next Question" and "Show Final Score" buttons are now generated based on refined logic */}
-      {/* in the main return block of the game screen, so this temporary button is no longer needed. */}
+      {isAnswerChecked && questionNumber >= totalQuestions -1 && !gameOver && (
+         <button
+            style={{...buttonStyle, marginTop: '25px', backgroundColor: theme === 'dark' ? '#f97316' : '#ea580c'}}
+            onMouseEnter={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#fb923c' : '#f97316'}
+            onMouseLeave={e => e.currentTarget.style.backgroundColor = theme === 'dark' ? '#f97316' : '#ea580c'}
+            onClick={() => setGameOver(true)}
+        >
+            Show Final Score 🏁
+        </button>
+      )}
     </div>
   );
 };
