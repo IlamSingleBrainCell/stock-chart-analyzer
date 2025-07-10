@@ -229,13 +229,16 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
 
       {selectedAnswer !== null && !gameOver && (
         // <button style={buttonStyle} onClick={loadNextQuestion}>Next Question</button> // Placeholder
-        <p>Next Question button will appear here.</p>
+        // This was replaced by the more specific "Next Question" or "Show Final Score" buttons
+        // based on the UI refinement logic.
+        // The actual "Next Question" button is rendered conditionally later.
+        // For clarity, this placeholder paragraph can be removed or kept if it helps visualize structure.
+        // Let's remove it as the actual buttons are implemented.
+        null
       )}
 
-      {/* Temporary way to end game for testing structure */}
-      {questionNumber >= totalQuestions -1 && selectedAnswer !== null && (
-         <button style={{...buttonStyle, backgroundColor: theme === 'dark' ? '#e67e22' : '#d35400'}} onClick={resetGame}>End Game (Temp)</button>
-      )}
+      {/* The "Next Question" and "Show Final Score" buttons are now generated based on refined logic */}
+      {/* in the main return block of the game screen, so this temporary button is no longer needed. */}
     </div>
   );
 };
