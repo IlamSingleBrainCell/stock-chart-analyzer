@@ -12,8 +12,9 @@ const InputSection = ({
   showSuggestions,
   filteredSuggestions,
   selectSuggestion,
-  selectedSuggestionIndex, // Added this prop
-  highlightMatch, // Added this prop
+  selectedSuggestionIndex,
+  setSelectedSuggestionIndex, // Function to set the index
+  highlightMatch,
   inputRef,
   loading,
   financialDataLoading,
