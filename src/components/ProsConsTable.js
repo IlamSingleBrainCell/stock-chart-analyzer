@@ -1,24 +1,18 @@
-import React, { useContext } from 'react';
-import { ThemeContext } from '../ThemeContext';
+import React from 'react';
+// import { ThemeContext } from '../ThemeContext'; // No longer needed
+// import { useContext } from 'react'; // No longer needed
 
 const ProsConsTable = ({ financialData }) => {
-  const { theme } = useContext(ThemeContext);
+  // const { theme } = useContext(ThemeContext); // Theme context is not used as styles are class-based
 
   if (!financialData) {
-    return null; // Or a loading indicator if financialDataLoading is also passed
+    return null;
   }
 
   if (financialData.error) {
+    // Use a consistent error display, perhaps a new .error-card class
     return (
-      <div style={{
-        padding: '15px',
-        margin: '20px 0',
-        border: `1px solid ${theme === 'dark' ? '#7f1d1d' : '#fecaca'}`,
-        backgroundColor: theme === 'dark' ? '#450a0a' : '#fee2e2',
-        color: theme === 'dark' ? '#fca5a5' : '#b91c1c',
-        borderRadius: '8px',
-        textAlign: 'center'
-      }}>
+      <div className="data-card" style={{ background: 'var(--danger-background)', color: 'var(--danger-color)', textAlign: 'center' }}>
         <p>Could not load fundamental data: {financialData.error}</p>
       </div>
     );
@@ -26,7 +20,7 @@ const ProsConsTable = ({ financialData }) => {
 
   const formatNumber = (num, isCurrency = false, isPercent = false) => {
     if (num === null || num === undefined || num === 'N/A' || num === 'Error fetching') return num;
-    if (typeof num === 'string' && !isPercent) return num; // Already formatted or textual like 'N/A'
+    if (typeof num === 'string' && !isPercent) return num;
 
     let number = parseFloat(num);
     if (isNaN(number)) return 'N/A';
@@ -38,38 +32,6 @@ const ProsConsTable = ({ financialData }) => {
       return `${number.toFixed(2)}%`;
     }
     return new Intl.NumberFormat('en-US').format(number);
-  };
-
-  const tableStyle = {
-    width: '100%',
-    borderCollapse: 'collapse',
-    marginTop: '20px',
-    fontSize: '14px',
-    backgroundColor: theme === 'dark' ? '#2d3748' : '#ffffff', // card-background
-    color: theme === 'dark' ? '#e2e8f0' : '#2d3748', // text-color
-    borderRadius: '8px',
-    overflow: 'hidden', // To make border-radius work on table
-    boxShadow: `0 4px 12px ${theme === 'dark' ? 'rgba(0,0,0,0.3)' : 'rgba(0,0,0,0.1)'}`
-  };
-
-  const thStyle = {
-    borderBottom: `2px solid ${theme === 'dark' ? '#4a5568' : '#e2e8f0'}`, // separator-color
-    padding: '12px 15px',
-    textAlign: 'left',
-    backgroundColor: theme === 'dark' ? '#374151' : '#f8fafc', // Slightly different header
-    fontWeight: '600',
-    textTransform: 'uppercase',
-    letterSpacing: '0.05em'
-  };
-
-  const tdStyle = {
-    borderBottom: `1px solid ${theme === 'dark' ? '#374151' : '#e2e8f0'}`, // separator-color
-    padding: '10px 15px',
-  };
-
-  const metricNameStyle = {
-    fontWeight: '500',
-    color: theme === 'dark' ? '#a0aec0' : '#4a5568', // text-color-light
   };
 
   // Prepare sales history display
@@ -95,33 +57,30 @@ const ProsConsTable = ({ financialData }) => {
   ];
 
   return (
-    <div style={{ marginTop: '25px', marginBottom: '25px' }}>
-      <h3 style={{
-        textAlign: 'center',
-        fontSize: '20px',
-        fontWeight: '700',
-        color: theme === 'dark' ? '#cbd5e1' : '#334155',
-        marginBottom: '15px'
-      }}>
+    <div className="data-card semrush-table-container"> {/* Wrap in data-card for consistency */}
+      <h3 className="financial-metrics-title data-card-title"> {/* Use consistent title class */}
         Key Financial Metrics
       </h3>
-      <table style={tableStyle}>
+      <table className="semrush-table">
         <thead>
           <tr>
-            <th style={thStyle}>Metric</th>
-            <th style={thStyle}>Value</th>
+            <th>Metric</th> {/* th styles will be applied from App.css */}
+            <th>Value</th>
           </tr>
         </thead>
         <tbody>
           {dataRows.map((row, index) => (
-            <tr key={index} style={{ backgroundColor: index % 2 === 0 ? (theme === 'dark' ? '#2d3748' : '#f9fafb') : (theme === 'dark' ? '#374151' : '#ffffff') }}>
-              <td style={{...tdStyle, ...metricNameStyle}}>{row.metric}</td>
-              <td style={tdStyle}>{row.value}</td>
+            // Alternating row colors can be done with :nth-child(even) in CSS if desired,
+            // or keep inline style if complex logic based on theme is still needed.
+            // For now, removing inline background style to rely on CSS.
+            <tr key={index}>
+              <td className="table-metric-name">{row.metric}</td> {/* td styles from App.css */}
+              <td>{row.value}</td>
             </tr>
           ))}
         </tbody>
       </table>
-      <p style={{fontSize: '12px', color: theme === 'dark' ? '#a0aec0' : '#64748b', textAlign: 'center', marginTop: '10px'}}>
+      <p className="financial-metrics-note">
         Note: Financial data is for informational purposes. "Current Debt" typically refers to total debt from the latest available report. CAGR is based on available annual net income.
       </p>
     </div>
