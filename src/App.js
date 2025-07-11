@@ -236,6 +236,8 @@ function StockChartAnalyzer() {
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
   const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
+  const [isEducationalExample, setIsEducationalExample] = useState(false); // Added for educational example message
+  const [isMockDataUsed, setIsMockDataUsed] = useState(false); // Added for prominent mock data notification
   const canvasRef = useRef(null);
   const chartCanvasRef = useRef(null);
   const inputRef = useRef(null);
@@ -248,10 +250,15 @@ function StockChartAnalyzer() {
 
 
   const fetchFinancialDataForProsCons = async (symbol) => {
-    if (!symbol || FMP_API_KEY === "YOUR_FMP_API_KEY") {
-      setFinancialDataError("FMP API key not configured or symbol missing for financial data.");
-      console.warn("FMP API key not configured or symbol missing. Financial data fetch skipped.");
-      setFinancialData({ error: "API key not configured or symbol missing." });
+    if (!symbol) {
+      setFinancialDataError(`Cannot fetch financial data: Stock symbol is missing.`);
+      setFinancialData({ error: "Symbol missing." });
+      return;
+    }
+    if (FMP_API_KEY === "YOUR_FMP_API_KEY" || FMP_API_KEY === "6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC") { // Added placeholder check
+      setFinancialDataError("Financial data service is currently unavailable due to a configuration issue. Please contact support.");
+      console.warn("FMP API key not configured. Financial data fetch skipped.");
+      setFinancialData({ error: "API key not configured." });
       return;
     }
 
@@ -266,6 +273,7 @@ function StockChartAnalyzer() {
       salesHistory10Y: [],
       error: null
     };
+    let specificErrorMessage = `Could not load financial details for ${symbol}. Please try again later.`;
 
     try {
       // 1. Fetch Balance Sheet (latest annual for current debt)
@@ -273,7 +281,11 @@ function StockChartAnalyzer() {
       const bsResponse = await fetch(balanceSheetUrl);
       if (!bsResponse.ok) {
         console.warn(`Pros/Cons: Failed to fetch balance sheet for ${symbol}. Status: ${bsResponse.status}`);
-         fetchedProsConsData.currentDebt = 'Error fetching';
+        fetchedProsConsData.currentDebt = 'Error fetching';
+        // Potentially set a more specific error if bsResponse.status indicates API key issue, though FMP usually returns 200 with error message in body
+        if (bsResponse.status === 401 || bsResponse.status === 403) {
+          specificErrorMessage = "Financial data service is currently unavailable (authentication error).";
+        }
       } else {
         const bsData = await bsResponse.json();
         if (bsData && bsData.length > 0) {
@@ -292,7 +304,7 @@ function StockChartAnalyzer() {
         fetchedProsConsData.nextQuarterExpectation = 'Error fetching';
       } else {
         const estData = await estResponse.json();
-        if (estData && estData.length > 0) {
+        if (estData && estData.length > 0 && !estData[0]?.Error) { // FMP might return 200 with an error message
           // Find the most recent estimate that has a future date for earnings release
           const futureEstimates = estData.filter(e => e.date && new Date(e.date) > new Date() && e.estimatedEpsAvg !== null);
           let targetEstimate = null;
@@ -322,10 +334,11 @@ function StockChartAnalyzer() {
       if (!isResponse.ok) {
          console.warn(`Pros/Cons: Failed to fetch income statements for ${symbol}. Status: ${isResponse.status}`);
          fetchedProsConsData.salesHistory10Y = [{ year: 'Error', revenue: 'Error fetching'}];
+         fetchedProsConsData.salesHistory10Y = [{ year: 'Error', revenue: 'Error fetching'}];
          fetchedProsConsData.profitCAGR5Y = null; // Error state
       } else {
         const isData = await isResponse.json();
-        if (isData && isData.length > 0) {
+        if (isData && isData.length > 0 && !isData[0]?.Error) { // FMP might return 200 with an error message
           fetchedProsConsData.salesHistory10Y = isData.slice(0, 10).map(report => ({
             year: new Date(report.date).getFullYear(),
             revenue: report.revenue
@@ -356,9 +369,17 @@ function StockChartAnalyzer() {
       }
     } catch (e) {
       console.error("Error in fetchFinancialDataForProsCons:", e);
-      fetchedProsConsData.error = e.message;
-      setFinancialDataError(e.message);
+      fetchedProsConsData.error = specificErrorMessage; // Use the potentially more specific message
+      setFinancialDataError(specificErrorMessage);
     } finally {
+      // If any part of the data is 'Error fetching' or if there was a general error, set the financialDataError
+      if (Object.values(fetchedProsConsData).includes('Error fetching') && !financialDataError) {
+        setFinancialDataError(specificErrorMessage);
+      }
+      // Ensure error field in fetchedProsConsData is also set if financialDataError is present
+      if (financialDataError && !fetchedProsConsData.error) {
+        fetchedProsConsData.error = financialDataError;
+      }
       setFinancialData(fetchedProsConsData);
       setFinancialDataLoading(false);
     }
@@ -463,11 +484,41 @@ function StockChartAnalyzer() {
     try {
       const url = `${MARKETAUX_BASE_URL}?api_token=${MARKETAUX_API_KEY}&symbols=${symbol}&language=en&limit=5&filter_entities=true`;
       const response = await fetch(url);
-      if (!response.ok) { const errorData = await response.json(); const errorMessage = errorData?.error?.message || `Failed to fetch news for ${symbol}. Status: ${response.status}`; throw new Error(errorMessage); }
+      if (!response.ok) {
+        let errorMessage = `Could not load news for ${symbol}. Please try again later.`;
+        try {
+          const errorData = await response.json();
+          const apiProvidedMessage = errorData?.error?.message || errorData?.message;
+          if (apiProvidedMessage) {
+            if (apiProvidedMessage.toLowerCase().includes('token') || apiProvidedMessage.toLowerCase().includes('api key') || response.status === 401 || response.status === 403) {
+              errorMessage = "News service is currently unavailable (authentication error).";
+            } else {
+              errorMessage = `Could not load news for ${symbol}: ${apiProvidedMessage}`;
+            }
+          } else {
+            errorMessage = `Could not load news for ${symbol}. Status: ${response.status}.`;
+          }
+        } catch (e) {
+          // Failed to parse error JSON, stick with the generic status code message
+           errorMessage = `Could not load news for ${symbol}. Status: ${response.status}.`;
+        }
+        throw new Error(errorMessage);
+      }
       const rawData = await response.json();
       if (rawData && rawData.data) { const formattedNews = rawData.data.map(item => ({ title: item.title, url: item.url, text: item.snippet || item.description || '', publishedDate: item.published_at, site: item.source, image: item.image_url, })); setStockNews(formattedNews);
       } else { setStockNews([]); }
-    } catch (error) { console.error('Marketaux News API Error:', error); setNewsError(error.message); setStockNews([]); } finally { setNewsLoading(false); }
+    } catch (error) {
+      console.error('Marketaux News API Error:', error);
+      // Check if the error message already implies an API key issue from a previous check or a general "service unavailable"
+      if (error.message && (error.message.toLowerCase().includes('token') || error.message.toLowerCase().includes('api key') || error.message.toLowerCase().includes('authentication error'))) {
+        setNewsError("News service is currently unavailable.");
+      } else if (error.message) {
+        setNewsError(error.message); // Use the message from the Error thrown
+      } else {
+        setNewsError(`Could not load news for ${symbol}. Please try again later.`);
+      }
+      setStockNews([]);
+    } finally { setNewsLoading(false); }
   };
 
   const calculateVolatility = (prices) => {
@@ -652,14 +703,17 @@ function StockChartAnalyzer() {
     if (currentKeyLevels && currentKeyLevels.support && currentKeyLevels.resistance) { ctx.lineWidth = 1; ctx.font = 'bold 10px Inter, Arial, sans-serif'; currentKeyLevels.support.forEach(level => { if (level >= minPrice && level <= maxPrice) { const y = yScale(level); ctx.strokeStyle = colors.keyLevelSupport; ctx.fillStyle = colors.keyLevelSupport; ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.moveTo(margin.left, y); ctx.lineTo(chartWidth + margin.left, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`S: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2); } }); currentKeyLevels.resistance.forEach(level => { if (level >= minPrice && level <= maxPrice) { const y = yScale(level); ctx.strokeStyle = colors.keyLevelResistance; ctx.fillStyle = colors.keyLevelResistance; ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.moveTo(margin.left, y); ctx.lineTo(chartWidth + margin.left, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`R: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2); } }); }
     ctx.fillStyle = colors.text; ctx.font = 'bold 20px Inter, Arial, sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`${stockData.symbol} - ${stockData.companyName}`, margin.left, 25);
     ctx.font = '14px Inter, Arial, sans-serif'; ctx.fillStyle = colors.label; const currentPriceText = stockData.currentPrice !== undefined && stockData.currentPrice !== null ? stockData.currentPrice : (prices[prices.length -1]?.close); ctx.fillText(`Current: ${currencySymbol}${currentPriceText ? currentPriceText.toFixed(2) : 'N/A'} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
-    if (stockData.isMockData) { ctx.fillStyle = (currentTheme === 'dark') ? chartThemeColors.dark.danger || '#f59e0b' : '#f59e0b'; ctx.font = 'italic 12px Inter, Arial, sans-serif'; ctx.fillText('Demo Data - API temporarily unavailable', margin.left + 300, 25); }
+    // Removed the direct canvas drawing for mock data as it's now a prominent banner
     return canvas.toDataURL('image/png', 1.0);
   };
 
   const fetchStockData = async (symbol, timeRange = '3mo') => {
-    if (!symbol.trim()) return; setLoading(true); setError(null); setStockData(null); setKeyLevels(null); setFinancialData(null); setFinancialDataError(null);
+    if (!symbol.trim()) return; setLoading(true); setError(null); setStockData(null); setKeyLevels(null); setFinancialData(null); setFinancialDataError(null); setIsMockDataUsed(false); // Reset mock data flag
     try {
       const data = await fetchYahooFinanceData(symbol.trim().toUpperCase(), timeRange); setStockData(data);
+      if (data && data.isMockData) {
+        setIsMockDataUsed(true);
+      }
       if (data && data.symbol) { // Ensure data is valid before proceeding
         fetchFinancialDataForProsCons(data.symbol); // Fetch financial data after stock price data
         fetchStockNews(data.symbol);
@@ -696,7 +750,7 @@ function StockChartAnalyzer() {
   };
 
   const analyzeChart = () => {
-    if (!uploadedImage) return; setLoading(true); setLongTermAssessment(null);
+    if (!uploadedImage) return; setLoading(true); setLongTermAssessment(null); setIsEducationalExample(false); // Reset educational example flag
     // If it's from a live stock, ensure financial data is fetched or being fetched
     if (stockData && stockData.symbol && !financialData && !financialDataLoading && !financialDataError) {
         fetchFinancialDataForProsCons(stockData.symbol);
@@ -715,6 +769,7 @@ function StockChartAnalyzer() {
           const patternWeights = {'head-and-shoulders': 12,'inverse-head-and-shoulders': 12,'double-top': 15,'double-bottom': 15,'cup-and-handle': 10,'ascending-triangle': 15,'descending-triangle': 15,'flag': 8,'wedge-rising': 8,'wedge-falling': 8};
           const weightedPatterns = []; Object.entries(patternWeights).forEach(([pattern, weight]) => { for (let i = 0; i < weight; i++) { weightedPatterns.push(pattern); } });
           const randomIndex = Math.floor(Math.random() * weightedPatterns.length); detectedPatternName = weightedPatterns[randomIndex]; confidenceScore = Math.floor(Math.random() * 35) + 50;
+          setIsEducationalExample(true); // Set flag for educational example
         }
 
         if (detectedPatternName && chartPatterns[detectedPatternName]) { // Ensure pattern exists before accessing
@@ -795,9 +850,12 @@ function StockChartAnalyzer() {
                       ) : null}
                     </div>)}
                 </div>
-                <button onClick={() => { if (stockSymbol.trim()) { const symbolToFetch = stockSymbol.toUpperCase(); fetchStockData(symbolToFetch, selectedTimeRange); } }} disabled={loading || !stockSymbol.trim()} style={{ padding: '14px 24px', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
-                  {loading && !financialDataLoading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
-                  {loading && !financialDataLoading ? 'Fetching Chart...' : (financialDataLoading ? 'Fetching Financials...' : 'Get Chart & Financials')}
+                <button onClick={() => { if (stockSymbol.trim()) { const symbolToFetch = stockSymbol.toUpperCase(); fetchStockData(symbolToFetch, selectedTimeRange); } }} disabled={loading || !stockSymbol.trim()} style={{ padding: '14px 24px', background: loading || financialDataLoading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading || financialDataLoading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
+                  {(loading || financialDataLoading) ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
+                  {loading && !financialDataLoading ? 'Fetching Chart...' :
+                   financialDataLoading && !loading ? 'Fetching Financials...' :
+                   loading && financialDataLoading ? 'Fetching Data...' :
+                   'Get Chart & Financials'}
                 </button>
               </div>
             </div>
@@ -821,6 +879,22 @@ function StockChartAnalyzer() {
           {error && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Chart Error:</strong> {error}</div>)}
           {financialDataError && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Financial Data Error:</strong> {financialDataError}</div>)}
 
+          {isMockDataUsed && stockData && (
+            <div style={{
+              background: 'var(--warning-background)',
+              border: '2px solid var(--warning-border)',
+              borderRadius: '12px',
+              padding: '20px',
+              marginBottom: '24px',
+              color: 'var(--warning-color)',
+              textAlign: 'center',
+              fontSize: '16px',
+              fontWeight: '600'
+            }}>
+              <AlertTriangle size={24} style={{ marginRight: '12px', verticalAlign: 'middle' }} />
+              Live data for {stockData.symbol} is temporarily unavailable. Displaying a randomly generated demo chart.
+            </div>
+          )}
 
           <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, transparent, var(--separator-color), transparent)' }}></div><span style={{ color: 'var(--text-color-lighter)', fontWeight: '600', fontSize: '14px', background: 'var(--card-background)', padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--card-border)' }}>OR</span><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, var(--separator-color), transparent)' }}></div></div>
 
@@ -844,14 +918,98 @@ function StockChartAnalyzer() {
               <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', padding: '24px 24px 0', textAlign: 'center' }}>📈 Short-Term Pattern Analysis</h2>
               <div style={{ padding: '24px', background: prediction === 'up' ? 'var(--success-background)' : prediction === 'down' ? 'var(--danger-background)' : 'var(--primary-accent-light)', borderLeft: `6px solid ${prediction === 'up' ? 'var(--success-color)' : prediction === 'down' ? 'var(--danger-color)' : 'var(--primary-accent)'}`, margin: '0 24px 16px', borderRadius: '12px', border: `2px solid ${prediction === 'up' ? 'var(--success-border)' : prediction === 'down' ? 'var(--danger-border)' : 'var(--primary-accent-border)'}` }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: prediction === 'up' ? 'var(--success-color)' : prediction === 'down' ? 'var(--danger-color)' : 'var(--primary-accent)' }}>{prediction === 'up' ? <TrendingUp size={28} /> : prediction === 'down' ? <TrendingDown size={28} /> : <BarChart size={28} />}<h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Enhanced Prediction</h3></div><p style={{ fontSize: '20px', marginBottom: '16px', fontWeight: '800', color: prediction === 'up' ? 'var(--success-color)' : prediction === 'down' ? 'var(--danger-color)' : 'var(--primary-accent-darker)' }}>{prediction === 'up' ? '📈 Likely to go UP' : prediction === 'down' ? '📉 Likely to go DOWN' : '↔️ Continuation Expected'}</p><div style={{ fontSize: '16px', color: 'var(--text-color)', marginTop: '16px', padding: '14px 18px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)', fontWeight: '600' }}><span style={{ fontWeight: '700', color: 'var(--text-color)' }}>{prediction === 'up' ? '⏱️ Upward duration:' : prediction === 'down' ? '⏱️ Downward duration:' : '⏱️ Pattern duration:'}</span> {prediction === 'up' ? patternDetected.daysUp : prediction === 'down' ? patternDetected.daysDown : patternDetected.timeframe}</div>
                 {confidence && (<div><div style={{ fontSize: '16px', color: 'var(--text-color)', marginTop: '16px', fontWeight: '700', background: 'var(--background-color)', padding: '12px 16px', borderRadius: '8px', border: '2px solid var(--card-border)', textAlign: 'center', position: 'relative' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>🎯 Confidence Level: {confidence}%<button onClick={() => setShowConfidenceHelp(!showConfidenceHelp)} style={{ background: 'var(--primary-accent-light)', border: '1px solid var(--primary-accent-border)', borderRadius: '50%', width: '24px', height: '24px', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', transition: 'all 0.2s', padding: '0' }} onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--input-background-hover)'; e.currentTarget.style.transform = 'scale(1.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.background = 'var(--primary-accent-light)'; e.currentTarget.style.transform = 'scale(1)'; }} title="Click to understand confidence levels"><Info size={12} color="var(--primary-accent-darker)" /></button></div><div style={{ marginTop: '8px', fontSize: '14px', fontWeight: '600' }}>{confidence >= 80 ? (<span style={{ color: 'var(--success-color)', background: 'var(--success-background)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--success-border)' }}>🟢 High Confidence - Strong Signal</span>) : confidence >= 60 ? (<span style={{ color: 'var(--warning-color)', background: 'var(--warning-background)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--warning-border)' }}>🟡 Medium Confidence - Proceed with Caution</span>) : (<span style={{ color: 'var(--danger-color)', background: 'var(--danger-background)', padding: '4px 8px', borderRadius: '12px', border: '1px solid var(--danger-border)' }}>🟠 Low Confidence - High Risk</span>)}</div></div>
-                  {showConfidenceHelp && (<div style={{ marginTop: '12px', background: 'var(--primary-accent-light)', border: '2px solid var(--primary-accent-border)', borderRadius: '12px', padding: '20px', animation: 'slideInUp 0.3s ease-out' }}><div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}><h4 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: 'var(--primary-accent-darker)' }}>📊 Understanding Confidence Levels</h4><button onClick={() => setShowConfidenceHelp(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronUp size={20} color="var(--text-color-lighter)" /></button></div><div style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text-color-light)' }}><div style={{ marginBottom: '16px', padding: '12px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}><strong style={{ color: 'var(--text-color)' }}>What is Confidence Level?</strong><p style={{ margin: '4px 0 0 0', fontWeight: '500' }}>A percentage (45-92%) indicating how reliable the pattern detection and prediction are. Higher = more trustworthy.</p></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '16px' }}><div style={{ padding: '12px', background: 'var(--success-background)', borderRadius: '8px', border: '1px solid var(--success-border)' }}><div style={{ fontWeight: '700', color: 'var(--success-color)', marginBottom: '4px' }}>🟢 High (80-92%)</div><div style={{ fontSize: '13px', fontWeight: '500' }}>Very reliable • Strong signal • Clear pattern • Normal position sizes</div></div><div style={{ padding: '12px', background: 'var(--warning-background)', borderRadius: '8px', border: '1px solid var(--warning-border)' }}><div style={{ fontWeight: '700', color: 'var(--warning-color)', marginBottom: '4px' }}>🟡 Medium (60-79%)</div><div style={{ fontSize: '13px', fontWeight: '500' }}>Moderately reliable • Use caution • Smaller positions • Wait for confirmation</div></div><div style={{ padding: '12px', background: 'var(--danger-background)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}><div style={{ fontWeight: '700', color: 'var(--danger-color)', marginBottom: '4px' }}>🟠 Low (45-59%)</div><div style={{ fontSize: '13px', fontWeight: '500' }}>High risk • Avoid trading • Wait for better setup • Educational only</div></div></div><div style={{ padding: '12px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}><div style={{ fontWeight: '700', color: 'var(--primary-accent-darker)', marginBottom: '8px' }}>How is it calculated?</div><ul style={{ margin: '0', paddingLeft: '16px', fontSize: '13px', fontWeight: '500' }}><li>Base pattern reliability (each pattern has historical success rates)</li><li>Pattern clarity and shape matching quality</li><li>Technical indicator alignment (RSI, moving averages)</li><li>Market conditions and data quality factors</li></ul></div>{confidence < 60 && (<div style={{ marginTop: '12px', padding: '12px', background: 'var(--danger-background)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}><div style={{ fontWeight: '700', color: 'var(--danger-color)', marginBottom: '4px' }}>⚠️ Your Current Score: {confidence}%</div><div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--danger-color)' }}>This is a <strong>low confidence</strong> signal. Consider waiting for a clearer pattern with 70%+ confidence before making trading decisions.</div></div>)}<div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-color-lighter)', fontStyle: 'italic', textAlign: 'center' }}>💡 Remember: Even high confidence doesn't guarantee success. Always use proper risk management and do your own research.</div></div></div>)}</div>)}
+                  {showConfidenceHelp && (
+                    <div style={{ marginTop: '12px', background: 'var(--primary-accent-light)', border: '2px solid var(--primary-accent-border)', borderRadius: '12px', padding: '20px', animation: 'slideInUp 0.3s ease-out' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
+                        <h4 style={{ margin: '0', fontSize: '18px', fontWeight: '700', color: 'var(--primary-accent-darker)' }}>📊 Understanding Confidence Levels</h4>
+                        <button onClick={() => setShowConfidenceHelp(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: '4px', borderRadius: '4px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}><ChevronUp size={20} color="var(--text-color-lighter)" /></button>
+                      </div>
+                      <div style={{ fontSize: '14px', lineHeight: '1.6', color: 'var(--text-color-light)' }}>
+                        <div style={{ marginBottom: '16px', padding: '12px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}>
+                          <strong style={{ color: 'var(--text-color)' }}>What is Confidence Level?</strong>
+                          <p style={{ margin: '4px 0 0 0', fontWeight: '500' }}>
+                            The Confidence Level is a percentage (typically 45-92%) generated by this educational tool. It reflects how closely the detected chart characteristics match an idealized pattern, based on our internal heuristics. <strong>It is NOT a prediction of market success or financial advice.</strong>
+                          </p>
+                        </div>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '12px', marginBottom: '16px' }}>
+                          <div style={{ padding: '12px', background: 'var(--success-background)', borderRadius: '8px', border: '1px solid var(--success-border)' }}>
+                            <div style={{ fontWeight: '700', color: 'var(--success-color)', marginBottom: '4px' }}>🟢 High (80-92%)</div>
+                            <div style={{ fontSize: '13px', fontWeight: '500' }}>Indicates the chart data strongly resembles a textbook pattern according to the tool's algorithm. This is for educational comparison only.</div>
+                          </div>
+                          <div style={{ padding: '12px', background: 'var(--warning-background)', borderRadius: '8px', border: '1px solid var(--warning-border)' }}>
+                            <div style={{ fontWeight: '700', color: 'var(--warning-color)', marginBottom: '4px' }}>🟡 Medium (60-79%)</div>
+                            <div style={{ fontSize: '13px', fontWeight: '500' }}>Suggests some characteristics of a pattern are present, but with deviations. Useful for learning pattern variations.</div>
+                          </div>
+                          <div style={{ padding: '12px', background: 'var(--danger-background)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}>
+                            <div style={{ fontWeight: '700', color: 'var(--danger-color)', marginBottom: '4px' }}>🟠 Low (45-59%)</div>
+                            <div style={{ fontSize: '13px', fontWeight: '500' }}>Indicates a weak resemblance to a pattern. Primarily for educational illustration of less clear formations.</div>
+                          </div>
+                        </div>
+                        <div style={{ padding: '12px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}>
+                          <div style={{ fontWeight: '700', color: 'var(--primary-accent-darker)', marginBottom: '8px' }}>How is it calculated?</div>
+                          <ul style={{ margin: '0', paddingLeft: '16px', fontSize: '13px', fontWeight: '500' }}>
+                            <li>Base pattern reliability (historical data often cited in technical analysis literature, used here as a heuristic starting point).</li>
+                            <li>Clarity of the pattern's shape compared to an idealized form.</li>
+                            <li>Alignment with certain technical indicators (e.g., RSI, moving averages), as programmed into the heuristic.</li>
+                            <li>This tool's internal scoring mechanism based on these factors.</li>
+                          </ul>
+                        </div>
+                        {confidence < 60 && (
+                          <div style={{ marginTop: '12px', padding: '12px', background: 'var(--danger-background)', borderRadius: '8px', border: '1px solid var(--danger-border)' }}>
+                            <div style={{ fontWeight: '700', color: 'var(--danger-color)', marginBottom: '4px' }}>⚠️ Your Current Score: {confidence}%</div>
+                            <div style={{ fontSize: '13px', fontWeight: '500', color: 'var(--danger-color)' }}>
+                              This is a "Low Confidence" score <strong>within this educational tool</strong>. It suggests the current chart data has a weak resemblance to the identified pattern example.
+                            </div>
+                          </div>
+                        )}
+                        <div style={{ marginTop: '16px', padding: '12px', background: 'var(--info-background)', border: '1px solid var(--info-border)', color: 'var(--info-color)', borderRadius: '8px', fontSize: '13px', fontWeight: '600', textAlign: 'center' }}>
+                          <AlertTriangle size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                          <strong>Educational Tool Only:</strong> All analyses, including "High Confidence", are part of this educational demonstration and are <strong>NOT financial advice</strong>. Always conduct your own thorough research and consult with a qualified financial advisor before making any investment decisions.
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>)}
               </div>
               {breakoutTiming && (<div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><Clock size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Breakout Timing Prediction</h3></div><div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px' }}><div style={{ background: 'var(--info-background)', padding: '12px', borderRadius: '8px', border: '1px solid var(--info-border)' }}><div style={{ fontWeight: '700', color: 'var(--info-color)', fontSize: '14px' }}>Expected Timeframe</div><div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.daysRange}</div></div><div style={{ background: 'var(--success-background)', padding: '12px', borderRadius: '8px', border: '1px solid var(--success-border)' }}><div style={{ fontWeight: '700', color: 'var(--success-color)', fontSize: '14px' }}>Earliest Date</div><div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.minDate}</div></div><div style={{ background: 'var(--danger-background)', padding: '12px', borderRadius: '8px', border: '1px solid var(--danger-border)' }}><div style={{ fontWeight: '700', color: 'var(--danger-color)', fontSize: '14px' }}>Latest Date</div><div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.maxDate}</div></div><div style={{ background: 'var(--primary-accent-light)', padding: '12px', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}><div style={{ fontWeight: '700', color: 'var(--primary-accent-darker)', fontSize: '14px' }}>Timing Confidence</div><div style={{ fontWeight: '600', color: 'var(--text-color)', fontSize: '16px' }}>{breakoutTiming.confidence}</div></div></div><div style={{ marginTop: '12px', padding: '10px', background: 'var(--warning-background)', borderRadius: '6px', fontSize: '14px', color: 'var(--warning-color)', fontWeight: '500' }}>💡 <strong>Note:</strong> Breakout timing is based on pattern analysis and current market momentum. Monitor volume and price action for confirmation.</div></div>)}
               {keyLevels && (keyLevels.support?.length > 0 || keyLevels.resistance?.length > 0) && (<div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><BarChart size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Key Price Levels</h3></div>{keyLevels.support?.length > 0 && (<div style={{ marginBottom: '12px' }}><strong style={{ color: 'var(--success-color)' }}>Support Levels:</strong><ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>{keyLevels.support.map((level, idx) => (<li key={`s-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>{stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}</li>))}</ul></div>)}{keyLevels.resistance?.length > 0 && (<div><strong style={{ color: 'var(--danger-color)' }}>Resistance Levels:</strong><ul style={{ listStyle: 'disc', paddingLeft: '20px', margin: '4px 0 0 0' }}>{keyLevels.resistance.map((level, idx) => (<li key={`r-${idx}`} style={{ fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>{stockData?.currency === 'INR' || stockData?.symbol?.includes('.NS') ? '₹' : '$'}{level.toFixed(2)}</li>))}</ul></div>)}<div style={{ marginTop: '12px', padding: '10px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontSize: '13px', color: 'var(--text-color-light)', fontWeight: '500' }}>💡 These are automatically identified potential support (price floor) and resistance (price ceiling) levels from recent price action.</div></div>)}
               {recommendation && (<div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><DollarSign size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Recommendation</h3></div><p style={{ fontSize: '20px', marginBottom: '12px', fontWeight: '800', color: recommendation.action === 'BUY' ? 'var(--success-color)' : recommendation.action === 'SELL' ? 'var(--danger-color)' : 'var(--primary-accent-darker)' }}>{recommendation.action === 'BUY' ? '💰 BUY' : recommendation.action === 'SELL' ? '💸 SELL' : '✋ HOLD'}</p><p style={{ fontSize: '16px', color: 'var(--text-color-light)', lineHeight: '1.6', fontWeight: '500' }}>{recommendation.reasoning}</p></div>)}
               {entryExit && (<div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><Target size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Entry & Exit Strategy</h3></div><div style={{ marginBottom: '12px' }}><span style={{ fontWeight: '700', color: 'var(--success-color)' }}>🟢 Entry Point: </span><span style={{ color: 'var(--text-color-light)', fontWeight: '500' }}>{entryExit.entry}</span></div><div><span style={{ fontWeight: '700', color: 'var(--danger-color)' }}>🔴 Exit Strategy: </span><span style={{ color: 'var(--text-color-light)', fontWeight: '500' }}>{entryExit.exit}</span></div></div>)}
               <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><Calendar size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Time Estimate</h3></div><p style={{ fontSize: '18px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '600' }}>{timeEstimate}</p><div style={{ fontSize: '16px', color: 'var(--text-color)', marginTop: '16px', padding: '12px 16px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)', fontWeight: '600' }}><span style={{ fontWeight: '700', color: 'var(--text-color)' }}>📅 Typical pattern duration:</span> {patternDetected.timeframe}</div></div>
-              <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><BarChart size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Pattern Detected</h3></div><div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}><div><p style={{ fontSize: '20px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '700' }}>📊 {patternDetected.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p><div style={{ fontSize: '14px', color: 'var(--text-color-lighter)', marginTop: '8px', padding: '8px 12px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontWeight: '500' }}>💡 Compare the actual chart above with this pattern example below</div></div><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)' }}><PatternVisualization patternName={patternDetected.name} theme={theme} width={300} height={160} /><div style={{ fontSize: '12px', color: 'var(--text-color-muted)', textAlign: 'center', fontWeight: '500' }}>📈 Typical {patternDetected.name.split('-').join(' ')} pattern example</div></div></div></div>
+              <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
+                  <BarChart size={28} />
+                  <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Pattern Detected</h3>
+                </div>
+                {isEducationalExample && stockData && !stockData.isMockData && ( // Only show for live data fallback
+                  <div style={{ background: 'var(--info-background)', border: '1px solid var(--info-border)', color: 'var(--info-color)', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '500' }}>
+                    <Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                    Displaying an educational example of a {patternDetected.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')} as specific analysis of the chart data was inconclusive.
+                  </div>
+                )}
+                 {isEducationalExample && !stockData && ( // Show for uploaded image if it's also an educational example (which it always is for uploads)
+                  <div style={{ background: 'var(--info-background)', border: '1px solid var(--info-border)', color: 'var(--info-color)', padding: '12px', borderRadius: '8px', marginBottom: '16px', fontSize: '14px', fontWeight: '500' }}>
+                    <Info size={16} style={{ marginRight: '8px', verticalAlign: 'middle' }} />
+                    Displaying an educational example of a {patternDetected.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}. Analysis for uploaded images is always illustrative.
+                  </div>
+                )}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                  <div>
+                    <p style={{ fontSize: '20px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '700' }}>
+                      📊 {patternDetected.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </p>
+                    <div style={{ fontSize: '14px', color: 'var(--text-color-lighter)', marginTop: '8px', padding: '8px 12px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontWeight: '500' }}>
+                      💡 Compare the actual chart above with this pattern example below
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+                    <PatternVisualization patternName={patternDetected.name} theme={theme} width={300} height={160} />
+                    <div style={{ fontSize: '12px', color: 'var(--text-color-muted)', textAlign: 'center', fontWeight: '500' }}>
+                      📈 Typical {patternDetected.name.split('-').join(' ')} pattern example
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>)}
           {patternDetected && (<div style={{ background: 'var(--card-background)', padding: '32px', borderRadius: '20px', marginBottom: '32px', border: '2px solid var(--card-border)', boxShadow: `0 8px 32px var(--card-shadow)` }}><h3 style={{ fontWeight: '700', fontSize: '24px', marginTop: '0', marginBottom: '20px', color: 'var(--text-color)', textAlign: 'center' }}>📚 Pattern Education</h3><h4 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '12px', color: 'var(--text-color)' }}>Description:</h4><p style={{ marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>{patternDetected.description}</p><div style={{ padding: '24px', border: '2px solid var(--card-border)', background: 'var(--primary-accent-light)', borderRadius: '12px' }}><h4 style={{ fontWeight: '700', fontSize: '18px', color: 'var(--primary-accent-darker)', marginTop: '0', marginBottom: '16px' }}>🔍 What to look for:</h4><ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: 'var(--text-color-light)' }}><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Look for clear pattern formation with multiple confirmation points</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Check volume patterns that support the chart pattern</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Confirm breakout direction before making decisions</li><li style={{ marginBottom: '0', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Consider overall market conditions and sentiment</li></ul></div></div>)}
           <StockNewsDisplay newsItems={stockNews} loading={newsLoading} error={newsError} />
