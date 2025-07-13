@@ -1,12 +1,13 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
 import stocksData from '../stocks.json';
+import mockData from '../mock-data.json';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
-import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
+import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation, calculatePredictionAccuracy } from '../utils/analysis';
 import { highlightMatch } from '../utils/helpers';
 import { useStockData } from '../hooks/useStockData';
 
@@ -46,6 +47,7 @@ function StockChartAnalyzer() {
     const [keyLevels, setKeyLevels] = useState(null);
     const [selectedTimeRange, setSelectedTimeRange] = useState('3mo');
     const [longTermAssessment, setLongTermAssessment] = useState(null);
+    const [accuracy, setAccuracy] = useState(null);
     const [currentView, setCurrentView] = useState('analyzer');
     const [filteredSuggestions, setFilteredSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -196,6 +198,11 @@ function StockChartAnalyzer() {
         }
     }, [stockData, keyLevels, theme]);
 
+    useEffect(() => {
+        const accuracyScore = calculatePredictionAccuracy(mockData);
+        setAccuracy(accuracyScore);
+    }, []);
+
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'var(--app-background-start)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid var(--app-border)' }}>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -230,6 +237,11 @@ function StockChartAnalyzer() {
                         <AlertTriangle size={20} style={{ color: 'var(--info-color)', marginRight: '16px', flexShrink: 0 }} />
                         <div style={{ fontSize: '14px', color: 'var(--info-color)', fontWeight: '600' }}>
                             <strong>🚀 Features:</strong> Pattern detection from 3-month price data, dynamic confidence, breakout timing, Key Support/Resistance levels. {stockDatabase.length}+ US & Indian stocks!
+                            {accuracy !== null && (
+                                <div style={{ marginTop: '10px' }}>
+                                    <strong>📊 Prediction Accuracy:</strong> {accuracy.toFixed(2)}%
+                                </div>
+                            )}
                         </div>
                     </div>
 

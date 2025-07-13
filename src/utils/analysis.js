@@ -146,13 +146,13 @@ const findPeaksAndTroughs = (data, isPeak = true) => {
     const patternData = analyzePatterns(peaks, troughs, closes, highs, lows);
     let determinedPattern = patternData.pattern;
     const patternStrengthThreshold = 0.6;
-    if (!patternData.pattern || patternData.strength < patternStrengthThreshold) {
+    if (!patternData || !patternData.pattern || patternData.strength < patternStrengthThreshold) {
       const patternVariants = {'head-and-shoulders': ['head-and-shoulders', 'double-top'],'inverse-head-and-shoulders': ['inverse-head-and-shoulders', 'double-bottom'],'double-top': ['double-top', 'head-and-shoulders'],'double-bottom': ['double-bottom', 'inverse-head-and-shoulders'],'ascending-triangle': ['ascending-triangle', 'cup-and-handle'],'descending-triangle': ['descending-triangle', 'wedge-falling'],'flag': ['flag', 'ascending-triangle', 'descending-triangle'],'cup-and-handle': ['cup-and-handle', 'ascending-triangle'],'wedge-rising': ['wedge-rising', 'ascending-triangle'],'wedge-falling': ['wedge-falling', 'descending-triangle']};
-      const variants = patternVariants[patternData.pattern];
+      const variants = patternData && patternVariants[patternData.pattern];
       if (variants && variants.length > 0) {
         determinedPattern = variants[0];
       } else {
-        determinedPattern = patternData.pattern || 'flag';
+        determinedPattern = (patternData && patternData.pattern) || 'flag';
       }
     }
     return {pattern: determinedPattern, confidence: calculateDynamicConfidence({ ...patternData, pattern: determinedPattern }, currentRSI, priceVsSMA20, priceVsSMA50), technicals: {rsi: currentRSI, priceVsSMA20, priceVsSMA50, peaks: peaks.length, troughs: troughs.length}};
@@ -207,4 +207,21 @@ const findPeaksAndTroughs = (data, isPeak = true) => {
       default: reasoning = `Mixed signals detected. Monitor closely for breakout direction. Confidence: ${confidence}%.`;
     }
     return { action, reasoning };
+  };
+
+  export const calculatePredictionAccuracy = (mockData) => {
+    let correctPredictions = 0;
+    let totalPredictions = 0;
+
+    mockData.stocks.forEach(stock => {
+      const analysis = detectPatternFromPriceData(stock.prices);
+      if (analysis && analysis.pattern) {
+        if (analysis.pattern === stock.pattern) {
+          correctPredictions++;
+        }
+        totalPredictions++;
+      }
+    });
+
+    return totalPredictions > 0 ? (correctPredictions / totalPredictions) * 100 : 0;
   };
