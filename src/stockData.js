@@ -2019,7 +2019,10 @@ export const stockDatabase = [
     { symbol: "ZUARI.NS", name: "Zuari Industries Ltd.", market: "India" },
     { symbol: "ZUARIIND.NS", name: "Zuari Industries Ltd.", market: "India" },
     { symbol: "ZYDUSLIFE.NS", name: "Zydus Lifesciences Ltd.", market: "India" },
-    { symbol: "ZYDUSWELL.NS", name: "Zydus Wellness Ltd.", market: "India" }
+    { symbol: "ZYDUSWELL.NS", name: "Zydus Wellness Ltd.", market: "India" },
+    { symbol: "WIPRO.NS", name: "Wipro Ltd.", market: "India" },
+    { symbol: "ASIANPAINT.NS", name: "Asian Paints Ltd.", market: "India" },
+    { symbol: "BAJAJFINSV.NS", name: "Bajaj Finserv Ltd.", market: "India" }
 ];
 
 export const popularStocksData = [
