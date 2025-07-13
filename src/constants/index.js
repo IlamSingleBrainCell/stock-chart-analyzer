@@ -4,12 +4,6 @@ export const MARKETAUX_BASE_URL = "https://api.marketaux.com/v1/news/all";
 export const FMP_API_KEY = "6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC"; // Replace with your actual key
 export const FMP_BASE_URL = "https://financialmodelingprep.com/api/v3";
 
-export const RSS_FEEDS = [
-  { name: 'SEBI', url: 'https://www.sebi.gov.in/sebirss.xml' },
-  { name: 'NASDAQ', url: 'https://www.nasdaq.com/feed/rssoutbound' },
-  { name: 'NASDAQ Trader', url: 'https://www.nasdaqtrader.com/rss.aspx?feed=tradehalts' },
-];
-
 export const chartThemeColors = {
   light: {
     background: '#ffffff',
