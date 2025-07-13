@@ -17,3 +17,34 @@ export const generateMockStockData = (symbol) => {
     for (let i = 89; i >= 0; i--) { const date = new Date(); date.setDate(date.getDate() - i); const volatility = 0.02; const change = (Math.random() - 0.5) * 2 * volatility; currentPrice = currentPrice * (1 + change); const open = currentPrice; const close = currentPrice * (1 + (Math.random() - 0.5) * 0.01); const high = Math.max(open, close) * (1 + Math.random() * 0.005); const low = Math.min(open, close) * (1 - Math.random() * 0.005); const volume = Math.floor(Math.random() * 10000000) + 1000000; prices.push({ date: date.toISOString().split('T')[0], open: parseFloat(open.toFixed(2)), high: parseFloat(high.toFixed(2)), low: parseFloat(low.toFixed(2)), close: parseFloat(close.toFixed(2)), volume: volume }); currentPrice = close; }
     return { symbol: symbol.toUpperCase(), companyName: isIndianStock ? `${symbol.replace('.NS', '')} Ltd.` : `${symbol.toUpperCase()} Inc.`, currency: isIndianStock ? 'INR' : 'USD', exchange: isIndianStock ? 'NSE' : 'NASDAQ', currentPrice: currentPrice, prices: prices, isMockData: true };
 };
+
+export const fetchNASDAQListed = async () => {
+    try {
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        const nasdaqUrl = encodeURIComponent('https://www.nasdaqtrader.com/dynamic/symdir/nasdaqlisted.txt');
+        const response = await fetch(proxyUrl + nasdaqUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const text = await response.text();
+        const lines = text.split('\n');
+        const stocks = lines.slice(1) // Skip header
+            .map(line => {
+                const parts = line.split('|');
+                if (parts.length > 1) {
+                    return {
+                        symbol: parts[0].trim(),
+                        name: parts[1].trim().replace(/ - .*/, ''), // Clean up name
+                        market: 'US',
+                        sector: 'N/A' // Or parse from another source if available
+                    };
+                }
+                return null;
+            })
+            .filter(stock => stock && stock.symbol && stock.name && !stock.symbol.includes('.')); // Basic validation
+        return stocks;
+    } catch (error) {
+        console.error('Failed to fetch NASDAQ listed stocks:', error);
+        return []; // Return empty array on error
+    }
+};
