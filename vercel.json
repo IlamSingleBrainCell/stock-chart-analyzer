@@ -2,7 +2,8 @@
     "rewrites": [
         {
             "source": "/api/dhan",
-            "destination": "https://ow-scanx-analytics.dhan.co/customscan/fetchdt"
+            "destination": "https://ow-scanx-analytics.dhan.co/customscan/fetchdt",
+            "methods": ["POST"]
         }
     ]
 }
