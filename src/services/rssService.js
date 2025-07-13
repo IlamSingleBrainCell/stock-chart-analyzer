@@ -20,11 +20,45 @@ export const fetchRssFeed = async (url) => {
   }
 };
 
+const parseSebiFeed = async (url) => {
+    const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
+    try {
+        const response = await fetch(CORS_PROXY + encodeURIComponent(url));
+        const text = await response.text();
+        const items = [];
+        const itemRegex = /<item>[\s\S]*?<\/item>/g;
+        let match;
+        while ((match = itemRegex.exec(text)) !== null) {
+            const itemText = match[0];
+            const titleMatch = /<title><!\[CDATA\[(.*?)\]\]><\/title>/.exec(itemText);
+            const linkMatch = /<link><!\[CDATA\[(.*?)\]\]><\/link>/.exec(itemText);
+            const pubDateMatch = /<pubDate><!\[CDATA\[(.*?)\]\]><\/pubDate>/.exec(itemText);
+            if (titleMatch && linkMatch && pubDateMatch) {
+                items.push({
+                    title: titleMatch[1],
+                    url: linkMatch[1],
+                    publishedDate: pubDateMatch[1],
+                    site: 'SEBI',
+                });
+            }
+        }
+        return items;
+    } catch (error) {
+        console.error(`Failed to fetch or parse SEBI RSS feed from ${url}:`, error);
+        throw error;
+    }
+};
+
 export const fetchAllRssFeeds = async () => {
   const allItems = [];
   for (const feed of RSS_FEEDS) {
     try {
-      const items = await fetchRssFeed(feed.url);
+      let items;
+      if (feed.name === 'SEBI') {
+        items = await parseSebiFeed(feed.url);
+      } else {
+        items = await fetchRssFeed(feed.url);
+      }
       allItems.push(...items);
     } catch (error) {
       // Ignore individual feed errors
