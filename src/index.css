@@ -1,111 +1,111 @@
 :root {
-  --background-color: #f8f9fa;
-  --text-color: #212529;
-  --text-color-light: #495057;
-  --text-color-lighter: #6c757d;
-  --text-color-muted: #adb5bd;
+  --background-color: #ffffff;
+  --text-color: #1a202c;
+  --text-color-light: #4a5568;
+  --text-color-lighter: #6b7280;
+  --text-color-muted: #9ca3af;
 
-  --primary-accent: #007bff;
-  --primary-accent-darker: #0056b3;
-  --primary-accent-light: rgba(0, 123, 255, 0.1);
-  --primary-accent-border: rgba(0, 123, 255, 0.3);
+  --primary-accent: #6366f1; /* Indigo */
+  --primary-accent-darker: #4f46e5;
+  --primary-accent-light: rgba(99, 102, 241, 0.1);
+  --primary-accent-border: rgba(99, 102, 241, 0.3);
 
-  --secondary-accent: #6c757d;
+  --secondary-accent: #8b5cf6; /* Violet */
 
-  --card-background: #ffffff;
-  --card-border: #dee2e6;
-  --card-shadow: rgba(0, 0, 0, 0.05);
+  --card-background: rgba(255, 255, 255, 0.95);
+  --card-border: rgba(0, 0, 0, 0.1);
+  --card-shadow: rgba(0, 0, 0, 0.1);
 
-  --input-border: #ced4da;
-  --input-border-focus: #80bdff;
-  --input-background: #ffffff;
-  --input-background-hover: #f8f9fa;
+  --input-border: rgba(99, 102, 241, 0.2);
+  --input-border-focus: #6366f1;
+  --input-background: rgba(139, 92, 246, 0.05);
+  --input-background-hover: rgba(139, 92, 246, 0.1);
 
   --button-primary-text: #ffffff;
 
-  --success-color: #28a745;
-  --success-background: rgba(40, 167, 69, 0.15);
-  --success-border: rgba(40, 167, 69, 0.3);
+  --success-color: #059669; /* Green */
+  --success-background: rgba(16, 185, 129, 0.15);
+  --success-border: rgba(16, 185, 129, 0.3);
 
-  --danger-color: #dc3545;
-  --danger-background: rgba(220, 53, 69, 0.15);
-  --danger-border: rgba(220, 53, 69, 0.3);
+  --danger-color: #dc2626; /* Red */
+  --danger-background: rgba(239, 68, 68, 0.15);
+  --danger-border: rgba(239, 68, 68, 0.3);
 
-  --warning-color: #ffc107;
-  --warning-background: rgba(255, 193, 7, 0.15);
-  --warning-border: rgba(255, 193, 7, 0.3);
+  --warning-color: #d97706; /* Amber */
+  --warning-background: rgba(245, 158, 11, 0.1);
+  --warning-border: rgba(245, 158, 11, 0.3);
 
-  --info-color: #17a2b8;
-  --info-background: rgba(23, 162, 184, 0.1);
-  --info-border: rgba(23, 162, 184, 0.3);
+  --info-color: #0891b2; /* Cyan */
+  --info-background: rgba(34, 211, 238, 0.1);
+  --info-border: rgba(34, 211, 238, 0.3);
 
-  --link-color: #007bff;
-  --separator-color: #dee2e6;
-  --highlight-background: #ffeeba;
+  --link-color: #4f46e5;
+  --separator-color: rgba(107, 114, 128, 0.3);
+  --highlight-background: #fef3c7; /* For search term highlight */
 
-  --chart-grid-color: #e9ecef;
-  --chart-label-color: #6c757d;
-  --chart-main-line-color: #007bff;
-  --candlestick-green: #28a745;
-  --candlestick-red: #dc3545;
+  --chart-grid-color: #f0f0f0;
+  --chart-label-color: #666666;
+  --chart-main-line-color: #2563eb;
+  --candlestick-green: #10b981;
+  --candlestick-red: #ef4444;
 
-  --app-background-start: #f8f9fa;
-  --app-border: #dee2e6;
+  --app-background-start: rgba(255, 255, 255, 0.98); /* For the main div background */
+  --app-border: rgba(255, 255, 255, 0.4);
 }
 
 body.dark-mode {
-  --background-color: #212529;
-  --text-color: #f8f9fa;
-  --text-color-light: #adb5bd;
-  --text-color-lighter: #6c757d;
-  --text-color-muted: #495057;
+  --background-color: #111827; /* Gray 900 */
+  --text-color: #f3f4f6; /* Gray 100 */
+  --text-color-light: #d1d5db; /* Gray 300 */
+  --text-color-lighter: #9ca3af; /* Gray 400 */
+  --text-color-muted: #6b7280; /* Gray 500 */
 
-  --primary-accent: #007bff;
-  --primary-accent-darker: #0056b3;
-  --primary-accent-light: rgba(0, 123, 255, 0.1);
-  --primary-accent-border: rgba(0, 123, 255, 0.3);
+  --primary-accent: #818cf8; /* Indigo 400 */
+  --primary-accent-darker: #6366f1; /* Indigo 500 */
+  --primary-accent-light: rgba(129, 140, 248, 0.15);
+  --primary-accent-border: rgba(129, 140, 248, 0.4);
 
-  --secondary-accent: #6c757d;
+  --secondary-accent: #a78bfa; /* Violet 400 */
 
-  --card-background: #343a40;
-  --card-border: #495057;
-  --card-shadow: rgba(0, 0, 0, 0.1);
+  --card-background: #1f2937; /* Gray 800 */
+  --card-border: rgba(255, 255, 255, 0.15);
+  --card-shadow: rgba(0, 0, 0, 0.2);
 
-  --input-border: #495057;
-  --input-border-focus: #80bdff;
-  --input-background: #343a40;
-  --input-background-hover: #495057;
+  --input-border: rgba(129, 140, 248, 0.3);
+  --input-border-focus: #818cf8;
+  --input-background: rgba(129, 140, 248, 0.1);
+  --input-background-hover: rgba(129, 140, 248, 0.2);
 
-  --button-primary-text: #ffffff;
+  /* --button-primary-text: #ffffff; */ /* Remains white or light gray */
 
-  --success-color: #28a745;
-  --success-background: rgba(40, 167, 69, 0.15);
-  --success-border: rgba(40, 167, 69, 0.3);
+  --success-color: #34d399; /* Green 400 */
+  --success-background: rgba(52, 211, 153, 0.15);
+  --success-border: rgba(52, 211, 153, 0.4);
 
-  --danger-color: #dc3545;
-  --danger-background: rgba(220, 53, 69, 0.15);
-  --danger-border: rgba(220, 53, 69, 0.3);
+  --danger-color: #f87171; /* Red 400 */
+  --danger-background: rgba(248, 113, 113, 0.15);
+  --danger-border: rgba(248, 113, 113, 0.4);
 
-  --warning-color: #ffc107;
-  --warning-background: rgba(255, 193, 7, 0.15);
-  --warning-border: rgba(255, 193, 7, 0.3);
+  --warning-color: #fbbf24; /* Amber 400 */
+  --warning-background: rgba(251, 191, 36, 0.15);
+  --warning-border: rgba(251, 191, 36, 0.4);
 
-  --info-color: #17a2b8;
-  --info-background: rgba(23, 162, 184, 0.1);
-  --info-border: rgba(23, 162, 184, 0.3);
+  --info-color: #67e8f9; /* Cyan 300 */
+  --info-background: rgba(103, 232, 249, 0.1);
+  --info-border: rgba(103, 232, 249, 0.3);
 
-  --link-color: #007bff;
-  --separator-color: #495057;
-  --highlight-background: #495057;
+  --link-color: #818cf8;
+  --separator-color: rgba(107, 114, 128, 0.5);
+  --highlight-background: #4b5563; /* Gray 600 - for search term highlight on dark */
 
-  --chart-grid-color: #495057;
-  --chart-label-color: #6c757d;
-  --chart-main-line-color: #007bff;
-  --candlestick-green: #28a745;
-  --candlestick-red: #dc3545;
+  --chart-grid-color: #374151; /* Gray 700 */
+  --chart-label-color: #9ca3af; /* Gray 400 */
+  --chart-main-line-color: #60a5fa; /* Blue 400 */
+  --candlestick-green: #34d399; /* Green 400 */
+  --candlestick-red: #f87171; /* Red 400 */
 
-  --app-background-start: #212529;
-  --app-border: #495057;
+  --app-background-start: #1f2937; /* For the main div background - Gray 800 */
+  --app-border: rgba(55, 65, 81, 0.6); /* Gray 700 with opacity */
 }
 
 
