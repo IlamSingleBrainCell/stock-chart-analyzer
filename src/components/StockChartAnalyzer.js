@@ -208,7 +208,8 @@ function StockChartAnalyzer() {
 
     useEffect(() => {
         if (stockData) {
-            const accuracyScore = calculatePredictionAccuracy(stockData);
+            const actualPattern = stockData.pattern;
+            const accuracyScore = calculatePredictionAccuracy(stockData, actualPattern);
             setAccuracy(accuracyScore);
         }
     }, [stockData]);
