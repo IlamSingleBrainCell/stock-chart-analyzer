@@ -223,5 +223,5 @@ const findPeaksAndTroughs = (data, isPeak = true) => {
       }
     }
 
-    return totalPredictions > 0 ? (correctPredictions / totalPredictions) * 100 : 99;
+    return totalPredictions > 0 ? (correctPredictions / totalPredictions) * 100 : 0;
   };
