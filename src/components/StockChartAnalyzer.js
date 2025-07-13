@@ -1,10 +1,10 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { AlertTriangle, Sun, Moon, Zap, Award } from 'lucide-react';
+import { AlertTriangle, Sun, Moon, Zap, Award, RefreshCw } from 'lucide-react';
 import stocksData from '../stocks.json';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
 import { chartPatterns } from '../constants';
-import { createChartFromData } from '../utils/chart';
+import { createChartFromData, drawPatternOnCanvas } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
 import { useStockData } from '../hooks/useStockData';
 import './StockChartAnalyzer.css';

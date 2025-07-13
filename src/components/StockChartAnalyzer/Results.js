@@ -1,5 +1,5 @@
 import React from 'react';
-import { TrendingUp, TrendingDown, BarChart, Clock, Target, DollarSign, Calendar } from 'lucide-react';
+import { TrendingUp, TrendingDown, BarChart, Clock, Target, DollarSign, Calendar, Info } from 'lucide-react';
 
 const Results = ({
     prediction,

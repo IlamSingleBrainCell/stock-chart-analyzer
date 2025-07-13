@@ -48,7 +48,7 @@ const Search = ({
                                                 <div style={{ fontSize: '13px', color: 'var(--text-color-lighter)', marginTop: '2px' }}>{stock.name}</div>
                                             </div>
                                             <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-                                                <div style={{ fontSize: '10px', color: stock.market === 'India' ? 'var(--danger-color)' : 'var(--primary-accent)', backgroundColor: stock.market === 'India' ? 'var(--danger-background)' : 'var(--primary-accent-light)', padding: '2px 6px', borderRadius: '4px', fontWeight: '600', border: `1px solid ${stock.market === 'India' ? 'var(--danger-border)' : 'var(--primary-accent-border')}`, display: 'flex', alignItems: 'center', gap: '2px' }}>
+                                                <div style={{ fontSize: '10px', color: stock.market === 'India' ? 'var(--danger-color)' : 'var(--primary-accent)', backgroundColor: stock.market === 'India' ? 'var(--danger-background)' : 'var(--primary-accent-light)', padding: '2px 6px', borderRadius: '4px', fontWeight: '600', border: `1px solid ${stock.market === 'India' ? 'var(--danger-border)' : 'var(--primary-accent-border)'}`, display: 'flex', alignItems: 'center', gap: '2px' }}>
                                                     <FlagIcon country={stock.market} size={12} />
                                                     {stock.market === 'India' ? 'NSE' : 'US'}
                                                 </div>
