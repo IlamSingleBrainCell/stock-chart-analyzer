@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
 import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
 import stocksData from '../stocks.json';
-import mockData from '../mock-data.json';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
@@ -208,9 +207,11 @@ function StockChartAnalyzer() {
     }, [stockData, keyLevels, theme]);
 
     useEffect(() => {
-        const accuracyScore = calculatePredictionAccuracy(mockData);
-        setAccuracy(accuracyScore);
-    }, []);
+        if (stockData) {
+            const accuracyScore = calculatePredictionAccuracy(stockData);
+            setAccuracy(accuracyScore);
+        }
+    }, [stockData]);
 
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'var(--app-background-start)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid var(--app-border)' }}>
