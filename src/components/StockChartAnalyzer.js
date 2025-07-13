@@ -40,6 +40,7 @@ function StockChartAnalyzer() {
         { symbol: "HDFCBANK.NS", name: "HDFC Bank", sector: "Banking", market: "India" },
         { symbol: "INFY.NS", name: "Infosys", sector: "IT", market: "India" },
         { symbol: "ICICIBANK.NS", name: "ICICI Bank", sector: "Banking", market: "India" },
+        { symbol: "JIOFIN.NS", name: "Jio Financial Services", sector: "Financial Services", market: "India" },
     ];
     const popularStocksData = [
         { symbol: "AAPL", name: "Apple", market: "US" },
@@ -50,6 +51,7 @@ function StockChartAnalyzer() {
         { symbol: "RELIANCE.NS", name: "Reliance", market: "India" },
         { symbol: "HDFCBANK.NS", name: "HDFC Bank", market: "India" },
         { symbol: "INFY.NS", name: "Infosys", market: "India" },
+        { symbol: "JIOFIN.NS", name: "Jio Financial", market: "India" },
     ];
     const [uploadedImage, setUploadedImage] = useState(null);
     const [stockSymbol, setStockSymbol] = useState('');
