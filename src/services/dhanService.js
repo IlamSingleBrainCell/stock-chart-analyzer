@@ -41,9 +41,7 @@ export const fetchDhanData = async (page = 1) => {
     };
 
     try {
-        const proxyUrl = 'https://api.allorigins.win/raw?url=';
-        const fullUrl = proxyUrl + encodeURIComponent(url);
-        const response = await fetch(fullUrl, {
+        const response = await fetch(url, {
             method: 'POST',
             headers: headers,
             body: JSON.stringify(body)
