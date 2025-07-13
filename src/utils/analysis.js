@@ -62,7 +62,7 @@ const findPeaksAndTroughs = (data, isPeak = true) => {
     } else if (priceChange < -8) { if (peaks.length >= 2 && troughs.length >= 2) { return { pattern: 'descending-triangle', strength: 0.5 }; } return { pattern: 'head-and-shoulders', strength: 0.5 };
     } else if (priceChange > 3) { return { pattern: 'ascending-triangle', strength: 0.4 };
     } else if (priceChange < -3) { return { pattern: 'descending-triangle', strength: 0.4 };
-    } else { if (volatility > 4) { return Math.random() > 0.5 ? { pattern: 'double-top', strength: 0.4 } : { pattern: 'double-bottom', strength: 0.4 }; } return { pattern: 'flag', strength: 0.4 }; }
+    } else { if (volatility > 4) { return null; } return { pattern: 'flag', strength: 0.4 }; }
   };
 
   const calculateVolatility = (prices) => {
