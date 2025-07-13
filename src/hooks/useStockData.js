@@ -19,6 +19,7 @@ export const useStockData = () => {
         } catch (error) {
             setError(error.message);
             console.error('Stock data fetch error:', error);
+            setStockData(null);
         } finally {
             setLoading(false);
         }
