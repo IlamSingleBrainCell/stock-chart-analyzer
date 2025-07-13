@@ -1,8 +1,7 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, Rss, Briefcase } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, Rss } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
-import StockTable from './StockTable';
 import PatternRecognitionGame from './PatternRecognitionGame';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
@@ -2200,9 +2199,6 @@ function StockChartAnalyzer() {
                 <button onClick={() => setCurrentView('analyzer')} style={{ ...toggleButtonStyle, background: currentView === 'analyzer' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'analyzer' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <Zap size={18} style={{ marginRight: '8px' }} /> Chart Analyzer
                 </button>
-                <button onClick={() => setCurrentView('stockTable')} style={{ ...toggleButtonStyle, background: currentView === 'stockTable' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'stockTable' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
-                    <Briefcase size={18} style={{ marginRight: '8px' }} /> Stock Overview
-                </button>
                 <button onClick={() => setCurrentView('news')} style={{ ...toggleButtonStyle, background: currentView === 'news' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'news' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <Rss size={18} style={{ marginRight: '8px' }} /> News Feed
                 </button>
@@ -2420,10 +2416,6 @@ function StockChartAnalyzer() {
 
             {currentView === 'game' && (
                 <PatternRecognitionGame PatternVisualization={PatternVisualization} chartPatterns={chartPatterns} />
-            )}
-
-            {currentView === 'stockTable' && (
-                <StockTable />
             )}
 
             {currentView === 'news' && (
