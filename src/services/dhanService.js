@@ -1,5 +1,5 @@
 export const fetchDhanData = async (page = 1) => {
-    const url = "https://ow-scanx-analytics.dhan.co/customscan/fetchdt";
+    const url = "/api/dhan";
     const headers = {
         "accept": "*/*",
         "accept-language": "en-US,en;q=0.9",
