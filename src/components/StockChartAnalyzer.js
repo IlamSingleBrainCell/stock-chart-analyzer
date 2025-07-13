@@ -2022,7 +2022,6 @@ function StockChartAnalyzer() {
     const handleInputChange = (value) => {
         setStockSymbol(value);
         if (value.length >= 1) {
-            let finalQuery = value;
             const suggestionQuery = value.toLowerCase();
             const isIndianStock = stockDatabase.some(stock => stock.market === 'India' && (stock.symbol.toLowerCase() === `${suggestionQuery}.ns` || stock.name.toLowerCase().includes(suggestionQuery)));
 
