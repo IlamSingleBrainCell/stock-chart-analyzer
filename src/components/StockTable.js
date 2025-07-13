@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { fetchDhanData } from '../services/dhanService';
 
 const StockTable = () => {
@@ -8,7 +8,7 @@ const StockTable = () => {
     const [page, setPage] = useState(1);
     const [hasMore, setHasMore] = useState(true);
 
-    const loadMoreStocks = async () => {
+    const loadMoreStocks = useCallback(async () => {
         if (loading || !hasMore) return;
         setLoading(true);
         setError(null);
@@ -28,11 +28,11 @@ const StockTable = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [loading, hasMore, page]);
 
     useEffect(() => {
         loadMoreStocks();
-    }, []);
+    }, [loadMoreStocks]);
 
     const handleScroll = (e) => {
         if (e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight) {
@@ -52,7 +52,41 @@ const StockTable = () => {
                             <th style={tableHeaderStyle}>Symbol</th>
                             <th style={tableHeaderStyle}>Market Cap</th>
                             <th style={tableHeaderStyle}>1-Year High</th>
-                            <th style| {
+                            <th style={tableHeaderStyle}>1-Year Low</th>
+                            <th style={tableHeaderStyle}>PE Ratio</th>
+                            <th style={tableHeaderStyle}>ROCE</th>
+                            <th style={tableHeaderStyle}>1-Month Change</th>
+                            <th style={tableHeaderStyle}>1-Year Change</th>
+                            <th style={tableHeaderStyle}>Sector</th>
+                            <th style={tableHeaderStyle}>Analyst Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {stocks.map((stock, index) => (
+                            <tr key={index}>
+                                <td style={tableCellStyle}>{stock.Sym}</td>
+                                <td style={tableCellStyle}>{stock.Mcap}</td>
+                                <td style={tableCellStyle}>{stock.High1Yr}</td>
+                                <td style={tableCellStyle}>{stock.Low1Yr}</td>
+                                <td style={tableCellStyle}>{stock.Pe}</td>
+                                <td style={tableCellStyle}>{stock.ROCE}</td>
+                                <td style={tableCellStyle}>{stock.PricePerchng1mon}</td>
+                                <td style={tableCellStyle}>{stock.PricePerchng1year}</td>
+                                <td style={tableCellStyle}>{stock.Sector}</td>
+                                <td style={tableCellStyle}>{stock.AnalystRating}</td>
+                            </tr>
+                        ))}
+                    </tbody>
+                </table>
+                {loading && <p>Loading more stocks...</p>}
+                {error && <p style={{ color: 'red' }}>{error}</p>}
+                {!hasMore && <p>No more stocks to load.</p>}
+            </div>
+        </div>
+    );
+};
+
+const tableHeaderStyle = {
     padding: '12px 15px',
     textAlign: 'left',
     borderBottom: '2px solid var(--card-border)',
