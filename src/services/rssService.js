@@ -4,9 +4,8 @@ import { RSS_FEEDS } from '../constants';
 const parser = new Parser();
 
 export const fetchRssFeed = async (url) => {
-  const CORS_PROXY = 'https://cors-anywhere.herokuapp.com/';
   try {
-    const feed = await parser.parseURL(CORS_PROXY + url);
+    const feed = await parser.parseURL(url);
     return feed.items.map(item => ({
       title: item.title,
       url: item.link,
