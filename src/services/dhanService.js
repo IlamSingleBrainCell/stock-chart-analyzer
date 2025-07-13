@@ -4,14 +4,6 @@ export const fetchDhanData = async (page = 1) => {
         "accept": "*/*",
         "accept-language": "en-US,en;q=0.9",
         "content-type": "application/json; charset=UTF-8",
-        "priority": "u=1, i",
-        "sec-ch-ua": "\"Not)A;Brand\";v=\"8\", \"Chromium\";v=\"138\", \"Google Chrome\";v=\"138\"",
-        "sec-ch-ua-mobile": "?0",
-        "sec-ch-ua-platform": "\"Windows\"",
-        "sec-fetch-dest": "empty",
-        "sec-fetch-mode": "cors",
-        "sec-fetch-site": "same-site",
-        "Referer": "https://dhan.co/"
     };
     const body = {
         "data": {
