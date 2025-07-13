@@ -4,7 +4,6 @@ import stocksData from '../stocks.json';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
-import ProsConsTable from './ProsConsTable';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
@@ -34,13 +33,7 @@ function StockChartAnalyzer() {
         stockData,
         loading,
         error,
-        stockNews,
-        newsLoading,
-        newsError,
-        financialData,
-        financialDataLoading,
-        financialDataError,
-        fetchStockData,
+        fetchAllData,
     } = useStockData();
 
     const [prediction, setPrediction] = useState(null);
@@ -120,7 +113,7 @@ function StockChartAnalyzer() {
                     selectSuggestion(filteredSuggestions[selectedSuggestionIndex]);
                 } else if (stockSymbol.trim()) {
                     const symbolToFetch = stockSymbol.toUpperCase();
-                    fetchStockData(symbolToFetch, selectedTimeRange);
+                    fetchAllData(symbolToFetch, selectedTimeRange);
                     setShowSuggestions(false);
                 }
                 break;
@@ -142,7 +135,7 @@ function StockChartAnalyzer() {
         setStockSymbol(stock.symbol);
         setShowSuggestions(false);
         setSelectedSuggestionIndex(-1);
-        fetchStockData(stock.symbol, selectedTimeRange);
+        fetchAllData(stock.symbol, selectedTimeRange);
     };
 
     const handleTimeRangeChange = (range) => {
@@ -157,7 +150,7 @@ function StockChartAnalyzer() {
             setBreakoutTiming(null);
             setKeyLevels(null);
             setLongTermAssessment(null);
-            fetchStockData(stockSymbol.toUpperCase(), range);
+            fetchAllData(stockSymbol.toUpperCase(), range);
         }
     };
 
@@ -194,111 +187,6 @@ function StockChartAnalyzer() {
             };
             reader.readAsDataURL(file);
         }
-    };
-
-    const analyzeChart = () => {
-        if (!uploadedImage) return;
-        setLoading(true);
-        setLongTermAssessment(null);
-        // If it's from a live stock, ensure financial data is fetched or being fetched
-        if (stockData && stockData.symbol && !financialData && !financialDataLoading && !financialDataError) {
-            fetchFinancialDataForProsCons(stockData.symbol).then(data => {
-                setFinancialData(data);
-            });
-        }
-        setTimeout(() => {
-            try {
-                let detectedPatternName = null;
-                let confidenceScore = 70;
-                let calculatedKeyLevels = null;
-                let currentLongTermAssessment = null;
-                if (stockData && stockData.prices && stockData.prices.length > 0) {
-                    calculatedKeyLevels = calculateKeyLevels(stockData.prices);
-                    if (selectedTimeRange === '1y' || selectedTimeRange === '5y' || selectedTimeRange === '10y') {
-                        currentLongTermAssessment = generateLongTermAssessment(stockData, selectedTimeRange);
-                        if (currentLongTermAssessment) {
-                            setLongTermAssessment(currentLongTermAssessment);
-                            setPatternDetected(null);
-                            setPrediction(null);
-                            setConfidence(null);
-                            setRecommendation(null);
-                            setEntryExit(null);
-                            setTimeEstimate(null);
-                            setBreakoutTiming(null);
-                        }
-                    } else {
-                        setLongTermAssessment(null);
-                        const analysis = detectPatternFromPriceData(stockData.prices);
-                        if (analysis) {
-                            detectedPatternName = analysis.pattern;
-                            confidenceScore = analysis.confidence;
-                        }
-                    }
-                }
-                if (!currentLongTermAssessment && !detectedPatternName) {
-                    const patternWeights = {
-                        'head-and-shoulders': 12,
-                        'inverse-head-and-shoulders': 12,
-                        'double-top': 15,
-                        'double-bottom': 15,
-                        'cup-and-handle': 10,
-                        'ascending-triangle': 15,
-                        'descending-triangle': 15,
-                        'flag': 8,
-                        'wedge-rising': 8,
-                        'wedge-falling': 8
-                    };
-                    const weightedPatterns = [];
-                    Object.entries(patternWeights).forEach(([pattern, weight]) => {
-                        for (let i = 0; i < weight; i++) {
-                            weightedPatterns.push(pattern);
-                        }
-                    });
-                    const randomIndex = Math.floor(Math.random() * weightedPatterns.length);
-                    detectedPatternName = weightedPatterns[randomIndex];
-                    confidenceScore = Math.floor(Math.random() * 35) + 50;
-                }
-
-                if (detectedPatternName && chartPatterns[detectedPatternName]) { // Ensure pattern exists before accessing
-                    const selectedPatternDetails = chartPatterns[detectedPatternName];
-                    const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
-                    const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
-                    setPatternDetected({
-                        name: detectedPatternName,
-                        ...selectedPatternDetails
-                    });
-                    setPrediction(selectedPatternDetails.prediction);
-                    setConfidence(confidenceScore);
-                    setRecommendation(rec);
-                    setBreakoutTiming(breakout);
-                    setKeyLevels(calculatedKeyLevels);
-                    let timeInfo = '';
-                    if (selectedPatternDetails.prediction === 'up') {
-                        timeInfo = `Expected to rise for ${selectedPatternDetails.daysUp}`;
-                    } else if (selectedPatternDetails.prediction === 'down') {
-                        timeInfo = `Expected to decline for ${selectedPatternDetails.daysDown}`;
-                    } else if (selectedPatternDetails.prediction === 'continuation') {
-                        const isUptrend = Math.random() > 0.5;
-                        timeInfo = isUptrend ? `Current uptrend likely to continue for ${selectedPatternDetails.daysUp}` : `Current downtrend likely to continue for ${selectedPatternDetails.daysDown}`;
-                    } else {
-                        timeInfo = `Pattern suggests movement within ${selectedPatternDetails.timeframe}`;
-                    }
-                    setTimeEstimate(timeInfo);
-                    setEntryExit({
-                        entry: selectedPatternDetails.entryStrategy,
-                        exit: selectedPatternDetails.exitStrategy
-                    });
-                } else if (!currentLongTermAssessment) { // If no pattern was determined and not long-term
-                    setError("Could not determine a specific pattern. Analysis might be inconclusive.");
-                }
-
-            } catch (error) {
-                console.error('Error analyzing chart:', error);
-                setError('Analysis failed. Please try uploading a clearer chart image.');
-            } finally {
-                setLoading(false);
-            }
-        }, 1800);
     };
 
     useEffect(() => {
@@ -369,9 +257,9 @@ function StockChartAnalyzer() {
                                             ) : null}
                                         </div>)}
                                 </div>
-                                <button onClick={() => { if (stockSymbol.trim()) { const symbolToFetch = stockSymbol.toUpperCase(); fetchStockData(symbolToFetch, selectedTimeRange); } }} disabled={loading || !stockSymbol.trim()} style={{ padding: '14px 24px', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
-                                    {loading && !financialDataLoading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
-                                    {loading && !financialDataLoading ? 'Fetching Chart...' : (financialDataLoading ? 'Fetching Financials...' : 'Get Chart & Financials')}
+                                <button onClick={() => { if (stockSymbol.trim()) { const symbolToFetch = stockSymbol.toUpperCase(); fetchAllData(symbolToFetch, selectedTimeRange); } }} disabled={loading} style={{ padding: '14px 24px', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
+                                    {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
+                                    {loading ? 'Fetching...' : 'Get Chart'}
                                 </button>
                             </div>
                         </div>
@@ -400,7 +288,6 @@ function StockChartAnalyzer() {
                     </div>
 
                     {error && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Chart Error:</strong> {error}</div>)}
-                    {financialDataError && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Financial Data Error:</strong> {financialDataError}</div>)}
 
 
                     <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, transparent, var(--separator-color), transparent)' }}></div><span style={{ color: 'var(--text-color-lighter)', fontWeight: '600', fontSize: '14px', background: 'var(--card-background)', padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--card-border)' }}>OR</span><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, var(--separator-color), transparent)' }}></div></div>
@@ -415,7 +302,94 @@ function StockChartAnalyzer() {
                         <div style={{ marginBottom: '32px' }}>
                             <div style={{ width: '100%', height: '400px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}><img src={uploadedImage} alt="Stock chart" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} /></div>
                             {stockData && (<div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}><div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : selectedTimeRange === '10y' ? '10 Years' : '3 Months'} Data):</div><div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div><div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |<strong> Data Points:</strong> {stockData.prices.length} {selectedTimeRange === '1y' ? 'weeks' : (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'}</div>{stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}</div>)}
-                            <button onClick={analyzeChart} disabled={loading} style={{ width: '100%', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', padding: '18px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.3s', boxShadow: loading ? 'none' : `0 4px 20px ${'var(--primary-accent-light)'}` }}>{loading ? (<span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />Analyzing Pattern...</span>) : stockData ? ('🔍 Analyze Live Chart Data') : ('🔍 Explore Example Pattern')}</button>
+                            <button onClick={() => {
+                                try {
+                                    let detectedPatternName = null;
+                                    let confidenceScore = 70;
+                                    let calculatedKeyLevels = null;
+                                    let currentLongTermAssessment = null;
+                                    if (stockData && stockData.prices && stockData.prices.length > 0) {
+                                        calculatedKeyLevels = calculateKeyLevels(stockData.prices);
+                                        if (selectedTimeRange === '1y' || selectedTimeRange === '5y' || selectedTimeRange === '10y') {
+                                            currentLongTermAssessment = generateLongTermAssessment(stockData, selectedTimeRange);
+                                            if (currentLongTermAssessment) {
+                                                setLongTermAssessment(currentLongTermAssessment);
+                                                setPatternDetected(null);
+                                                setPrediction(null);
+                                                setConfidence(null);
+                                                setRecommendation(null);
+                                                setEntryExit(null);
+                                                setTimeEstimate(null);
+                                                setBreakoutTiming(null);
+                                            }
+                                        } else {
+                                            setLongTermAssessment(null);
+                                            const analysis = detectPatternFromPriceData(stockData.prices);
+                                            if (analysis) {
+                                                detectedPatternName = analysis.pattern;
+                                                confidenceScore = analysis.confidence;
+                                            }
+                                        }
+                                    }
+                                    if (!currentLongTermAssessment && !detectedPatternName) {
+                                        const patternWeights = {
+                                            'head-and-shoulders': 12,
+                                            'inverse-head-and-shoulders': 12,
+                                            'double-top': 15,
+                                            'double-bottom': 15,
+                                            'cup-and-handle': 10,
+                                            'ascending-triangle': 15,
+                                            'descending-triangle': 15,
+                                            'flag': 8,
+                                            'wedge-rising': 8,
+                                            'wedge-falling': 8
+                                        };
+                                        const weightedPatterns = [];
+                                        Object.entries(patternWeights).forEach(([pattern, weight]) => {
+                                            for (let i = 0; i < weight; i++) {
+                                                weightedPatterns.push(pattern);
+                                            }
+                                        });
+                                        const randomIndex = Math.floor(Math.random() * weightedPatterns.length);
+                                        detectedPatternName = weightedPatterns[randomIndex];
+                                        confidenceScore = Math.floor(Math.random() * 35) + 50;
+                                    }
+
+                                    if (detectedPatternName && chartPatterns[detectedPatternName]) { // Ensure pattern exists before accessing
+                                        const selectedPatternDetails = chartPatterns[detectedPatternName];
+                                        const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
+                                        const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
+                                        setPatternDetected({
+                                            name: detectedPatternName,
+                                            ...selectedPatternDetails
+                                        });
+                                        setPrediction(selectedPatternDetails.prediction);
+                                        setConfidence(confidenceScore);
+                                        setRecommendation(rec);
+                                        setBreakoutTiming(breakout);
+                                        setKeyLevels(calculatedKeyLevels);
+                                        let timeInfo = '';
+                                        if (selectedPatternDetails.prediction === 'up') {
+                                            timeInfo = `Expected to rise for ${selectedPatternDetails.daysUp}`;
+                                        } else if (selectedPatternDetails.prediction === 'down') {
+                                            timeInfo = `Expected to decline for ${selectedPatternDetails.daysDown}`;
+                                        } else if (selectedPatternDetails.prediction === 'continuation') {
+                                            const isUptrend = Math.random() > 0.5;
+                                            timeInfo = isUptrend ? `Current uptrend likely to continue for ${selectedPatternDetails.daysUp}` : `Current downtrend likely to continue for ${selectedPatternDetails.daysDown}`;
+                                        } else {
+                                            timeInfo = `Pattern suggests movement within ${selectedPatternDetails.timeframe}`;
+                                        }
+                                        setTimeEstimate(timeInfo);
+                                        setEntryExit({
+                                            entry: selectedPatternDetails.entryStrategy,
+                                            exit: selectedPatternDetails.exitStrategy
+                                        });
+                                    }
+
+                                } catch (error) {
+                                    console.error('Error analyzing chart:', error);
+                                }
+                            }} disabled={loading} style={{ width: '100%', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', padding: '18px 24px', fontSize: '18px', fontWeight: '600', borderRadius: '12px', cursor: loading ? 'not-allowed' : 'pointer', textTransform: 'uppercase', letterSpacing: '0.5px', transition: 'all 0.3s', boxShadow: loading ? 'none' : `0 4px 20px ${'var(--primary-accent-light)'}` }}>{loading ? (<span style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}><RefreshCw size={20} style={{ animation: 'spin 1s linear infinite' }} />Analyzing Pattern...</span>) : stockData ? ('🔍 Analyze Live Chart Data') : ('🔍 Explore Example Pattern')}</button>
                         </div>)}
 
                     {longTermAssessment && stockData && (<div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', marginBottom: '32px', padding: '24px', boxShadow: `0 8px 32px var(--card-shadow)` }}><h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', textAlign: 'center' }}>🗓️ Long-Term Review ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : '10 Years'})</h2><div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}><p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Overall Trend:</p><p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.trend}</p><p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Shows the general direction of the stock's price over the selected period.</p></div><div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}><p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Total Return:</p><p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.totalReturn}</p><p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Illustrates the percentage gain or loss if you had invested at the beginning and held until the end of the period.</p></div><div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}><p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Price Extremes:</p><p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.highLow}</p><p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Highlights the highest and lowest prices the stock reached during this timeframe.</p></div><div style={{ marginBottom: '16px', padding: '12px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)' }}><p style={{ margin: '0 0 4px 0', fontWeight: '600', color: 'var(--text-color)' }}>Volatility Insight:</p><p style={{ margin: '0 0 8px 0', fontSize: '15px', color: 'var(--text-color-light)' }}>{longTermAssessment.volatility}</p><p style={{ margin: '0', fontSize: '12px', color: 'var(--text-color-muted)' }}>Gives an idea of how much the stock's price fluctuated; higher volatility means bigger price swings.</p></div><p style={{ fontSize: '13px', color: 'var(--text-color-muted)', fontStyle: 'italic', textAlign: 'center', marginTop: '20px' }}>{longTermAssessment.disclaimer}</p></div>)}
@@ -435,19 +409,6 @@ function StockChartAnalyzer() {
                             <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><BarChart size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Pattern Detected</h3></div><div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}><div><p style={{ fontSize: '20px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '700' }}>📊 {patternDetected.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p><div style={{ fontSize: '14px', color: 'var(--text-color-lighter)', marginTop: '8px', padding: '8px 12px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontWeight: '500' }}>💡 Compare the actual chart above with this pattern example below</div></div><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)' }}><PatternVisualization patternName={patternDetected.name} theme={theme} width={300} height={160} /><div style={{ fontSize: '12px', color: 'var(--text-color-muted)', textAlign: 'center', fontWeight: '500' }}>📈 Typical {patternDetected.name.split('-').join(' ')} pattern example</div></div></div></div>
                         </div>)}
                     {patternDetected && (<div style={{ background: 'var(--card-background)', padding: '32px', borderRadius: '20px', marginBottom: '32px', border: '2px solid var(--card-border)', boxShadow: `0 8px 32px var(--card-shadow)` }}><h3 style={{ fontWeight: '700', fontSize: '24px', marginTop: '0', marginBottom: '20px', color: 'var(--text-color)', textAlign: 'center' }}>📚 Pattern Education</h3><h4 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '12px', color: 'var(--text-color)' }}>Description:</h4><p style={{ marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>{patternDetected.description}</p><div style={{ padding: '24px', border: '2px solid var(--card-border)', background: 'var(--primary-accent-light)', borderRadius: '12px' }}><h4 style={{ fontWeight: '700', fontSize: '18px', color: 'var(--primary-accent-darker)', marginTop: '0', marginBottom: '16px' }}>🔍 What to look for:</h4><ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: 'var(--text-color-light)' }}><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Look for clear pattern formation with multiple confirmation points</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Check volume patterns that support the chart pattern</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Confirm breakout direction before making decisions</li><li style={{ marginBottom: '0', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Consider overall market conditions and sentiment</li></ul></div></div>)}
-                    <StockNewsDisplay newsItems={stockNews} loading={newsLoading} error={newsError} />
-
-                    {/* Pros and Cons Table Integration */}
-                    {financialDataLoading && !financialData && (
-                        <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-color-light)' }}>
-                            <RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px', color: 'var(--primary-accent)' }} />
-                            <p>Loading Financial Metrics...</p>
-                        </div>
-                    )}
-                    {financialData && !financialDataLoading && (
-                        <ProsConsTable financialData={financialData} />
-                    )}
-                    {/* End Pros and Cons Table Integration */}
                 </>
             )}
 
@@ -499,24 +460,6 @@ const toggleButtonStyle = {
     alignItems: 'center',
     justifyContent: 'center',
     minWidth: '180px'
-};
-
-const StockNewsDisplay = ({ newsItems, loading, error }) => {
-    if (loading) { return (<div style={{ marginTop: '32px', background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', padding: '24px', boxShadow: `0 8px 32px var(--card-shadow)`, textAlign: 'center', color: 'var(--text-color-light)' }}><RefreshCw size={28} style={{ animation: 'spin 1s linear infinite', marginBottom: '12px', color: 'var(--primary-accent)' }} /><p style={{ fontSize: '18px', fontWeight: '600' }}>Loading latest news...</p></div>); }
-    if (error) { return (<div style={{ marginTop: '32px', background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '20px', padding: '24px', color: 'var(--danger-color)', textAlign: 'center' }}><AlertTriangle size={28} style={{ marginBottom: '12px' }} /><h3 style={{ fontSize: '20px', fontWeight: '700', margin: '0 0 8px 0' }}>Error Fetching News</h3><p style={{ fontSize: '16px', margin: '0' }}>{error}</p><p style={{ fontSize: '14px', marginTop: '10px', fontStyle: 'italic' }}>Please try again later or select a different stock.</p></div>); }
-    if (!newsItems || newsItems.length === 0) { return (<div style={{ marginTop: '32px', padding: '24px', background: 'var(--card-background)', borderRadius: '20px', border: '1px solid var(--card-border)', textAlign: 'center', color: 'var(--text-color-lighter)', boxShadow: `0 8px 32px var(--card-shadow)` }}><Info size={28} style={{ marginBottom: '12px', color: 'var(--primary-accent)' }} /><h3 style={{ fontSize: '20px', fontWeight: '600', color: 'var(--text-color)' }}>No Recent News</h3><p style={{ fontSize: '16px' }}>No news articles found for the selected stock at this time.</p></div>); }
-    return (
-        <div style={{ marginTop: '32px', background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', padding: '24px', boxShadow: `0 8px 32px var(--card-shadow)` }}>
-            <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', textAlign: 'center' }}>📰 Latest Stock News</h2>
-            <div style={{ display: 'grid', gap: '20px', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))' }}>
-                {newsItems.map((item, index) => (
-                    <div key={index} style={{ background: 'var(--primary-accent-light)', padding: '20px', borderRadius: '12px', border: '1px solid var(--primary-accent-border)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between', transition: 'transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out', }} onMouseEnter={(e) => { e.currentTarget.style.transform = 'translateY(-5px)'; e.currentTarget.style.boxShadow = '0 12px 24px rgba(0,0,0,0.1)'; }} onMouseLeave={(e) => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; }}>
-                        <div><h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '12px', color: 'var(--text-color)' }}><a href={item.url} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--primary-accent-darker)', textDecoration: 'none' }}>{item.title}</a></h3><p style={{ fontSize: '13px', color: 'var(--text-color-light)', marginBottom: '8px', lineHeight: '1.5' }}>{item.text && item.text.length > 150 ? `${item.text.substring(0, 150)}...` : item.text}</p></div>
-                        <div style={{ marginTop: '16px', fontSize: '12px', color: 'var(--text-color-muted)', fontWeight: '500' }}><span style={{ fontWeight: '600' }}>Source:</span> {item.site} | <span style={{ fontWeight: '600' }}>Published:</span> {new Date(item.publishedDate).toLocaleDateString()}</div>
-                    </div>))}
-            </div>
-        </div>
-    );
 };
 
 export default StockChartAnalyzer;
