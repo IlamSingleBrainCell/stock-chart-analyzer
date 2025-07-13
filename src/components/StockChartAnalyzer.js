@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, Rss } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
@@ -8,27 +8,7 @@ import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation, calculatePredictionAccuracy } from '../utils/analysis';
 import { highlightMatch } from '../utils/helpers';
 import { useStockData } from '../hooks/useStockData';
-import { fetchAllRssFeeds } from '../services/rssService';
 
-const NewsFeed = ({ news }) => {
-    if (!news || news.length === 0) {
-        return <p>No news available.</p>;
-    }
-
-    return (
-        <div style={{ maxHeight: '400px', overflowY: 'auto', paddingRight: '10px' }}>
-            {news.map((item, index) => (
-                <div key={index} style={{ marginBottom: '15px', padding: '10px', border: '1px solid var(--card-border)', borderRadius: '8px' }}>
-                    <a href={item.url} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none', color: 'var(--text-color)' }}>
-                        <h4 style={{ margin: '0 0 5px 0' }}>{item.title}</h4>
-                        <p style={{ fontSize: '14px', margin: '0 0 5px 0', color: 'var(--text-color-light)' }}>{item.text}</p>
-                        <small style={{ color: 'var(--text-color-muted)' }}>{new Date(item.publishedDate).toLocaleString()} - {item.site}</small>
-                    </a>
-                </div>
-            ))}
-        </div>
-    );
-};
 export const PatternVisualization = ({ patternName, theme = 'light', width = 300, height = 150 }) => {
     const canvasRef = useRef(null);
     useEffect(() => {
@@ -1985,7 +1965,6 @@ function StockChartAnalyzer() {
     const [longTermAssessment, setLongTermAssessment] = useState(null);
     const [accuracy, setAccuracy] = useState(null);
     const [currentView, setCurrentView] = useState('analyzer');
-    const [news, setNews] = useState([]);
     const [filteredSuggestions, setFilteredSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
@@ -2182,14 +2161,6 @@ function StockChartAnalyzer() {
         }
     }, [stockData]);
 
-    useEffect(() => {
-        const getNews = async () => {
-            const newsItems = await fetchAllRssFeeds();
-            setNews(newsItems);
-        };
-        getNews();
-    }, []);
-
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'var(--app-background-start)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid var(--app-border)' }}>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
@@ -2198,9 +2169,6 @@ function StockChartAnalyzer() {
             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '25px', padding: '10px', background: 'var(--card-background)', borderRadius: '12px', border: '1px solid var(--card-border)' }}>
                 <button onClick={() => setCurrentView('analyzer')} style={{ ...toggleButtonStyle, background: currentView === 'analyzer' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'analyzer' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <Zap size={18} style={{ marginRight: '8px' }} /> Chart Analyzer
-                </button>
-                <button onClick={() => setCurrentView('news')} style={{ ...toggleButtonStyle, background: currentView === 'news' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'news' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
-                    <Rss size={18} style={{ marginRight: '8px' }} /> News Feed
                 </button>
                 <button onClick={() => setCurrentView('game')} style={{ ...toggleButtonStyle, background: currentView === 'game' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'game' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <Award size={18} style={{ marginRight: '8px' }} /> Pattern Game
@@ -2416,16 +2384,6 @@ function StockChartAnalyzer() {
 
             {currentView === 'game' && (
                 <PatternRecognitionGame PatternVisualization={PatternVisualization} chartPatterns={chartPatterns} />
-            )}
-
-            {currentView === 'news' && (
-                <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', padding: '24px', boxShadow: '0 8px 32px var(--card-shadow)' }}>
-                    <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', textAlign: 'center' }}>
-                        <Rss size={28} style={{ marginRight: '12px', verticalAlign: 'middle' }} />
-                        Latest Financial News
-                    </h2>
-                    <NewsFeed news={news} />
-                </div>
             )}
 
             <div style={{ fontSize: '15px', color: 'var(--text-color-light)', background: 'var(--card-background)', padding: '24px', borderRadius: '16px', border: '2px solid var(--card-border)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
