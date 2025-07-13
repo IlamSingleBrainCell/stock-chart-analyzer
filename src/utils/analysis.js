@@ -209,19 +209,19 @@ const findPeaksAndTroughs = (data, isPeak = true) => {
     return { action, reasoning };
   };
 
-  export const calculatePredictionAccuracy = (mockData) => {
+  export const calculatePredictionAccuracy = (stockData) => {
     let correctPredictions = 0;
     let totalPredictions = 0;
 
-    mockData.stocks.forEach(stock => {
-      const analysis = detectPatternFromPriceData(stock.prices);
+    if (stockData && stockData.prices) {
+      const analysis = detectPatternFromPriceData(stockData.prices);
       if (analysis && analysis.pattern) {
-        if (analysis.pattern === stock.pattern) {
+        if (analysis.pattern === stockData.pattern) {
           correctPredictions++;
         }
         totalPredictions++;
       }
-    });
+    }
 
     return totalPredictions > 0 ? (correctPredictions / totalPredictions) * 100 : 0;
   };
