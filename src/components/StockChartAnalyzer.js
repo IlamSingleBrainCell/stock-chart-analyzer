@@ -8,7 +8,6 @@ import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation, calculatePredictionAccuracy } from '../utils/analysis';
 import { highlightMatch } from '../utils/helpers';
 import { useStockData } from '../hooks/useStockData';
-import { stockDatabase, popularStocksData } from '../stockData';
 
 export const PatternVisualization = ({ patternName, theme = 'light', width = 300, height = 150 }) => {
     const canvasRef = useRef(null);
