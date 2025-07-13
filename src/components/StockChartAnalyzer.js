@@ -137,6 +137,15 @@ function StockChartAnalyzer() {
         setStockSymbol(stock.symbol);
         setShowSuggestions(false);
         setSelectedSuggestionIndex(-1);
+        setPrediction(null);
+        setPatternDetected(null);
+        setConfidence(null);
+        setRecommendation(null);
+        setEntryExit(null);
+        setTimeEstimate(null);
+        setBreakoutTiming(null);
+        setKeyLevels(null);
+        setLongTermAssessment(null);
         fetchAllData(stock.symbol, selectedTimeRange);
     };
 
