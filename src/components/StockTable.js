@@ -35,18 +35,17 @@ const StockTable = () => {
     }, [loadMoreStocks]);
 
     const handleScroll = (e) => {
-        const { scrollTop, scrollHeight, clientHeight } = e.target;
-        if (scrollHeight - scrollTop <= clientHeight + 1) {
+        if (e.target.scrollHeight - e.target.scrollTop === e.target.clientHeight) {
             loadMoreStocks();
         }
     };
 
     return (
-        <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', padding: '24px', boxShadow: '0 8px 32px var(--card-shadow)' }} >
+        <div style={{ background: 'var(--card-background)', borderRadius: '20px', border: '2px solid var(--card-border)', padding: '24px', boxShadow: '0 8px 32px var(--card-shadow)' }} onScroll={handleScroll} >
             <h2 style={{ fontSize: '28px', fontWeight: '700', marginBottom: '24px', color: 'var(--text-color)', textAlign: 'center' }}>
                 Stock Market Overview
             </h2>
-            <div style={{ maxHeight: '600px', overflowY: 'auto' }} onScroll={handleScroll}>
+            <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse' }}>
                     <thead>
                         <tr>
