@@ -297,9 +297,6 @@ function StockChartAnalyzer() {
                         </p>
                     </div>
 
-                    <div style={{ textAlign: 'center', marginBottom: '20px' }}>
-                        <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-color)' }}>Your AI-Powered Charting Assistant</h2>
-                    </div>
                     <div className="features-grid">
                         <div className="feature-card">
                             <div className="feature-icon">📊</div>
