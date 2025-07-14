@@ -113,16 +113,27 @@ const calculateSMA = (data, period) => {
  * @param {number[]} lows - Array of low prices.
  * @returns {object|null} - An object with the detected pattern and its strength, or null if no pattern is detected.
  */
-const analyzePatterns = (peaks, troughs, closes, highs, lows) => {
+const calculatePatternAccuracy = (detectedPoints, idealPoints) => {
+    if (detectedPoints.length !== idealPoints.length) {
+        return 0;
+    }
+    // This is a simplified accuracy calculation. A more robust implementation would
+    // involve more complex geometric comparisons.
+    const similarity = detectedPoints.reduce((acc, point, i) => {
+        const ideal = idealPoints[i];
+        const distance = Math.sqrt(Math.pow(point.x - ideal.x, 2) + Math.pow(point.y - ideal.y, 2));
+        return acc + (1 / (1 + distance));
+    }, 0);
+
+    return Math.min(100, Math.round((similarity / detectedPoints.length) * 100));
+};
+
+const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
     const recentData = closes.slice(-30);
-    const fullData = closes.slice(-60);
     const priceRange = Math.max(...recentData) - Math.min(...recentData);
     const tolerance = priceRange * 0.05;
-    const startPrice = fullData[0];
-    const endPrice = fullData[fullData.length - 1];
-    const priceChange = startPrice !== 0 ? ((endPrice - startPrice) / startPrice) * 100 : 0;
-    const volatility = calculateVolatility(recentData);
 
+    // Head and Shoulders
     if (peaks.length >= 3) {
         const lastThreePeaks = peaks.slice(-3);
         const [left, head, right] = lastThreePeaks;
@@ -130,10 +141,18 @@ const analyzePatterns = (peaks, troughs, closes, highs, lows) => {
             const leftRightDiff = Math.abs(left.value - right.value);
             const headHeight = Math.min(head.value - left.value, head.value - right.value);
             if (leftRightDiff <= tolerance * 2 && headHeight > tolerance) {
-                return { pattern: 'head-and-shoulders', strength: 0.75 };
+                const detectedPoints = [left, head, right];
+                return {
+                    pattern: 'head-and-shoulders',
+                    strength: 0.8,
+                    accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:1}, {x:2, y:0}]),
+                    detectedPoints,
+                };
             }
         }
     }
+
+    // Inverse Head and Shoulders
     if (troughs.length >= 3) {
         const lastThreeTroughs = troughs.slice(-3);
         const [left, head, right] = lastThreeTroughs;
@@ -141,22 +160,44 @@ const analyzePatterns = (peaks, troughs, closes, highs, lows) => {
             const leftRightDiff = Math.abs(left.value - right.value);
             const headDepth = Math.min(left.value - head.value, right.value - head.value);
             if (leftRightDiff <= tolerance * 2 && headDepth > tolerance) {
-                return { pattern: 'inverse-head-and-shoulders', strength: 0.75 };
+                const detectedPoints = [left, head, right];
+                return {
+                    pattern: 'inverse-head-and-shoulders',
+                    strength: 0.8,
+                    accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:0}, {x:2, y:1}]),
+                    detectedPoints,
+                };
             }
         }
     }
+
+    // Double Top
     if (peaks.length >= 2) {
         const lastTwoPeaks = peaks.slice(-2);
         const [first, second] = lastTwoPeaks;
         if (Math.abs(first.value - second.value) <= tolerance * 1.5) {
-            return { pattern: 'double-top', strength: 0.7 };
+            const detectedPoints = [first, second];
+            return {
+                pattern: 'double-top',
+                strength: 0.7,
+                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:1}]),
+                detectedPoints,
+            };
         }
     }
+
+    // Double Bottom
     if (troughs.length >= 2) {
         const lastTwoTroughs = troughs.slice(-2);
         const [first, second] = lastTwoTroughs;
         if (Math.abs(first.value - second.value) <= tolerance * 1.5) {
-            return { pattern: 'double-bottom', strength: 0.7 };
+            const detectedPoints = [first, second];
+            return {
+                pattern: 'double-bottom',
+                strength: 0.7,
+                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:0}]),
+                detectedPoints,
+            };
         }
     }
 
@@ -164,54 +205,21 @@ const analyzePatterns = (peaks, troughs, closes, highs, lows) => {
     if (trianglePattern) return trianglePattern;
 
     const cupPattern = detectCupAndHandle(closes);
-    if (cupPattern) return { pattern: 'cup-and-handle', strength: 0.6 };
+    if (cupPattern) {
+        return {
+            pattern: 'cup-and-handle',
+            strength: 0.6,
+            accuracy: 85, // Placeholder
+            detectedPoints: [], // Placeholder
+        };
+    }
 
     const wedgePattern = detectWedgePatterns(peaks, troughs, closes);
     if (wedgePattern) return wedgePattern;
 
-    if (volatility < 2 && Math.abs(priceChange) < 5) {
-        return { pattern: 'flag', strength: 0.6 };
-    }
-
-    if (priceChange > 8) {
-        if (peaks.length >= 2 && troughs.length >= 2) {
-            return { pattern: 'ascending-triangle', strength: 0.5 };
-        }
-        return { pattern: 'cup-and-handle', strength: 0.5 };
-    } else if (priceChange < -8) {
-        if (peaks.length >= 2 && troughs.length >= 2) {
-            return { pattern: 'descending-triangle', strength: 0.5 };
-        }
-        return { pattern: 'head-and-shoulders', strength: 0.5 };
-    } else if (priceChange > 3) {
-        return { pattern: 'ascending-triangle', strength: 0.4 };
-    } else if (priceChange < -3) {
-        return { pattern: 'descending-triangle', strength: 0.4 };
-    } else {
-        if (volatility > 4) {
-            return null;
-        }
-        return { pattern: 'flag', strength: 0.4 };
-    }
+    return null;
 };
 
-/**
- * Calculates the volatility of a given set of prices.
- * @param {number[]} prices - The input prices.
- * @returns {number} - The volatility.
- */
-const calculateVolatility = (prices) => {
-    if (prices.length < 2) return 0;
-    const returns = [];
-    for (let i = 1; i < prices.length; i++) {
-        if (prices[i - 1] === 0) continue;
-        returns.push(((prices[i] - prices[i - 1]) / prices[i - 1]) * 100);
-    }
-    if (returns.length === 0) return 0;
-    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length;
-    return Math.sqrt(variance);
-};
 
 /**
  * Detects triangle patterns from peaks and troughs.
@@ -356,10 +364,10 @@ export const detectPatternFromPriceData = (prices) => {
     const priceVsSMA20 = sma20.length > 0 ? ((currentPrice - sma20[sma20.length - 1]) / sma20[sma20.length - 1]) * 100 : 0;
     const priceVsSMA50 = sma50.length > 0 ? ((currentPrice - sma50[sma50.length - 1]) / sma50[sma50.length - 1]) * 100 : 0;
 
-    const patternData = analyzePatterns(peaks, troughs, closes, highs, lows);
+    const patternData = analyzePatternsDeterministic(peaks, troughs, closes, highs, lows);
 
     if (!patternData || !patternData.pattern) {
-        return { pattern: 'flag', confidence: 50 };
+        return null;
     }
 
     const confidence = calculateDynamicConfidence(patternData, currentRSI, priceVsSMA20, priceVsSMA50);
@@ -367,6 +375,8 @@ export const detectPatternFromPriceData = (prices) => {
     return {
         pattern: patternData.pattern,
         confidence: confidence,
+        accuracy: patternData.accuracy,
+        detectedPoints: patternData.detectedPoints,
         technicals: {
             rsi: currentRSI,
             priceVsSMA20,
