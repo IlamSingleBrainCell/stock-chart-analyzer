@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, CheckCircle } from 'lucide-react';  
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
@@ -297,31 +297,10 @@ function StockChartAnalyzer() {
                         </p>
                     </div>
 
-                    <div className="features-grid">
-                        <div className="feature-card">
-                            <div className="feature-icon">📊</div>
-                            <h3 className="feature-title">Pattern Detection</h3>
-                            <p className="feature-description">Identify patterns from 3-month price data.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">🎯</div>
-                            <h3 className="feature-title">Dynamic Confidence</h3>
-                            <p className="feature-description">Get dynamic confidence scores for patterns.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">📈</div>
-                            <h3 className="feature-title">Breakout Timing</h3>
-                            <p className="feature-description">Predict breakout timings for your stocks.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">📉</div>
-                            <h3 className="feature-title">Key Levels</h3>
-                            <p className="feature-description">Find key support and resistance levels.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">🇮🇳</div>
-                            <h3 className="feature-title">2K+ Stocks</h3>
-                            <p className="feature-description">US and Indian stocks available for analysis.</p>
+                    <div style={{ background: 'var(--info-background)', borderLeft: '4px solid var(--info-color)', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid var(--info-border)' }}>
+                        <AlertTriangle size={20} style={{ color: 'var(--info-color)', marginRight: '16px', flexShrink: 0 }} />
+                        <div style={{ fontSize: '14px', color: 'var(--info-color)', fontWeight: '600' }}>
+                            <strong>🚀 Features:</strong> Pattern detection from 3-month price data, dynamic confidence, breakout timing, Key Support/Resistance levels. {stockDatabase.length}+ US & Indian stocks!
                         </div>
                     </div>
 
