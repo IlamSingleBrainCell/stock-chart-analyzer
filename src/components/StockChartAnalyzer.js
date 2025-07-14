@@ -3,6 +3,7 @@ import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Searc
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
+import PatternDetectionModal from './PatternDetectionModal';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
@@ -60,6 +61,7 @@ function StockChartAnalyzer() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
     const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
+    const [isModalOpen, setIsModalOpen] = useState(false);
     const canvasRef = useRef(null);
     const chartCanvasRef = useRef(null);
     const inputRef = useRef(null);
@@ -427,9 +429,12 @@ function StockChartAnalyzer() {
                                         const selectedPatternDetails = chartPatterns[detectedPatternName];
                                         const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
                                         const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
+                                        const analysis = detectPatternFromPriceData(stockData.prices);
                                         setPatternDetected({
                                             name: detectedPatternName,
-                                            ...selectedPatternDetails
+                                            ...selectedPatternDetails,
+                                            accuracy: analysis ? analysis.accuracy : 'N/A',
+                                            detectedPoints: analysis ? analysis.detectedPoints : [],
                                         });
                                         setPrediction(selectedPatternDetails.prediction);
                                         setConfidence(confidenceScore);
@@ -474,8 +479,29 @@ function StockChartAnalyzer() {
                             {recommendation && (<div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><DollarSign size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Recommendation</h3></div><p style={{ fontSize: '20px', marginBottom: '12px', fontWeight: '800', color: recommendation.action === 'BUY' ? 'var(--success-color)' : recommendation.action === 'SELL' ? 'var(--danger-color)' : 'var(--primary-accent-darker)' }}>{recommendation.action === 'BUY' ? '💰 BUY' : recommendation.action === 'SELL' ? '💸 SELL' : '✋ HOLD'}</p><p style={{ fontSize: '16px', color: 'var(--text-color-light)', lineHeight: '1.6', fontWeight: '500' }}>{recommendation.reasoning}</p></div>)}
                             {entryExit && (<div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><Target size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Entry & Exit Strategy</h3></div><div style={{ marginBottom: '12px' }}><span style={{ fontWeight: '700', color: 'var(--success-color)' }}>🟢 Entry Point: </span><span style={{ color: 'var(--text-color-light)', fontWeight: '500' }}>{entryExit.entry}</span></div><div><span style={{ fontWeight: '700', color: 'var(--danger-color)' }}>🔴 Exit Strategy: </span><span style={{ color: 'var(--text-color-light)', fontWeight: '500' }}>{entryExit.exit}</span></div></div>)}
                             <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 16px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><Calendar size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Time Estimate</h3></div><p style={{ fontSize: '18px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '600' }}>{timeEstimate}</p><div style={{ fontSize: '16px', color: 'var(--text-color)', marginTop: '16px', padding: '12px 16px', background: 'var(--primary-accent-light)', borderRadius: '8px', border: '1px solid var(--primary-accent-border)', fontWeight: '600' }}><span style={{ fontWeight: '700', color: 'var(--text-color)' }}>📅 Typical pattern duration:</span> {patternDetected.timeframe}</div></div>
-                            <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid var(--card-border)' }}><div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}><BarChart size={28} /><h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Pattern Detected</h3></div><div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}><div><p style={{ fontSize: '20px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '700' }}>📊 {patternDetected.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}</p><div style={{ fontSize: '14px', color: 'var(--text-color-lighter)', marginTop: '8px', padding: '8px 12px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontWeight: '500' }}>💡 Compare the actual chart above with this pattern example below</div></div><div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)' }}><PatternVisualization patternName={patternDetected.name} theme={theme} width={300} height={160} /><div style={{ fontSize: '12px', color: 'var(--text-color-muted)', textAlign: 'center', fontWeight: '500' }}>📈 Typical {patternDetected.name.split('-').join(' ')} pattern example</div></div></div></div>
-                        </div>)}
+                            <div style={{ padding: '24px', background: 'var(--background-color)', margin: '0 24px 24px', borderRadius: '12px', border: '2px solid var(--card-border)' }}>
+                                <div style={{ display: 'flex', alignItems: 'center', marginBottom: '16px', color: 'var(--text-color)' }}>
+                                    <BarChart size={28} />
+                                    <h3 style={{ fontSize: '22px', fontWeight: '700', margin: '0 0 0 16px', color: 'var(--text-color)' }}>Pattern Detected</h3>
+                                </div>
+                                <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                                    <div>
+                                        <p style={{ fontSize: '20px', marginBottom: '12px', color: 'var(--text-color-light)', fontWeight: '700' }}>
+                                            📊 {patternDetected.name.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                                            <button onClick={() => setIsModalOpen(true)} style={{ marginLeft: '12px', background: 'none', border: 'none', color: 'var(--primary-accent)', cursor: 'pointer', textDecoration: 'underline', fontSize: '14px', fontStyle: 'italic' }}>
+                                                How was this detected?
+                                            </button>
+                                        </p>
+                                        <div style={{ fontSize: '14px', color: 'var(--text-color-lighter)', marginTop: '8px', padding: '8px 12px', background: 'var(--primary-accent-light)', borderRadius: '6px', fontWeight: '500' }}>💡 Compare the actual chart above with this pattern example below</div>
+                                    </div>
+                                    <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', flexDirection: 'column', gap: '8px', padding: '16px', background: 'var(--background-color)', borderRadius: '8px', border: '1px solid var(--card-border)' }}>
+                                        <PatternVisualization patternName={patternDetected.name} theme={theme} width={300} height={160} />
+                                        <div style={{ fontSize: '12px', color: 'var(--text-color-muted)', textAlign: 'center', fontWeight: '500' }}>📈 Typical {patternDetected.name.split('-').join(' ')} pattern example</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )}
                     {patternDetected && (<div style={{ background: 'var(--card-background)', padding: '32px', borderRadius: '20px', marginBottom: '32px', border: '2px solid var(--card-border)', boxShadow: `0 8px 32px var(--card-shadow)` }}><h3 style={{ fontWeight: '700', fontSize: '24px', marginTop: '0', marginBottom: '20px', color: 'var(--text-color)', textAlign: 'center' }}>📚 Pattern Education</h3><h4 style={{ fontWeight: '600', fontSize: '18px', marginBottom: '12px', color: 'var(--text-color)' }}>Description:</h4><p style={{ marginBottom: '24px', lineHeight: '1.7', fontSize: '16px', color: 'var(--text-color-light)', fontWeight: '500' }}>{patternDetected.description}</p><div style={{ padding: '24px', border: '2px solid var(--card-border)', background: 'var(--primary-accent-light)', borderRadius: '12px' }}><h4 style={{ fontWeight: '700', fontSize: '18px', color: 'var(--primary-accent-darker)', marginTop: '0', marginBottom: '16px' }}>🔍 What to look for:</h4><ul style={{ marginTop: '0', paddingLeft: '0', listStyle: 'none', fontSize: '15px', color: 'var(--text-color-light)' }}><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Look for clear pattern formation with multiple confirmation points</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Check volume patterns that support the chart pattern</li><li style={{ marginBottom: '12px', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Confirm breakout direction before making decisions</li><li style={{ marginBottom: '0', paddingLeft: '24px', position: 'relative', lineHeight: '1.6', fontWeight: '500' }}><span style={{ position: 'absolute', left: '0', color: 'var(--primary-accent-darker)', fontWeight: 'bold', fontSize: '16px' }}>→</span>Consider overall market conditions and sentiment</li></ul></div></div>)}
                 </>
             )}
@@ -483,6 +509,14 @@ function StockChartAnalyzer() {
             {currentView === 'game' && (
                 <PatternRecognitionGame PatternVisualization={PatternVisualization} chartPatterns={chartPatterns} />
             )}
+
+            <PatternDetectionModal
+                isOpen={isModalOpen}
+                onClose={() => setIsModalOpen(false)}
+                pattern={patternDetected}
+                stockData={stockData}
+                theme={theme}
+            />
 
             <div style={{ fontSize: '15px', color: 'var(--text-color-light)', background: 'var(--card-background)', padding: '24px', borderRadius: '16px', border: '2px solid var(--card-border)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
                 <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides technical analysis and historical data reviews for educational purposes only.</p>
