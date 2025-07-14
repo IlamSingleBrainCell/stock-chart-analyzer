@@ -1,8 +1,8 @@
 export const fetchYahooFinanceData = async (symbol, range = '3mo') => {
     let interval = '1d'; if (range === '5y' || range === '10y') { interval = '1mo'; } else if (range === '1y') { interval = '1wk'; }
     try {
-      const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`);
-      const response = await fetch(`/.netlify/functions/yahoo-finance-proxy?url=${yahooUrl}`); if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
+      const proxyUrl = 'https://api.allorigins.win/raw?url='; const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v8/finance/chart/${symbol}?range=${range}&interval=${interval}`);
+      const response = await fetch(proxyUrl + yahooUrl); if (!response.ok) { throw new Error(`HTTP error! status: ${response.status}`); }
       const data = await response.json(); if (data.chart?.error) { throw new Error(data.chart.error.description || 'Invalid stock symbol'); }
       if (!data.chart?.result?.[0]) { throw new Error('No data found for this symbol'); }
       const result = data.chart.result[0]; const timestamps = result.timestamp; const quotes = result.indicators.quote[0]; const meta = result.meta;
