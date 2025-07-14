@@ -1,7 +1,7 @@
-export const MARKETAUX_API_KEY = 'F8x0iPiyy2Rhe8LZsQJvmisOPwpr7xQ4Np7XF0o1';
+export const MARKETAUX_API_KEY = process.env.REACT_APP_MARKETAUX_API_KEY;
 export const MARKETAUX_BASE_URL = "https://api.marketaux.com/v1/news/all";
 
-export const FMP_API_KEY = "6Mdo6RRKRk0tofiGn2J4qVTBtCXu3zVC"; // Replace with your actual key
+export const FMP_API_KEY = process.env.REACT_APP_FMP_API_KEY;
 export const FMP_BASE_URL = "https://financialmodelingprep.com/api/v3";
 
 export const chartThemeColors = {
