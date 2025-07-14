@@ -135,69 +135,77 @@ const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
 
     // Head and Shoulders
     if (peaks.length >= 3) {
-        const lastThreePeaks = peaks.slice(-3);
-        const [left, head, right] = lastThreePeaks;
-        if (head.value > left.value && head.value > right.value) {
-            const leftRightDiff = Math.abs(left.value - right.value);
-            const headHeight = Math.min(head.value - left.value, head.value - right.value);
-            if (leftRightDiff <= tolerance * 2 && headHeight > tolerance) {
-                const detectedPoints = [left, head, right];
-                return {
-                    pattern: 'head-and-shoulders',
-                    strength: 0.8,
-                    accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:1}, {x:2, y:0}]),
-                    detectedPoints,
-                };
+        for (let i = 0; i < peaks.length - 2; i++) {
+            const [left, head, right] = peaks.slice(i, i + 3);
+            if (head.value > left.value && head.value > right.value) {
+                const neckline = troughs.filter(t => t.index > left.index && t.index < right.index);
+                if (neckline.length >= 2) {
+                    const detectedPoints = [left, head, right, ...neckline];
+                    return {
+                        pattern: 'head-and-shoulders',
+                        strength: 0.8,
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:1}, {x:2, y:0}]),
+                        detectedPoints,
+                    };
+                }
             }
         }
     }
 
     // Inverse Head and Shoulders
     if (troughs.length >= 3) {
-        const lastThreeTroughs = troughs.slice(-3);
-        const [left, head, right] = lastThreeTroughs;
-        if (head.value < left.value && head.value < right.value) {
-            const leftRightDiff = Math.abs(left.value - right.value);
-            const headDepth = Math.min(left.value - head.value, right.value - head.value);
-            if (leftRightDiff <= tolerance * 2 && headDepth > tolerance) {
-                const detectedPoints = [left, head, right];
-                return {
-                    pattern: 'inverse-head-and-shoulders',
-                    strength: 0.8,
-                    accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:0}, {x:2, y:1}]),
-                    detectedPoints,
-                };
+        for (let i = 0; i < troughs.length - 2; i++) {
+            const [left, head, right] = troughs.slice(i, i + 3);
+            if (head.value < left.value && head.value < right.value) {
+                const neckline = peaks.filter(p => p.index > left.index && p.index < right.index);
+                if (neckline.length >= 2) {
+                    const detectedPoints = [left, head, right, ...neckline];
+                    return {
+                        pattern: 'inverse-head-and-shoulders',
+                        strength: 0.8,
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:0}, {x:2, y:1}]),
+                        detectedPoints,
+                    };
+                }
             }
         }
     }
 
     // Double Top
     if (peaks.length >= 2) {
-        const lastTwoPeaks = peaks.slice(-2);
-        const [first, second] = lastTwoPeaks;
-        if (Math.abs(first.value - second.value) <= tolerance * 1.5) {
-            const detectedPoints = [first, second];
-            return {
-                pattern: 'double-top',
-                strength: 0.7,
-                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:1}]),
-                detectedPoints,
-            };
+        for (let i = 0; i < peaks.length - 1; i++) {
+            const [first, second] = peaks.slice(i, i + 2);
+            if (Math.abs(first.value - second.value) <= tolerance * 1.5) {
+                const troughBetween = troughs.find(t => t.index > first.index && t.index < second.index);
+                if (troughBetween) {
+                    const detectedPoints = [first, second, troughBetween];
+                    return {
+                        pattern: 'double-top',
+                        strength: 0.7,
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:1}]),
+                        detectedPoints,
+                    };
+                }
+            }
         }
     }
 
     // Double Bottom
     if (troughs.length >= 2) {
-        const lastTwoTroughs = troughs.slice(-2);
-        const [first, second] = lastTwoTroughs;
-        if (Math.abs(first.value - second.value) <= tolerance * 1.5) {
-            const detectedPoints = [first, second];
-            return {
-                pattern: 'double-bottom',
-                strength: 0.7,
-                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:0}]),
-                detectedPoints,
-            };
+        for (let i = 0; i < troughs.length - 1; i++) {
+            const [first, second] = troughs.slice(i, i + 2);
+            if (Math.abs(first.value - second.value) <= tolerance * 1.5) {
+                const peakBetween = peaks.find(p => p.index > first.index && p.index < second.index);
+                if (peakBetween) {
+                    const detectedPoints = [first, second, peakBetween];
+                    return {
+                        pattern: 'double-bottom',
+                        strength: 0.7,
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:0}]),
+                        detectedPoints,
+                    };
+                }
+            }
         }
     }
 
@@ -231,19 +239,41 @@ const detectTrianglePatterns = (peaks, troughs) => {
     if (peaks.length < 2 || troughs.length < 2) return null;
     const recentPeaks = peaks.slice(-4);
     const recentTroughs = troughs.slice(-4);
+
     if (recentPeaks.length >= 2 && recentTroughs.length >= 2) {
         const peakValues = recentPeaks.map(p => p.value);
         const troughValues = recentTroughs.map(t => t.value);
         const peakTrend = calculateTrend(peakValues);
         const troughTrend = calculateTrend(troughValues);
-        if (Math.abs(peakTrend) < 1 && troughTrend > 0.5) {
-            return { pattern: 'ascending-triangle', strength: 0.6 };
+
+        // Ascending Triangle: Flat top, rising bottom
+        if (Math.abs(peakTrend) < 0.1 && troughTrend > 0.1) {
+            return {
+                pattern: 'ascending-triangle',
+                strength: 0.7,
+                accuracy: 90, // Placeholder
+                detectedPoints: [...recentPeaks, ...recentTroughs],
+            };
         }
-        if (peakTrend < -0.5 && Math.abs(troughTrend) < 1) {
-            return { pattern: 'descending-triangle', strength: 0.6 };
+
+        // Descending Triangle: Falling top, flat bottom
+        if (peakTrend < -0.1 && Math.abs(troughTrend) < 0.1) {
+            return {
+                pattern: 'descending-triangle',
+                strength: 0.7,
+                accuracy: 90, // Placeholder
+                detectedPoints: [...recentPeaks, ...recentTroughs],
+            };
         }
-        if (peakTrend < -0.2 && troughTrend > 0.2) {
-            return { pattern: 'ascending-triangle', strength: 0.5 };
+
+        // Symmetrical Triangle: Converging trendlines
+        if (peakTrend < -0.1 && troughTrend > 0.1) {
+            return {
+                pattern: 'symmetrical-triangle',
+                strength: 0.6,
+                accuracy: 85, // Placeholder
+                detectedPoints: [...recentPeaks, ...recentTroughs],
+            };
         }
     }
     return null;
@@ -295,22 +325,29 @@ const detectWedgePatterns = (peaks, troughs, closes) => {
     if (peaks.length < 2 || troughs.length < 2) return null;
     const recentPeaks = peaks.slice(-4);
     const recentTroughs = troughs.slice(-4);
-    const recent30 = closes.slice(-30);
-    if (recentPeaks.length >= 2 && recentTroughs.length >= 2 && recent30.length > 0) {
+
+    if (recentPeaks.length >= 2 && recentTroughs.length >= 2) {
         const peakTrend = calculateTrend(recentPeaks.map(p => p.value));
         const troughTrend = calculateTrend(recentTroughs.map(t => t.value));
-        const overallTrend = recent30[0] !== 0 ? ((recent30[recent30.length - 1] - recent30[0]) / recent30[0]) * 100 : 0;
-        if (peakTrend > 0.3 && troughTrend > 0.2 && troughTrend < peakTrend * 0.8) {
-            return { pattern: 'wedge-rising', strength: 0.6 };
+
+        // Rising Wedge: Both trendlines slope upward, converging
+        if (peakTrend > 0.1 && troughTrend > 0.1 && peakTrend > troughTrend) {
+            return {
+                pattern: 'wedge-rising',
+                strength: 0.6,
+                accuracy: 80, // Placeholder
+                detectedPoints: [...recentPeaks, ...recentTroughs],
+            };
         }
-        if (peakTrend < -0.3 && troughTrend < -0.2 && Math.abs(troughTrend) < Math.abs(peakTrend) * 0.8) {
-            return { pattern: 'wedge-falling', strength: 0.6 };
-        }
-        if (overallTrend > 5 && peakTrend < 0 && troughTrend > 0) {
-            return { pattern: 'wedge-rising', strength: 0.5 };
-        }
-        if (overallTrend < -5 && peakTrend < 0 && troughTrend < 0) {
-            return { pattern: 'wedge-falling', strength: 0.5 };
+
+        // Falling Wedge: Both trendlines slope downward, converging
+        if (peakTrend < -0.1 && troughTrend < -0.1 && peakTrend < troughTrend) {
+            return {
+                pattern: 'wedge-falling',
+                strength: 0.6,
+                accuracy: 80, // Placeholder
+                detectedPoints: [...recentPeaks, ...recentTroughs],
+            };
         }
     }
     return null;

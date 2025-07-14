@@ -401,42 +401,44 @@ function StockChartAnalyzer() {
                                             }
                                         }
                                     }
-                                    if (!currentLongTermAssessment && !detectedPatternName) {
-                                        const patternWeights = {
-                                            'head-and-shoulders': 12,
-                                            'inverse-head-and-shoulders': 12,
-                                            'double-top': 15,
-                                            'double-bottom': 15,
-                                            'cup-and-handle': 10,
-                                            'ascending-triangle': 15,
-                                            'descending-triangle': 15,
-                                            'flag': 8,
-                                            'wedge-rising': 8,
-                                            'wedge-falling': 8
-                                        };
-                                        const weightedPatterns = [];
-                                        Object.entries(patternWeights).forEach(([pattern, weight]) => {
-                                            for (let i = 0; i < weight; i++) {
-                                                weightedPatterns.push(pattern);
-                                            }
-                                        });
-                                        const randomIndex = Math.floor(Math.random() * weightedPatterns.length);
-                                        detectedPatternName = weightedPatterns[randomIndex];
-                                        confidenceScore = Math.floor(Math.random() * 35) + 50;
-                                    }
-
-                                    if (detectedPatternName && chartPatterns[detectedPatternName]) { // Ensure pattern exists before accessing
-                                        const selectedPatternDetails = chartPatterns[detectedPatternName];
-                                        const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
-                                        const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
+                                    if (stockData && stockData.prices && stockData.prices.length > 0) {
                                         const analysis = detectPatternFromPriceData(stockData.prices);
-                                        setPatternDetected({
-                                            name: detectedPatternName,
-                                            ...selectedPatternDetails,
-                                            accuracy: analysis ? analysis.accuracy : 'N/A',
-                                            detectedPoints: analysis ? analysis.detectedPoints : [],
-                                        });
-                                        setPrediction(selectedPatternDetails.prediction);
+                                        if (analysis) {
+                                            const { pattern: detectedPatternName, confidence: confidenceScore, accuracy, detectedPoints } = analysis;
+                                            if (detectedPatternName && chartPatterns[detectedPatternName]) {
+                                                const selectedPatternDetails = chartPatterns[detectedPatternName];
+                                                const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
+                                                const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
+                                                setPatternDetected({
+                                                    name: detectedPatternName,
+                                                    ...selectedPatternDetails,
+                                                    accuracy: accuracy,
+                                                    detectedPoints: detectedPoints,
+                                                });
+                                                setPrediction(selectedPatternDetails.prediction);
+                                                setConfidence(confidenceScore);
+                                                setRecommendation(rec);
+                                                setBreakoutTiming(breakout);
+                                                setKeyLevels(calculatedKeyLevels);
+                                                let timeInfo = '';
+                                                if (selectedPatternDetails.prediction === 'up') {
+                                                    timeInfo = `Expected to rise for ${selectedPatternDetails.daysUp}`;
+                                                } else if (selectedPatternDetails.prediction === 'down') {
+                                                    timeInfo = `Expected to decline for ${selectedPatternDetails.daysDown}`;
+                                                } else if (selectedPatternDetails.prediction === 'continuation') {
+                                                    const isUptrend = Math.random() > 0.5;
+                                                    timeInfo = isUptrend ? `Current uptrend likely to continue for ${selectedPatternDetails.daysUp}` : `Current downtrend likely to continue for ${selectedPatternDetails.daysDown}`;
+                                                } else {
+                                                    timeInfo = `Pattern suggests movement within ${selectedPatternDetails.timeframe}`;
+                                                }
+                                                setTimeEstimate(timeInfo);
+                                                setEntryExit({
+                                                    entry: selectedPatternDetails.entryStrategy,
+                                                    exit: selectedPatternDetails.exitStrategy
+                                                });
+                                            }
+                                        }
+                                    }
                                         setConfidence(confidenceScore);
                                         setRecommendation(rec);
                                         setBreakoutTiming(breakout);
