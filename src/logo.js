@@ -25,7 +25,7 @@ const Logo = () => (
         d="M10 40 L30 20 L50 30 L70 10 L90 20"
       />
     </svg>
-    <p style={{ margin: 0, fontSize: '12px', color: 'white' }}>developed by Ilam</p>
+    <p className="flash" style={{ margin: 0, fontSize: '12px', color: 'white' }}>developed by Ilam</p>
   </div>
 );
 
