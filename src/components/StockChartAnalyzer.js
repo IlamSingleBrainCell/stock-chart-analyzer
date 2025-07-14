@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, CheckCircle, AlertTriangle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
