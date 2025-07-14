@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
+import { AlertTriangle, TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, CheckCircle } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
+import FeatureCard from './FeatureCard';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
@@ -297,10 +298,36 @@ function StockChartAnalyzer() {
                         </p>
                     </div>
 
-                    <div style={{ background: 'var(--info-background)', borderLeft: '4px solid var(--info-color)', borderRadius: '12px', padding: '20px', marginBottom: '32px', display: 'flex', alignItems: 'flex-start', border: '1px solid var(--info-border)' }}>
-                        <AlertTriangle size={20} style={{ color: 'var(--info-color)', marginRight: '16px', flexShrink: 0 }} />
-                        <div style={{ fontSize: '14px', color: 'var(--info-color)', fontWeight: '600' }}>
-                            <strong>🚀 Features:</strong> Pattern detection from 3-month price data, dynamic confidence, breakout timing, Key Support/Resistance levels. {stockDatabase.length}+ US & Indian stocks!
+                    <div style={{ marginBottom: '32px', textAlign: 'center' }}>
+                        <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-color)', marginBottom: '24px' }}>
+                            🚀 Key Features
+                        </h2>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+                            <FeatureCard
+                                icon={<CheckCircle size={24} color="var(--success-color)" />}
+                                title="Pattern Detection"
+                                description="Identifies classic chart patterns from 3-month price data."
+                            />
+                            <FeatureCard
+                                icon={<Zap size={24} color="var(--primary-accent)" />}
+                                title="Dynamic Confidence"
+                                description="Provides a data-driven confidence score for each detected pattern."
+                            />
+                            <FeatureCard
+                                icon={<Clock size={24} color="var(--warning-color)" />}
+                                title="Breakout Timing"
+                                description="Estimates the potential timing for pattern breakouts."
+                            />
+                            <FeatureCard
+                                icon={<BarChart size={24} color="var(--secondary-accent)" />}
+                                title="Key Levels"
+                                description="Automatically calculates and displays key support and resistance levels."
+                            />
+                             <FeatureCard
+                                icon={<TrendingUp size={24} color="var(--info-color)" />}
+                                title="2K+ Stocks"
+                                description="Supports a vast database of US and Indian stocks for analysis."
+                            />
                         </div>
                     </div>
 
