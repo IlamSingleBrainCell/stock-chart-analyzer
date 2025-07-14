@@ -1,0 +1,95 @@
+.accuracy-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 2000;
+  }
+
+  .accuracy-modal-content {
+    background: var(--card-background);
+    padding: 30px;
+    border-radius: 12px;
+    border: 2px solid var(--card-border);
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideInUp 0.3s ease-out;
+  }
+
+  .accuracy-modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .accuracy-modal-description {
+    font-size: 15px;
+    color: var(--text-color-lighter);
+    margin-bottom: 25px;
+    text-align: center;
+    line-height: 1.6;
+  }
+
+  .accuracy-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 25px;
+  }
+
+  .accuracy-table th,
+  .accuracy-table td {
+    padding: 12px 15px;
+    border: 1px solid var(--input-border);
+    text-align: left;
+  }
+
+  .accuracy-table th {
+    background-color: var(--primary-accent-light);
+    color: var(--primary-accent-darker);
+    font-weight: 600;
+  }
+
+  .accuracy-table td {
+    color: var(--text-color-light);
+  }
+
+  .accuracy-table tbody tr:nth-child(even) {
+    background-color: var(--input-background);
+  }
+
+  .accuracy-modal-close-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);
+    color: var(--button-primary-text);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .accuracy-modal-close-btn:hover {
+    opacity: 0.9;
+  }
+
+  @keyframes slideInUp {
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }

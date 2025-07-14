@@ -1,8 +1,9 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, BarChart2 } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
+import AccuracyTable from './AccuracyTable';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
@@ -60,6 +61,7 @@ function StockChartAnalyzer() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
     const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
+    const [showAccuracyModal, setShowAccuracyModal] = useState(false);
     const canvasRef = useRef(null);
     const chartCanvasRef = useRef(null);
     const inputRef = useRef(null);
@@ -279,7 +281,12 @@ function StockChartAnalyzer() {
                 <button onClick={() => setCurrentView('game')} style={{ ...toggleButtonStyle, background: currentView === 'game' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'game' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <Award size={18} style={{ marginRight: '8px' }} /> Pattern Game
                 </button>
+                <button onClick={() => setShowAccuracyModal(true)} style={{ ...toggleButtonStyle, background: 'var(--primary-accent-light)', color: 'var(--primary-accent-darker)' }}>
+                    <BarChart2 size={18} style={{ marginRight: '8px' }} /> Accuracy Scores
+                </button>
             </div>
+
+            {showAccuracyModal && <AccuracyTable onClose={() => setShowAccuracyModal(false)} />}
 
             {currentView === 'analyzer' && (
                 <>
