@@ -1,0 +1,49 @@
+.accuracy-details-modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 3000;
+  }
+
+  .accuracy-details-modal-content {
+    background: var(--card-background);
+    padding: 30px;
+    border-radius: 12px;
+    border: 2px solid var(--card-border);
+    width: 90%;
+    max-width: 600px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    animation: slideInUp 0.3s ease-out;
+  }
+
+  .accuracy-details-modal-title {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-color);
+    margin-bottom: 12px;
+    text-align: center;
+  }
+
+  .accuracy-details-modal-close-btn {
+    display: block;
+    width: 100%;
+    padding: 12px;
+    background: linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%);
+    color: var(--button-primary-text);
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease-in-out;
+  }
+
+  .accuracy-details-modal-close-btn:hover {
+    opacity: 0.9;
+  }

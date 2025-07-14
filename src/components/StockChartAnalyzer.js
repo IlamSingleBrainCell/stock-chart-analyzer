@@ -61,7 +61,6 @@ function StockChartAnalyzer() {
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
     const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
-    const [showAccuracyModal, setShowAccuracyModal] = useState(false);
     const canvasRef = useRef(null);
     const chartCanvasRef = useRef(null);
     const inputRef = useRef(null);
@@ -281,12 +280,10 @@ function StockChartAnalyzer() {
                 <button onClick={() => setCurrentView('game')} style={{ ...toggleButtonStyle, background: currentView === 'game' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'game' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <Award size={18} style={{ marginRight: '8px' }} /> Pattern Game
                 </button>
-                <button onClick={() => setShowAccuracyModal(true)} style={{ ...toggleButtonStyle, background: 'var(--primary-accent-light)', color: 'var(--primary-accent-darker)' }}>
+                <button onClick={() => setCurrentView('accuracy')} style={{ ...toggleButtonStyle, background: currentView === 'accuracy' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'accuracy' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <BarChart2 size={18} style={{ marginRight: '8px' }} /> Accuracy Scores
                 </button>
             </div>
-
-            {showAccuracyModal && <AccuracyTable onClose={() => setShowAccuracyModal(false)} />}
 
             {currentView === 'analyzer' && (
                 <>
@@ -489,6 +486,10 @@ function StockChartAnalyzer() {
 
             {currentView === 'game' && (
                 <PatternRecognitionGame PatternVisualization={PatternVisualization} chartPatterns={chartPatterns} />
+            )}
+
+            {currentView === 'accuracy' && (
+                <AccuracyTable />
             )}
 
             <div style={{ fontSize: '15px', color: 'var(--text-color-light)', background: 'var(--card-background)', padding: '24px', borderRadius: '16px', border: '2px solid var(--card-border)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
