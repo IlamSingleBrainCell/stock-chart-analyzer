@@ -130,7 +130,6 @@ const calculatePatternAccuracy = (detectedPoints, idealPoints) => {
 
 const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
     const recentData = closes.slice(-30);
-    const fullData = closes.slice(-60);
     const priceRange = Math.max(...recentData) - Math.min(...recentData);
     const tolerance = priceRange * 0.05;
 
@@ -221,23 +220,6 @@ const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
     return null;
 };
 
-/**
- * Calculates the volatility of a given set of prices.
- * @param {number[]} prices - The input prices.
- * @returns {number} - The volatility.
- */
-const calculateVolatility = (prices) => {
-    if (prices.length < 2) return 0;
-    const returns = [];
-    for (let i = 1; i < prices.length; i++) {
-        if (prices[i - 1] === 0) continue;
-        returns.push(((prices[i] - prices[i - 1]) / prices[i - 1]) * 100);
-    }
-    if (returns.length === 0) return 0;
-    const avgReturn = returns.reduce((a, b) => a + b, 0) / returns.length;
-    const variance = returns.reduce((sum, ret) => sum + Math.pow(ret - avgReturn, 2), 0) / returns.length;
-    return Math.sqrt(variance);
-};
 
 /**
  * Detects triangle patterns from peaks and troughs.
