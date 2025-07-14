@@ -6,7 +6,7 @@ import Logo from './logo';
 function App() {
   return (
     <ThemeProvider>
-      <div style={{ textAlign: 'center', padding: '20px' }}>
+      <div style={{ position: 'absolute', top: '20px', right: '20px', textAlign: 'center' }}>
         <Logo />
       </div>
       <StockChartAnalyzer />
