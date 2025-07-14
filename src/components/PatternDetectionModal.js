@@ -58,7 +58,7 @@ const PatternDetectionModal = ({ isOpen, onClose, pattern, stockData, theme }) =
                         <h3 style={styles.sectionTitle}>Pattern Detection Accuracy</h3>
                         <div style={styles.sectionContent}>
                             <div style={styles.accuracyBadge}>
-                                Pattern Match Accuracy: {pattern.accuracy || 'N/A'}%
+                                Pattern Match Accuracy: {pattern.accuracy ? pattern.accuracy.toFixed(0) : 'N/A'}%
                             </div>
                             <p>This score is computed based on the similarity of the detected points to the ideal pattern, the strictness of rule matching, and backtest validation.</p>
                         </div>
