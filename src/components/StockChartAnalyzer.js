@@ -374,8 +374,6 @@ function StockChartAnalyzer() {
                             {stockData && (<div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}><div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : selectedTimeRange === '10y' ? '10 Years' : '3 Months'} Data):</div><div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div><div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |<strong> Data Points:</strong> {stockData.prices.length} {selectedTimeRange === '1y' ? 'weeks' : (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'}</div>{stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}</div>)}
                             <button onClick={() => {
                                 try {
-                                    let detectedPatternName = null;
-                                    let confidenceScore = 70;
                                     let calculatedKeyLevels = null;
                                     let currentLongTermAssessment = null;
                                     if (stockData && stockData.prices && stockData.prices.length > 0) {
@@ -396,69 +394,42 @@ function StockChartAnalyzer() {
                                             setLongTermAssessment(null);
                                             const analysis = detectPatternFromPriceData(stockData.prices);
                                             if (analysis) {
-                                                detectedPatternName = analysis.pattern;
-                                                confidenceScore = analysis.confidence;
+                                                const { pattern: detectedPatternName, confidence: confidenceScore, accuracy, detectedPoints } = analysis;
+                                                if (detectedPatternName && chartPatterns[detectedPatternName]) {
+                                                    const selectedPatternDetails = chartPatterns[detectedPatternName];
+                                                    const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
+                                                    const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
+                                                    setPatternDetected({
+                                                        name: detectedPatternName,
+                                                        ...selectedPatternDetails,
+                                                        accuracy: accuracy,
+                                                        detectedPoints: detectedPoints,
+                                                    });
+                                                    setPrediction(selectedPatternDetails.prediction);
+                                                    setConfidence(confidenceScore);
+                                                    setRecommendation(rec);
+                                                    setBreakoutTiming(breakout);
+                                                    setKeyLevels(calculatedKeyLevels);
+                                                    let timeInfo = '';
+                                                    if (selectedPatternDetails.prediction === 'up') {
+                                                        timeInfo = `Expected to rise for ${selectedPatternDetails.daysUp}`;
+                                                    } else if (selectedPatternDetails.prediction === 'down') {
+                                                        timeInfo = `Expected to decline for ${selectedPatternDetails.daysDown}`;
+                                                    } else if (selectedPatternDetails.prediction === 'continuation') {
+                                                        const isUptrend = Math.random() > 0.5;
+                                                        timeInfo = isUptrend ? `Current uptrend likely to continue for ${selectedPatternDetails.daysUp}` : `Current downtrend likely to continue for ${selectedPatternDetails.daysDown}`;
+                                                    } else {
+                                                        timeInfo = `Pattern suggests movement within ${selectedPatternDetails.timeframe}`;
+                                                    }
+                                                    setTimeEstimate(timeInfo);
+                                                    setEntryExit({
+                                                        entry: selectedPatternDetails.entryStrategy,
+                                                        exit: selectedPatternDetails.exitStrategy
+                                                    });
+                                                }
                                             }
                                         }
                                     }
-                                    if (!currentLongTermAssessment && !detectedPatternName) {
-                                        const patternWeights = {
-                                            'head-and-shoulders': 12,
-                                            'inverse-head-and-shoulders': 12,
-                                            'double-top': 15,
-                                            'double-bottom': 15,
-                                            'cup-and-handle': 10,
-                                            'ascending-triangle': 15,
-                                            'descending-triangle': 15,
-                                            'flag': 8,
-                                            'wedge-rising': 8,
-                                            'wedge-falling': 8
-                                        };
-                                        const weightedPatterns = [];
-                                        Object.entries(patternWeights).forEach(([pattern, weight]) => {
-                                            for (let i = 0; i < weight; i++) {
-                                                weightedPatterns.push(pattern);
-                                            }
-                                        });
-                                        const randomIndex = Math.floor(Math.random() * weightedPatterns.length);
-                                        detectedPatternName = weightedPatterns[randomIndex];
-                                        confidenceScore = Math.floor(Math.random() * 35) + 50;
-                                    }
-
-                                    if (detectedPatternName && chartPatterns[detectedPatternName]) { // Ensure pattern exists before accessing
-                                        const selectedPatternDetails = chartPatterns[detectedPatternName];
-                                        const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
-                                        const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
-                                        const analysis = detectPatternFromPriceData(stockData.prices);
-                                        setPatternDetected({
-                                            name: detectedPatternName,
-                                            ...selectedPatternDetails,
-                                            accuracy: analysis ? analysis.accuracy : 'N/A',
-                                            detectedPoints: analysis ? analysis.detectedPoints : [],
-                                        });
-                                        setPrediction(selectedPatternDetails.prediction);
-                                        setConfidence(confidenceScore);
-                                        setRecommendation(rec);
-                                        setBreakoutTiming(breakout);
-                                        setKeyLevels(calculatedKeyLevels);
-                                        let timeInfo = '';
-                                        if (selectedPatternDetails.prediction === 'up') {
-                                            timeInfo = `Expected to rise for ${selectedPatternDetails.daysUp}`;
-                                        } else if (selectedPatternDetails.prediction === 'down') {
-                                            timeInfo = `Expected to decline for ${selectedPatternDetails.daysDown}`;
-                                        } else if (selectedPatternDetails.prediction === 'continuation') {
-                                            const isUptrend = Math.random() > 0.5;
-                                            timeInfo = isUptrend ? `Current uptrend likely to continue for ${selectedPatternDetails.daysUp}` : `Current downtrend likely to continue for ${selectedPatternDetails.daysDown}`;
-                                        } else {
-                                            timeInfo = `Pattern suggests movement within ${selectedPatternDetails.timeframe}`;
-                                        }
-                                        setTimeEstimate(timeInfo);
-                                        setEntryExit({
-                                            entry: selectedPatternDetails.entryStrategy,
-                                            exit: selectedPatternDetails.exitStrategy
-                                        });
-                                    }
-
                                 } catch (error) {
                                     console.error('Error analyzing chart:', error);
                                 }

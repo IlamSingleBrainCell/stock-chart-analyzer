@@ -1,5 +1,6 @@
 import React from 'react';
 import { X } from 'lucide-react';
+import PatternVisualizationChart from './PatternVisualizationChart';
 
 const PatternDetectionModal = ({ isOpen, onClose, pattern, stockData, theme }) => {
     if (!isOpen || !pattern) return null;
@@ -45,12 +46,11 @@ const PatternDetectionModal = ({ isOpen, onClose, pattern, stockData, theme }) =
                     <div style={styles.section}>
                         <h3 style={styles.sectionTitle}>Detected Pattern Visualization</h3>
                         <div style={styles.sectionContent}>
-                            <p>This is a simplified visualization of the detected points. A full chart visualization will be implemented in a future step.</p>
-                            <ul>
-                                {pattern.detectedPoints && pattern.detectedPoints.map((point, index) => (
-                                    <li key={index}>Point {index + 1}: Index - {point.index}, Value - {point.value}</li>
-                                ))}
-                            </ul>
+                            <PatternVisualizationChart
+                                stockData={stockData}
+                                detectedPoints={pattern.detectedPoints}
+                                theme={theme}
+                            />
                         </div>
                     </div>
 
