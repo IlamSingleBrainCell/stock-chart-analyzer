@@ -77,15 +77,11 @@ function StockChartAnalyzer() {
     const filterSuggestions = (input) => {
         if (!input || input.length < 1) return [];
         const query = input.toLowerCase();
-        const matches = stockDatabase.filter(stock => {
-            const symbolMatch = stock.symbol.toLowerCase().includes(query);
-            const nameMatch = stock.name.toLowerCase().includes(query);
-            const sectorMatch = stock.sector && stock.sector.toLowerCase().includes(query);
-            const marketMatch = stock.market.toLowerCase().includes(query);
-            // Specific check for Indian stocks without typing ".NS"
-            const indianStockMatch = stock.market === 'India' && stock.symbol.toLowerCase().startsWith(query) && query.endsWith('.ns') === false;
-            return symbolMatch || nameMatch || sectorMatch || marketMatch || indianStockMatch;
-        });
+        const matches = stockDatabase.filter(stock =>
+            stock.symbol.toLowerCase().includes(query) ||
+            stock.name.toLowerCase().includes(query) ||
+            (stock.sector && stock.sector.toLowerCase().includes(query))
+        );
 
         return matches.sort((a, b) => {
             const aSymbol = a.symbol.toLowerCase();
@@ -106,15 +102,13 @@ function StockChartAnalyzer() {
                 return aSymbol.length - bSymbol.length;
             }
 
-            // Prioritize by market (US > India)
-            if (a.market === 'US' && b.market === 'India') return -1;
-            if (b.market === 'US' && a.market === 'India') return 1;
+            // Prioritize name matches
+            const aNameStartsWith = aName.startsWith(query);
+            const bNameStartsWith = bName.startsWith(query);
+            if (aNameStartsWith && !bNameStartsWith) return -1;
+            if (bNameStartsWith && !aNameStartsWith) return 1;
 
-            // Lastly, sort by name
-            if (aName.includes(query) && !bName.includes(query)) return -1;
-            if (bName.includes(query) && !aName.includes(query)) return 1;
-
-            return 0;
+            return aSymbol.localeCompare(bSymbol);
         }).slice(0, 12);
     };
 
