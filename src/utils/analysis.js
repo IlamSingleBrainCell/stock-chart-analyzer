@@ -114,18 +114,57 @@ const calculateSMA = (data, period) => {
  * @returns {object|null} - An object with the detected pattern and its strength, or null if no pattern is detected.
  */
 const calculatePatternAccuracy = (detectedPoints, idealPoints) => {
-    if (detectedPoints.length !== idealPoints.length) {
+    if (!detectedPoints || detectedPoints.length === 0 || !idealPoints || idealPoints.length === 0) {
         return 0;
     }
-    // This is a simplified accuracy calculation. A more robust implementation would
-    // involve more complex geometric comparisons.
-    const similarity = detectedPoints.reduce((acc, point, i) => {
-        const ideal = idealPoints[i];
-        const distance = Math.sqrt(Math.pow(point.x - ideal.x, 2) + Math.pow(point.y - ideal.y, 2));
-        return acc + (1 / (1 + distance));
-    }, 0);
 
-    return Math.min(100, Math.round((similarity / detectedPoints.length) * 100));
+    // Normalize coordinates for comparison
+    const normalize = (points) => {
+        const xValues = points.map(p => p.x);
+        const yValues = points.map(p => p.y);
+        const minX = Math.min(...xValues);
+        const maxX = Math.max(...xValues);
+        const minY = Math.min(...yValues);
+        const maxY = Math.max(...yValues);
+
+        const rangeX = maxX - minX;
+        const rangeY = maxY - minY;
+
+        if (rangeX === 0 || rangeY === 0) return points.map(() => ({ x: 0, y: 0 }));
+
+        return points.map(p => ({
+            x: (p.x - minX) / rangeX,
+            y: (p.y - minY) / rangeY,
+        }));
+    };
+
+    const normalizedDetected = normalize(detectedPoints.map(p => ({ x: p.index, y: p.value })));
+    const normalizedIdeal = normalize(idealPoints);
+
+    // If ideal points are less than detected points, we can't make a direct comparison.
+    // Let's use the initial subset of detected points that matches the ideal points length.
+    const detectedSubset = normalizedDetected.slice(0, normalizedIdeal.length);
+
+    if (detectedSubset.length !== normalizedIdeal.length) {
+        return 50; // Cannot compute fairly, return a neutral score
+    }
+
+    // Calculate Euclidean distance between corresponding points
+    let totalDistance = 0;
+    for (let i = 0; i < detectedSubset.length; i++) {
+        const p1 = detectedSubset[i];
+        const p2 = normalizedIdeal[i];
+        totalDistance += Math.sqrt(Math.pow(p1.x - p2.x, 2) + Math.pow(p1.y - p2.y, 2));
+    }
+
+    const averageDistance = totalDistance / detectedSubset.length;
+
+    // Convert distance to a similarity score (0-100)
+    // The max possible distance in a normalized 1x1 box is sqrt(2)
+    const maxDistance = Math.sqrt(2);
+    const similarity = Math.max(0, 1 - (averageDistance / maxDistance));
+
+    return Math.round(similarity * 100);
 };
 
 const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
@@ -144,7 +183,7 @@ const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
                     return {
                         pattern: 'head-and-shoulders',
                         strength: 0.8,
-                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:1}, {x:2, y:0}]),
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:2}, {x:2, y:1}, {x:0.5, y:0}, {x:1.5, y:0}]),
                         detectedPoints,
                     };
                 }
@@ -163,7 +202,7 @@ const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
                     return {
                         pattern: 'inverse-head-and-shoulders',
                         strength: 0.8,
-                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:0}, {x:2, y:1}]),
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:0}, {x:2, y:1}, {x:0.5, y:2}, {x:1.5, y:2}]),
                         detectedPoints,
                     };
                 }
@@ -182,7 +221,7 @@ const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
                     return {
                         pattern: 'double-top',
                         strength: 0.7,
-                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:1}]),
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:1}, {x:1, y:1}, {x:0.5, y:0}]),
                         detectedPoints,
                     };
                 }
@@ -201,7 +240,7 @@ const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
                     return {
                         pattern: 'double-bottom',
                         strength: 0.7,
-                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:0}]),
+                        accuracy: calculatePatternAccuracy(detectedPoints, [{x:0, y:0}, {x:1, y:0}, {x:0.5, y:1}]),
                         detectedPoints,
                     };
                 }
@@ -217,7 +256,7 @@ const analyzePatternsDeterministic = (peaks, troughs, closes, highs, lows) => {
         return {
             pattern: 'cup-and-handle',
             strength: 0.6,
-            accuracy: 85, // Placeholder
+            accuracy: 75, // Placeholder for complex pattern
             detectedPoints: [], // Placeholder
         };
     }
@@ -248,31 +287,34 @@ const detectTrianglePatterns = (peaks, troughs) => {
 
         // Ascending Triangle: Flat top, rising bottom
         if (Math.abs(peakTrend) < 0.1 && troughTrend > 0.1) {
+            const detectedPoints = [...recentPeaks, ...recentTroughs];
             return {
                 pattern: 'ascending-triangle',
                 strength: 0.7,
-                accuracy: 90, // Placeholder
-                detectedPoints: [...recentPeaks, ...recentTroughs],
+                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0,y:1},{x:1,y:1},{x:0.2,y:0},{x:0.8,y:0.2}]),
+                detectedPoints,
             };
         }
 
         // Descending Triangle: Falling top, flat bottom
         if (peakTrend < -0.1 && Math.abs(troughTrend) < 0.1) {
+            const detectedPoints = [...recentPeaks, ...recentTroughs];
             return {
                 pattern: 'descending-triangle',
                 strength: 0.7,
-                accuracy: 90, // Placeholder
-                detectedPoints: [...recentPeaks, ...recentTroughs],
+                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0,y:1},{x:1,y:0.5},{x:0.2,y:0},{x:0.8,y:0}]),
+                detectedPoints,
             };
         }
 
         // Symmetrical Triangle: Converging trendlines
         if (peakTrend < -0.1 && troughTrend > 0.1) {
+            const detectedPoints = [...recentPeaks, ...recentTroughs];
             return {
                 pattern: 'symmetrical-triangle',
                 strength: 0.6,
-                accuracy: 85, // Placeholder
-                detectedPoints: [...recentPeaks, ...recentTroughs],
+                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0,y:1},{x:1,y:0.5},{x:0.2,y:0},{x:0.8,y:0.2}]),
+                detectedPoints,
             };
         }
     }
@@ -332,21 +374,23 @@ const detectWedgePatterns = (peaks, troughs, closes) => {
 
         // Rising Wedge: Both trendlines slope upward, converging
         if (peakTrend > 0.1 && troughTrend > 0.1 && peakTrend > troughTrend) {
+            const detectedPoints = [...recentPeaks, ...recentTroughs];
             return {
                 pattern: 'wedge-rising',
                 strength: 0.6,
-                accuracy: 80, // Placeholder
-                detectedPoints: [...recentPeaks, ...recentTroughs],
+                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0,y:0},{x:1,y:0.5},{x:0.1,y:0.2},{x:0.9,y:0.6}]),
+                detectedPoints,
             };
         }
 
         // Falling Wedge: Both trendlines slope downward, converging
         if (peakTrend < -0.1 && troughTrend < -0.1 && peakTrend < troughTrend) {
+            const detectedPoints = [...recentPeaks, ...recentTroughs];
             return {
                 pattern: 'wedge-falling',
                 strength: 0.6,
-                accuracy: 80, // Placeholder
-                detectedPoints: [...recentPeaks, ...recentTroughs],
+                accuracy: calculatePatternAccuracy(detectedPoints, [{x:0,y:1},{x:1,y:0.5},{x:0.1,y:0.8},{x:0.9,y:0.4}]),
+                detectedPoints,
             };
         }
     }
