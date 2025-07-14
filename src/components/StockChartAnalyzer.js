@@ -292,38 +292,11 @@ function StockChartAnalyzer() {
                             Get data-driven analysis from live stock charts (3-month data) or explore patterns with your own images.
                             <br />
                             <span style={{ fontSize: '14px', color: 'var(--text-color-muted)' }}>
-                                📊 Supporting {stockDatabase.length}+ stocks from US & Indian markets with Key Level detection.
+                                📊 Supporting 2000+ stocks from US & Indian markets with Key Level detection.
                             </span>
                         </p>
                     </div>
 
-                    <div className="features-grid">
-                        <div className="feature-card">
-                            <div className="feature-icon">📊</div>
-                            <h3 className="feature-title">Pattern Detection</h3>
-                            <p className="feature-description">Identify patterns from 3-month price data.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">🎯</div>
-                            <h3 className="feature-title">Dynamic Confidence</h3>
-                            <p className="feature-description">Get dynamic confidence scores for patterns.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">📈</div>
-                            <h3 className="feature-title">Breakout Timing</h3>
-                            <p className="feature-description">Predict breakout timings for your stocks.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">📉</div>
-                            <h3 className="feature-title">Key Levels</h3>
-                            <p className="feature-description">Find key support and resistance levels.</p>
-                        </div>
-                        <div className="feature-card">
-                            <div className="feature-icon">🇮🇳</div>
-                            <h3 className="feature-title">2K+ Stocks</h3>
-                            <p className="feature-description">US and Indian stocks available for analysis.</p>
-                        </div>
-                    </div>
 
                     <div style={{ marginBottom: '32px' }}>
                         <label style={{ display: 'block', fontWeight: '600', marginBottom: '12px', color: 'var(--text-color)', fontSize: '18px' }}>
