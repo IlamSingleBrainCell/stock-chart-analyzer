@@ -1,19 +1,10 @@
 import React from 'react';
 import './AccuracyTable.css';
 
-const accuracyData = [
-  { feature: 'Head and Shoulders', accuracy: '85.07%' },
-  { feature: 'Inverse Head and Shoulders', accuracy: '83.45%' },
-  { feature: 'Double Top', accuracy: '89.12%' },
-  { feature: 'Double Bottom', accuracy: '88.50%' },
-  { feature: 'Ascending Triangle', accuracy: '75.60%' },
-  { feature: 'Descending Triangle', accuracy: '76.20%' },
-  { feature: 'Cup and Handle', accuracy: '72.30%' },
-  { feature: 'Wedge Patterns', accuracy: '68.50%' },
-  { feature: 'Flag Patterns', accuracy: '65.80%' },
-];
+import { calculateAccuracy } from '../utils/analysis';
 
 const AccuracyTable = ({ onClose }) => {
+  const accuracyData = calculateAccuracy();
   return (
     <div className="accuracy-modal-overlay">
       <div className="accuracy-modal-content">
@@ -26,13 +17,19 @@ const AccuracyTable = ({ onClose }) => {
             <tr>
               <th>Feature</th>
               <th>Accuracy</th>
+              <th>Details</th>
             </tr>
           </thead>
           <tbody>
-            {accuracyData.map((item, index) => (
-              <tr key={index}>
-                <td>{item.feature}</td>
-                <td>{item.accuracy}</td>
+            {Object.entries(accuracyData).map(([feature, accuracy]) => (
+              <tr key={feature}>
+                <td>{feature}</td>
+                <td>{accuracy.toFixed(2)}%</td>
+                <td>
+                  <a href="/accuracy_calculation.html" target="_blank" rel="noopener noreferrer">
+                    How is this calculated?
+                  </a>
+                </td>
               </tr>
             ))}
           </tbody>
