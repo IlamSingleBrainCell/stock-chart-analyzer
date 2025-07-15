@@ -1,3 +1,4 @@
+/* global Chart */
 import { chartPatterns, chartThemeColors } from '../constants';
 
 let chartInstance = null;
