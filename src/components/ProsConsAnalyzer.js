@@ -8,7 +8,7 @@ const ProsConsAnalyzer = ({ stockSymbol }) => {
         if (stockSymbol) {
             analyzeData(stockSymbol);
         }
-    }, [stockSymbol]);
+    }, [stockSymbol, analyzeData]);
 
     if (loading) {
         return <div>Loading Pros & Cons...</div>;
