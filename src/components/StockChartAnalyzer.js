@@ -4,7 +4,6 @@ import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
 import PatternDetectionModal from './PatternDetectionModal';
-import ProsConsAnalyzer from './ProsConsAnalyzer';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
@@ -282,9 +281,6 @@ function StockChartAnalyzer() {
                 <button onClick={() => setCurrentView('game')} style={{ ...toggleButtonStyle, background: currentView === 'game' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'game' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
                     <Award size={18} style={{ marginRight: '8px' }} /> Pattern Game
                 </button>
-                <button onClick={() => setCurrentView('proscons')} style={{ ...toggleButtonStyle, background: currentView === 'proscons' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'proscons' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
-                    <BarChart size={18} style={{ marginRight: '8px' }} /> Pros & Cons
-                </button>
             </div>
 
             {currentView === 'analyzer' && (
@@ -483,10 +479,6 @@ function StockChartAnalyzer() {
 
             {currentView === 'game' && (
                 <PatternRecognitionGame PatternVisualization={PatternVisualization} chartPatterns={chartPatterns} />
-            )}
-
-            {currentView === 'proscons' && (
-                <ProsConsAnalyzer stockSymbol={stockSymbol} />
             )}
 
             <PatternDetectionModal
