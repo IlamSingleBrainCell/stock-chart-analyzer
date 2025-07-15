@@ -1,19 +1,37 @@
-import { useState } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { fetchYahooFinanceData } from '../services/stockService';
 
 export const useStockData = () => {
     const [stockData, setStockData] = useState(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const [stockDatabase, setStockDatabase] = useState([]);
 
-    const fetchAllData = async (symbol, timeRange = '3mo') => {
+    useEffect(() => {
+        fetch('/stockDatabase.json')
+            .then(response => response.json())
+            .then(data => setStockDatabase(data))
+            .catch(error => console.error('Error fetching stock database:', error));
+    }, []);
+
+    const fetchAllData = useCallback(async (symbol, timeRange = '3mo') => {
         if (!symbol.trim()) return;
         setLoading(true);
         setError(null);
         setStockData(null);
 
         try {
-            const data = await fetchYahooFinanceData(symbol.trim().toUpperCase(), timeRange);
+            let symbolToFetch = symbol.trim().toUpperCase();
+            const isIndianStock = stockDatabase.some(stock =>
+                stock.market === 'India' &&
+                (stock.symbol.toLowerCase() === `${symbol.toLowerCase()}.ns` || stock.name.toLowerCase().includes(symbol.toLowerCase()))
+            );
+
+            if (isIndianStock && !symbolToFetch.endsWith('.NS')) {
+                symbolToFetch += '.NS';
+            }
+
+            const data = await fetchYahooFinanceData(symbolToFetch, timeRange);
             setStockData(data);
 
         } catch (error) {
@@ -23,7 +41,7 @@ export const useStockData = () => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [stockDatabase]);
 
     return {
         stockData,
