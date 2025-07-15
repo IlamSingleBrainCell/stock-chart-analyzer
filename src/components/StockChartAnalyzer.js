@@ -122,13 +122,6 @@ function StockChartAnalyzer() {
     const handleInputChange = (value) => {
         setStockSymbol(value);
         if (value.length >= 1) {
-            const suggestionQuery = value.toLowerCase();
-            const isIndianStock = stockDatabase.some(stock => stock.market === 'India' && (stock.symbol.toLowerCase() === `${suggestionQuery}.ns` || stock.name.toLowerCase().includes(suggestionQuery)));
-
-            if (isIndianStock && !suggestionQuery.endsWith('.ns')) {
-                // Keep the displayed value clean, but fetch with .NS
-            }
-
             const suggestions = filterSuggestions(value);
             setFilteredSuggestions(suggestions);
             setShowSuggestions(true);
@@ -136,7 +129,6 @@ function StockChartAnalyzer() {
         } else {
             setShowSuggestions(false);
             setFilteredSuggestions([]);
-            setSelectedSuggestionIndex(-1);
         }
     };
 
@@ -156,7 +148,11 @@ function StockChartAnalyzer() {
                 if (selectedSuggestionIndex >= 0 && selectedSuggestionIndex < filteredSuggestions.length) {
                     selectSuggestion(filteredSuggestions[selectedSuggestionIndex]);
                 } else if (stockSymbol.trim()) {
-                    const symbolToFetch = stockSymbol.toUpperCase();
+                    let symbolToFetch = stockSymbol.toUpperCase();
+                    const isIndianStock = stockDatabase.some(stock => stock.market === 'India' && (stock.symbol.toLowerCase() === `${symbolToFetch.toLowerCase()}.ns` || stock.name.toLowerCase().includes(symbolToFetch.toLowerCase())));
+                    if (isIndianStock && !symbolToFetch.endsWith('.NS')) {
+                        symbolToFetch += '.NS';
+                    }
                     fetchAllData(symbolToFetch, selectedTimeRange);
                     setShowSuggestions(false);
                 }
@@ -324,7 +320,16 @@ function StockChartAnalyzer() {
                                             ) : null}
                                         </div>)}
                                 </div>
-                                <button onClick={() => { if (stockSymbol.trim()) { const symbolToFetch = stockSymbol.toUpperCase(); fetchAllData(symbolToFetch, selectedTimeRange); } }} disabled={loading} style={{ padding: '14px 24px', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
+                                <button onClick={() => {
+                                    if (stockSymbol.trim()) {
+                                        let symbolToFetch = stockSymbol.toUpperCase();
+                                        const isIndianStock = stockDatabase.some(stock => stock.market === 'India' && (stock.symbol.toLowerCase() === `${symbolToFetch.toLowerCase()}.ns` || stock.name.toLowerCase().includes(symbolToFetch.toLowerCase())));
+                                        if (isIndianStock && !symbolToFetch.endsWith('.NS')) {
+                                            symbolToFetch += '.NS';
+                                        }
+                                        fetchAllData(symbolToFetch, selectedTimeRange);
+                                    }
+                                }} disabled={loading} style={{ padding: '14px 24px', background: loading ? 'var(--text-color-muted)' : 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
                                     {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
                                     {loading ? 'Fetching...' : 'Get Chart'}
                                 </button>
