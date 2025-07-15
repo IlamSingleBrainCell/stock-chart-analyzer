@@ -56,7 +56,7 @@ function StockChartAnalyzer() {
     const [keyLevels, setKeyLevels] = useState(null);
     const [selectedTimeRange, setSelectedTimeRange] = useState('3mo');
     const [longTermAssessment, setLongTermAssessment] = useState(null);
-    const [, setCurrentView] = useState('analyzer');
+    const [currentView, setCurrentView] = useState('analyzer');
     const [filteredSuggestions, setFilteredSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
