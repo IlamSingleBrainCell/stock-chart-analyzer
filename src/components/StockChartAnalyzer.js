@@ -124,6 +124,7 @@ function StockChartAnalyzer() {
         }
     };
 
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     useEffect(() => {
         if (stockData) {
             const chartImageUrl = createChartFromData(stockData, analysis?.keyLevels, theme, chartCanvasRef);
