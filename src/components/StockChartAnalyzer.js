@@ -263,25 +263,65 @@ function StockChartAnalyzer() {
 
     useEffect(() => {
         if (stockData) {
-            const chartImageUrl = createChartFromData(stockData, keyLevels, theme, chartCanvasRef);
-            setUploadedImage(chartImageUrl);
+            createChartFromData(stockData, keyLevels, theme, chartCanvasRef);
         }
     }, [stockData, keyLevels, theme]);
 
 
     return (
-        <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'var(--app-background-start)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid var(--app-border)' }}>
-            <canvas ref={canvasRef} style={{ display: 'none' }} />
-            <canvas ref={chartCanvasRef} style={{ display: 'none' }} />
-
-            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '25px', padding: '10px', background: 'var(--card-background)', borderRadius: '12px', border: '1px solid var(--card-border)' }}>
-                <button onClick={() => setCurrentView('analyzer')} style={{ ...toggleButtonStyle, background: currentView === 'analyzer' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'analyzer' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
-                    <Zap size={18} style={{ marginRight: '8px' }} /> Chart Analyzer
-                </button>
-                <button onClick={() => setCurrentView('game')} style={{ ...toggleButtonStyle, background: currentView === 'game' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'game' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
-                    <Award size={18} style={{ marginRight: '8px' }} /> Pattern Game
-                </button>
-            </div>
+        <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '20px', background: 'var(--app-background-start)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid var(--app-border)' }}>
+            <div style={{ display: 'flex', gap: '20px' }}>
+                <div style={{ width: '250px', background: 'var(--card-background)', borderRadius: '12px', border: '1px solid var(--card-border)', padding: '20px' }}>
+                    <h2 style={{ fontSize: '20px', fontWeight: '700', color: 'var(--text-color)', marginBottom: '20px' }}>Controls</h2>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)', fontSize: '16px' }}>Chart Type:</label>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {['line', 'candlestick'].map(type => (
+                                <button key={type} onClick={() => {}} style={{ padding: '8px 16px', background: 'var(--primary-accent-light)', color: 'var(--primary-accent-darker)', border: `1px solid var(--primary-accent-border)`, borderRadius: '20px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease-in-out' }}>
+                                    {type.charAt(0).toUpperCase() + type.slice(1)}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+                    <div style={{ marginBottom: '20px' }}>
+                        <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)', fontSize: '16px' }}>Time Range:</label>
+                        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                            {['3mo', '1y', '5y', '10y'].map(range => {
+                                let displayLabel = '';
+                                if (range === '3mo') displayLabel = '3M';
+                                else if (range === '1y') displayLabel = '1Y';
+                                else if (range === '5y') displayLabel = '5Y';
+                                else if (range === '10y') displayLabel = '10Y';
+                                return (
+                                    <button key={range} onClick={() => handleTimeRangeChange(range)} style={{ padding: '8px 16px', background: selectedTimeRange === range ? 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)' : 'var(--primary-accent-light)', color: selectedTimeRange === range ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)', border: `1px solid ${selectedTimeRange === range ? 'transparent' : 'var(--primary-accent-border)'}`, borderRadius: '20px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease-in-out', }}>
+                                        {displayLabel}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                    <div>
+                        <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)', fontSize: '16px' }}>Search:</label>
+                        <div style={{ position: 'relative' }}>
+                            <input ref={inputRef} type="text" value={stockSymbol} onChange={(e) => handleInputChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleInputFocus} onBlur={handleInputBlur} placeholder="Search Stocks..." style={{ width: '100%', padding: '12px 14px', border: '2px solid var(--input-border)', borderRadius: '8px', fontSize: '14px', fontWeight: '500', outline: 'none', transition: 'border-color 0.2s', backgroundColor: 'var(--background-color)', color: 'var(--text-color)' }} />
+                            {showSuggestions && (
+                                <div style={{ position: 'absolute', top: '100%', left: '0', right: '0', backgroundColor: 'var(--background-color)', border: '2px solid var(--input-border-focus)', borderTop: 'none', borderRadius: '0 0 8px 8px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)', zIndex: 1000, maxHeight: '300px', overflowY: 'auto' }}>
+                                    {filteredSuggestions.length > 0 ? (
+                                        filteredSuggestions.map((stock, index) => (
+                                            <div key={stock.symbol} onClick={() => selectSuggestion(stock)} style={{ padding: '10px 12px', cursor: 'pointer', backgroundColor: index === selectedSuggestionIndex ? 'var(--primary-accent-light)' : 'var(--background-color)', borderBottom: index < filteredSuggestions.length - 1 ? '1px solid var(--input-border)' : 'none', transition: 'background-color 0.2s' }} onMouseEnter={() => setSelectedSuggestionIndex(index)}>
+                                                <div style={{ fontWeight: '600', fontSize: '14px', color: 'var(--text-color)' }}>{highlightMatch(stock.symbol, stockSymbol)}</div>
+                                                <div style={{ fontSize: '12px', color: 'var(--text-color-lighter)' }}>{highlightMatch(stock.name, stockSymbol)}</div>
+                                            </div>
+                                        ))
+                                    ) : (
+                                        <div style={{ padding: '12px', textAlign: 'center', color: 'var(--text-color-lighter)', fontSize: '13px' }}>No results</div>
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+                <div style={{ flex: 1 }}>
 
             {currentView === 'analyzer' && (
                 <>
@@ -331,20 +371,9 @@ function StockChartAnalyzer() {
                                 <button onClick={clearAnalysis} style={{ padding: '14px 24px', background: 'var(--danger-background)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
                                     Clear
                                 </button>
-                            </div>
-                        </div>
-
-                        <div style={{ marginBottom: '24px', marginTop: '16px' }}>
-                            <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)', fontSize: '16px' }}>Select Data Time Range:</label>
-                            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                                {['3mo', '1y', '5y', '10y'].map(range => {
-                                    let displayLabel = '';
-                                    if (range === '3mo') displayLabel = '3 Months';
-                                    else if (range === '1y') displayLabel = '1 Year';
-                                    else if (range === '5y') displayLabel = '5 Years';
-                                    else if (range === '10y') displayLabel = '10 Years';
-                                    return (<button key={range} onClick={() => handleTimeRangeChange(range)} style={{ padding: '8px 16px', background: selectedTimeRange === range ? 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)' : 'var(--primary-accent-light)', color: selectedTimeRange === range ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)', border: `1px solid ${selectedTimeRange === range ? 'transparent' : 'var(--primary-accent-border)'}`, borderRadius: '20px', fontSize: '13px', fontWeight: '600', cursor: 'pointer', transition: 'all 0.2s ease-in-out', }}>{displayLabel}</button>);
-                                })}
+                                <button onClick={() => {}} style={{ padding: '14px 24px', background: 'var(--info-background)', color: 'var(--info-color)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
+                                    Export
+                                </button>
                             </div>
                         </div>
 
@@ -368,13 +397,26 @@ function StockChartAnalyzer() {
                         <input type="file" accept="image/*" onChange={handleImageUpload} style={{ width: '100%', padding: '20px', border: '2px dashed var(--primary-accent-border)', borderRadius: '12px', background: 'var(--input-background)', fontSize: '16px', fontWeight: '500', color: 'var(--text-color)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.target.style.borderColor = 'var(--secondary-accent)'; e.target.style.background = 'var(--input-background-hover)'; }} onMouseLeave={(e) => { e.target.style.borderColor = 'var(--primary-accent-border)'; e.target.style.background = 'var(--input-background)'; }} />
                     </div>
 
-                    {uploadedImage && (
-                        <div style={{ marginBottom: '32px' }}>
-                            <div style={{ width: '100%', height: '400px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}><img src={uploadedImage} alt="Stock chart" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} /></div>
-                            {stockData && (<div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}><div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : selectedTimeRange === '10y' ? '10 Years' : '3 Months'} Data):</div><div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div><div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |<strong> Data Points:</strong> {stockData.prices.length} {selectedTimeRange === '1y' ? 'weeks' : (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'}</div>{stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}</div>)}
-                            <button onClick={() => {
-                                try {
-                                    let calculatedKeyLevels = null;
+                    <div style={{ marginBottom: '32px' }}>
+                        <div style={{ width: '100%', height: '500px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}>
+                            <canvas ref={chartCanvasRef} style={{ width: '100%', height: '100%' }} />
+                        </div>
+                        {stockData && (
+                            <div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}>
+                                <div style={{ fontWeight: '700', marginBottom: '8px' }}>
+                                    📊 Stock Information ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : selectedTimeRange === '10y' ? '10 Years' : '3 Months'} Data):
+                                </div>
+                                <div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div>
+                                <div>
+                                    <strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |
+                                    <strong> Data Points:</strong> {stockData.prices.length} {selectedTimeRange === '1y' ? 'weeks' : (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'}
+                                </div>
+                                {stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}
+                            </div>
+                        )}
+                        <button onClick={() => {
+                            try {
+                                let calculatedKeyLevels = null;
                                     let currentLongTermAssessment = null;
                                     if (stockData && stockData.prices && stockData.prices.length > 0) {
                                         calculatedKeyLevels = calculateKeyLevels(stockData.prices);
@@ -525,6 +567,8 @@ function StockChartAnalyzer() {
         div[style*="overflowY: auto"]::-webkit-scrollbar-thumb { background: #d1d5db; border-radius: 3px; }
         div[style*="overflowY: auto"]::-webkit-scrollbar-thumb:hover { background: #9ca3af; }
       `}</style>
+                </div>
+            </div>
         </div>
     );
 }

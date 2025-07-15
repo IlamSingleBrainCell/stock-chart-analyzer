@@ -54,58 +54,58 @@
 }
 
 body.dark-mode {
-  --background-color: #111827; /* Gray 900 */
-  --text-color: #f3f4f6; /* Gray 100 */
-  --text-color-light: #d1d5db; /* Gray 300 */
-  --text-color-lighter: #9ca3af; /* Gray 400 */
-  --text-color-muted: #6b7280; /* Gray 500 */
+  --background-color: #1A1A1A;
+  --text-color: #FFFFFF;
+  --text-color-light: #B3B3B3;
+  --text-color-lighter: #808080;
+  --text-color-muted: #4D4D4D;
 
-  --primary-accent: #818cf8; /* Indigo 400 */
-  --primary-accent-darker: #6366f1; /* Indigo 500 */
-  --primary-accent-light: rgba(129, 140, 248, 0.15);
-  --primary-accent-border: rgba(129, 140, 248, 0.4);
+  --primary-accent: #00C6FF;
+  --primary-accent-darker: #00A3CC;
+  --primary-accent-light: rgba(0, 198, 255, 0.1);
+  --primary-accent-border: rgba(0, 198, 255, 0.3);
 
-  --secondary-accent: #a78bfa; /* Violet 400 */
+  --secondary-accent: #007BFF;
 
-  --card-background: #1f2937; /* Gray 800 */
-  --card-border: rgba(255, 255, 255, 0.15);
+  --card-background: #2C2C2C;
+  --card-border: rgba(255, 255, 255, 0.1);
   --card-shadow: rgba(0, 0, 0, 0.2);
 
-  --input-border: rgba(129, 140, 248, 0.3);
-  --input-border-focus: #818cf8;
-  --input-background: rgba(129, 140, 248, 0.1);
-  --input-background-hover: rgba(129, 140, 248, 0.2);
+  --input-border: rgba(0, 198, 255, 0.2);
+  --input-border-focus: #00C6FF;
+  --input-background: rgba(0, 198, 255, 0.05);
+  --input-background-hover: rgba(0, 198, 255, 0.1);
 
-  /* --button-primary-text: #ffffff; */ /* Remains white or light gray */
+  --button-primary-text: #FFFFFF;
 
-  --success-color: #34d399; /* Green 400 */
-  --success-background: rgba(52, 211, 153, 0.15);
-  --success-border: rgba(52, 211, 153, 0.4);
+  --success-color: #28A745;
+  --success-background: rgba(40, 167, 69, 0.15);
+  --success-border: rgba(40, 167, 69, 0.3);
 
-  --danger-color: #f87171; /* Red 400 */
-  --danger-background: rgba(248, 113, 113, 0.15);
-  --danger-border: rgba(248, 113, 113, 0.4);
+  --danger-color: #DC3545;
+  --danger-background: rgba(220, 53, 69, 0.15);
+  --danger-border: rgba(220, 53, 69, 0.3);
 
-  --warning-color: #fbbf24; /* Amber 400 */
-  --warning-background: rgba(251, 191, 36, 0.15);
-  --warning-border: rgba(251, 191, 36, 0.4);
+  --warning-color: #FFC107;
+  --warning-background: rgba(255, 193, 7, 0.15);
+  --warning-border: rgba(255, 193, 7, 0.3);
 
-  --info-color: #67e8f9; /* Cyan 300 */
-  --info-background: rgba(103, 232, 249, 0.1);
-  --info-border: rgba(103, 232, 249, 0.3);
+  --info-color: #17A2B8;
+  --info-background: rgba(23, 162, 184, 0.1);
+  --info-border: rgba(23, 162, 184, 0.3);
 
-  --link-color: #818cf8;
-  --separator-color: rgba(107, 114, 128, 0.5);
-  --highlight-background: #4b5563; /* Gray 600 - for search term highlight on dark */
+  --link-color: #00C6FF;
+  --separator-color: rgba(255, 255, 255, 0.2);
+  --highlight-background: #0056b3;
 
-  --chart-grid-color: #374151; /* Gray 700 */
-  --chart-label-color: #9ca3af; /* Gray 400 */
-  --chart-main-line-color: #60a5fa; /* Blue 400 */
-  --candlestick-green: #34d399; /* Green 400 */
-  --candlestick-red: #f87171; /* Red 400 */
+  --chart-grid-color: #404040;
+  --chart-label-color: #B3B3B3;
+  --chart-main-line-color: #00C6FF;
+  --candlestick-green: #28A745;
+  --candlestick-red: #DC3545;
 
-  --app-background-start: #1f2937; /* For the main div background - Gray 800 */
-  --app-border: rgba(55, 65, 81, 0.6); /* Gray 700 with opacity */
+  --app-background-start: #2C2C2C;
+  --app-border: rgba(255, 255, 255, 0.1);
 }
 
 
