@@ -1,13 +1,16 @@
+/* global Chart */
 import { chartThemeColors } from '../constants';
 
+let chartInstance = null;
+
 const drawLine = (ctx, points) => {
-  if (points.length < 2) return;
-  ctx.beginPath();
-  ctx.moveTo(points[0][0], points[0][1]);
-  for (let i = 1; i < points.length; i++) {
-    ctx.lineTo(points[i][0], points[i][1]);
-  }
-  ctx.stroke();
+    if (points.length < 2) return;
+    ctx.beginPath();
+    ctx.moveTo(points[0][0], points[0][1]);
+    for (let i = 1; i < points.length; i++) {
+        ctx.lineTo(points[i][0], points[i][1]);
+    }
+    ctx.stroke();
 };
 
 const drawHeadAndShoulders = (ctx, margin, w, h) => {
@@ -136,26 +139,122 @@ export const drawPatternOnCanvas = (ctx, pattern, w, h) => {
   ctx.fillText(pattern.split('-').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' '), w / 2, h - 5);
 };
 
-export const createChartFromData = (stockData, currentKeyLevels, currentTheme = 'light', chartCanvasRef) => {
-    const canvas = chartCanvasRef.current; if(!canvas) return null; const ctx = canvas.getContext('2d'); const colors = chartThemeColors[currentTheme] || chartThemeColors.light;
-    canvas.width = 1000; canvas.height = 500; ctx.fillStyle = colors.background; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    const prices = stockData.prices; if (!prices || prices.length === 0) return null;
-    const margin = { top: 40, right: 60, bottom: 60, left: 80 }; const chartWidth = canvas.width - margin.left - margin.right; const chartHeight = canvas.height - margin.top - margin.bottom;
-    const allPrices = prices.flatMap(p => [p.high, p.low]).filter(p => p != null); if(allPrices.length === 0) return null; // Ensure there are prices to calculate min/max
-    const minPrice = Math.min(...allPrices); const maxPrice = Math.max(...allPrices); const priceRange = maxPrice - minPrice; const padding = priceRange * 0.1;
-    const xScale = (index) => margin.left + (index / (prices.length > 1 ? prices.length - 1 : 1)) * chartWidth; // Avoid division by zero for single data point
-    const yScale = (price) => margin.top + ((maxPrice + padding - price) / (priceRange + 2 * padding || 1)) * chartHeight; // Avoid division by zero
-    const isIndianStock = stockData.symbol.includes('.NS'); const currencySymbol = isIndianStock ? '₹' : '$';
-    ctx.strokeStyle = colors.grid; ctx.lineWidth = 1;
-    for (let i = 0; i <= 8; i++) { const y = margin.top + (i / 8) * chartHeight; ctx.beginPath(); ctx.moveTo(margin.left, y); ctx.lineTo(margin.left + chartWidth, y); ctx.stroke(); const price = maxPrice + padding - (i / 8) * (priceRange + 2 * padding); ctx.fillStyle = colors.label; ctx.font = '12px Inter, Arial, sans-serif'; ctx.textAlign = 'right'; ctx.fillText(currencySymbol + price.toFixed(2), margin.left - 10, y + 4); }
-    const numVerticalGridLines = prices.length > 250 ? 5 : (prices.length > 60 ? 6 : 4);
-    for (let i = 0; i <= numVerticalGridLines; i++) { const x = margin.left + (i / numVerticalGridLines) * chartWidth; ctx.beginPath(); ctx.moveTo(x, margin.top); ctx.lineTo(x, margin.top + chartHeight); ctx.stroke(); const priceIndex = Math.floor((i / numVerticalGridLines) * (prices.length - 1)); if (priceIndex < prices.length && prices[priceIndex]) { const date = new Date(prices[priceIndex].date); let dateFormatOptions = { month: 'short', day: 'numeric' }; if (prices.length > 365 * 2) { dateFormatOptions = { year: 'numeric', month: 'short' }; } else if (prices.length > 90) { dateFormatOptions = { month: 'short', day: 'numeric' }; } ctx.fillStyle = colors.label; ctx.font = '11px Inter, Arial, sans-serif'; ctx.textAlign = 'center'; ctx.fillText(date.toLocaleDateString('en-US', dateFormatOptions), x, canvas.height - 20); } }
-    ctx.strokeStyle = colors.mainLine; ctx.lineWidth = 3; ctx.beginPath();
-    prices.forEach((price, index) => { if(price && price.close !== null) {const x = xScale(index); const y = yScale(price.close); if (index === 0) { ctx.moveTo(x, y); } else { ctx.lineTo(x, y); }} }); ctx.stroke();
-    prices.forEach((price, index) => { if(price && price.open !== null && price.close !== null && price.high !== null && price.low !== null) {const x = xScale(index); const openY = yScale(price.open); const closeY = yScale(price.close); const highY = yScale(price.high); const lowY = yScale(price.low); const isGreen = price.close >= price.open; const candleColor = isGreen ? colors.candlestickGreen : colors.candlestickRed; ctx.strokeStyle = candleColor; ctx.fillStyle = candleColor; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(x, highY); ctx.lineTo(x, lowY); ctx.stroke(); const bodyHeight = Math.abs(closeY - openY); const bodyY = Math.min(openY, closeY); const bodyWidth = Math.max(2, chartWidth / prices.length * 0.6); ctx.fillRect(x - bodyWidth/2, bodyY, bodyWidth, bodyHeight || 1);}});
-    if (currentKeyLevels && currentKeyLevels.support && currentKeyLevels.resistance) { ctx.lineWidth = 1; ctx.font = 'bold 10px Inter, Arial, sans-serif'; currentKeyLevels.support.forEach(level => { if (level >= minPrice && level <= maxPrice) { const y = yScale(level); ctx.strokeStyle = colors.keyLevelSupport; ctx.fillStyle = colors.keyLevelSupport; ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.moveTo(margin.left, y); ctx.lineTo(chartWidth + margin.left, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`S: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2); } }); currentKeyLevels.resistance.forEach(level => { if (level >= minPrice && level <= maxPrice) { const y = yScale(level); ctx.strokeStyle = colors.keyLevelResistance; ctx.fillStyle = colors.keyLevelResistance; ctx.beginPath(); ctx.setLineDash([4, 4]); ctx.moveTo(margin.left, y); ctx.lineTo(chartWidth + margin.left, y); ctx.stroke(); ctx.setLineDash([]); ctx.fillText(`R: ${currencySymbol}${level.toFixed(2)}`, chartWidth + margin.left - 50, y - 2); } }); }
-    ctx.fillStyle = colors.text; ctx.font = 'bold 20px Inter, Arial, sans-serif'; ctx.textAlign = 'left'; ctx.fillText(`${stockData.symbol} - ${stockData.companyName}`, margin.left, 25);
-    ctx.font = '14px Inter, Arial, sans-serif'; ctx.fillStyle = colors.label; const currentPriceText = stockData.currentPrice !== undefined && stockData.currentPrice !== null ? stockData.currentPrice : (prices[prices.length -1]?.close); ctx.fillText(`Current: ${currencySymbol}${currentPriceText ? currentPriceText.toFixed(2) : 'N/A'} ${stockData.currency || (isIndianStock ? 'INR' : 'USD')}`, margin.left, margin.top - 5);
-    if (stockData.isMockData) { ctx.fillStyle = (currentTheme === 'dark') ? chartThemeColors.dark.danger || '#f59e0b' : '#f59e0b'; ctx.font = 'italic 12px Inter, Arial, sans-serif'; ctx.fillText('Demo Data - API temporarily unavailable', margin.left + 300, 25); }
-    return canvas.toDataURL('image/png', 1.0);
-  };
+export const createChartFromData = (stockData, keyLevels, theme, canvasRef, chartType = 'line') => {
+    if (!stockData || !stockData.prices || stockData.prices.length === 0 || !canvasRef.current) return null;
+
+    const { prices, dates } = stockData;
+
+    const isDarkMode = theme === 'dark';
+    const gridColor = isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)';
+    const textColor = isDarkMode ? '#FFFFFF' : '#333333';
+
+    const candlestickData = prices.map((price, index) => ({
+        x: dates[index],
+        o: price.open,
+        h: price.high,
+        l: price.low,
+        c: price.close
+    }));
+
+    const chartData = {
+        labels: dates,
+        datasets: [{
+            label: 'Price',
+            data: chartType === 'candlestick' ? candlestickData : prices.map(p => p.close),
+            borderColor: isDarkMode ? '#00C6FF' : '#007BFF',
+            backgroundColor: (context) => {
+                if (chartType === 'candlestick') {
+                    const { c, o } = context.raw;
+                    return c >= o ? 'rgba(40, 167, 69, 0.7)' : 'rgba(220, 53, 69, 0.7)';
+                }
+                return 'rgba(0, 198, 255, 0.1)';
+            },
+            borderWidth: chartType === 'candlestick' ? 1 : 2,
+            pointRadius: 0,
+            tension: 0.1,
+        }]
+    };
+
+    const chartOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            x: {
+                grid: { color: gridColor },
+                ticks: { color: textColor }
+            },
+            y: {
+                grid: { color: gridColor },
+                ticks: { color: textColor }
+            }
+        },
+        plugins: {
+            legend: { display: false },
+            tooltip: {
+                mode: 'index',
+                intersect: false,
+                backgroundColor: isDarkMode ? '#2C2C2C' : '#FFFFFF',
+                titleColor: isDarkMode ? '#FFFFFF' : '#333333',
+                bodyColor: isDarkMode ? '#FFFFFF' : '#333333',
+                borderColor: isDarkMode ? '#00C6FF' : '#007BFF',
+                borderWidth: 1,
+            },
+            annotation: {
+                annotations: {}
+            }
+        }
+    };
+
+    if (keyLevels) {
+        if (keyLevels.support) {
+            keyLevels.support.forEach((level, i) => {
+                chartOptions.plugins.annotation.annotations[`support${i}`] = {
+                    type: 'line',
+                    yMin: level,
+                    yMax: level,
+                    borderColor: 'rgba(40, 167, 69, 0.7)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    label: {
+                        content: `Support ${i + 1}`,
+                        enabled: true,
+                        position: 'start',
+                        backgroundColor: 'rgba(40, 167, 69, 0.7)',
+                        color: '#FFFFFF'
+                    }
+                };
+            });
+        }
+        if (keyLevels.resistance) {
+            keyLevels.resistance.forEach((level, i) => {
+                chartOptions.plugins.annotation.annotations[`resistance${i}`] = {
+                    type: 'line',
+                    yMin: level,
+                    yMax: level,
+                    borderColor: 'rgba(220, 53, 69, 0.7)',
+                    borderWidth: 2,
+                    borderDash: [5, 5],
+                    label: {
+                        content: `Resistance ${i + 1}`,
+                        enabled: true,
+                        position: 'start',
+                        backgroundColor: 'rgba(220, 53, 69, 0.7)',
+                        color: '#FFFFFF'
+                    }
+                };
+            });
+        }
+    }
+
+    if (chartInstance) {
+        chartInstance.destroy();
+    }
+
+    chartInstance = new Chart(canvasRef.current, {
+        type: chartType,
+        data: chartData,
+        options: chartOptions
+    });
+
+    return chartInstance;
+};
