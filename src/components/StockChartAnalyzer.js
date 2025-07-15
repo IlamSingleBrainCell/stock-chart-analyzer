@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
@@ -37,7 +37,7 @@ function StockChartAnalyzer() {
         { symbol: "INFY.NS", name: "Infosys", market: "India" },
         { symbol: "JIOFIN.NS", name: "Jio Financial", market: "India" },
     ];
-    const [uploadedImage, setUploadedImage] = useState(null);
+    const [, setUploadedImage] = useState(null);
     const [stockSymbol, setStockSymbol] = useState('');
     const {
         stockData,
@@ -56,13 +56,12 @@ function StockChartAnalyzer() {
     const [keyLevels, setKeyLevels] = useState(null);
     const [selectedTimeRange, setSelectedTimeRange] = useState('3mo');
     const [longTermAssessment, setLongTermAssessment] = useState(null);
-    const [currentView, setCurrentView] = useState('analyzer');
+    const [, setCurrentView] = useState('analyzer');
     const [filteredSuggestions, setFilteredSuggestions] = useState([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
     const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const canvasRef = useRef(null);
     const chartCanvasRef = useRef(null);
     const inputRef = useRef(null);
     const { theme, toggleTheme } = useContext(ThemeContext);
@@ -572,19 +571,5 @@ function StockChartAnalyzer() {
         </div>
     );
 }
-
-const toggleButtonStyle = {
-    padding: '10px 20px',
-    fontSize: '16px',
-    fontWeight: '600',
-    border: '1px solid var(--primary-accent-border)',
-    borderRadius: '8px',
-    cursor: 'pointer',
-    transition: 'all 0.2s ease-in-out',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    minWidth: '180px'
-};
 
 export default StockChartAnalyzer;

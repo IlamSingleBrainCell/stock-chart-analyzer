@@ -1,5 +1,5 @@
 /* global Chart */
-import { chartPatterns, chartThemeColors } from '../constants';
+import { chartThemeColors } from '../constants';
 
 let chartInstance = null;
 
