@@ -76,60 +76,57 @@ function StockChartAnalyzer() {
         }
     };
 
-    const runAnalysis = () => {
-        if (!stockData) return;
-
-        try {
-            let calculatedKeyLevels = null;
-            let currentLongTermAssessment = null;
-            if (stockData && stockData.prices && stockData.prices.length > 0) {
-                calculatedKeyLevels = calculateKeyLevels(stockData.prices);
-                if (selectedTimeRange === '1y' || selectedTimeRange === '5y' || selectedTimeRange === '10y') {
-                    currentLongTermAssessment = generateLongTermAssessment(stockData, selectedTimeRange);
-                    if (currentLongTermAssessment) {
-                        setAnalysis({ longTermAssessment: currentLongTermAssessment });
-                    }
-                } else {
-                    const patternAnalysis = detectPatternFromPriceData(stockData.prices);
-                    if (patternAnalysis) {
-                        const { pattern: detectedPatternName, confidence: confidenceScore, accuracy, detectedPoints } = patternAnalysis;
-                        if (detectedPatternName && chartPatterns[detectedPatternName]) {
-                            const selectedPatternDetails = chartPatterns[detectedPatternName];
-                            const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
-                            const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
-                            setAnalysis({
-                                patternDetected: {
-                                    name: detectedPatternName,
-                                    ...selectedPatternDetails,
-                                    accuracy: accuracy,
-                                    detectedPoints: detectedPoints,
-                                },
-                                prediction: selectedPatternDetails.prediction,
-                                confidence: confidenceScore,
-                                recommendation: rec,
-                                breakoutTiming: breakout,
-                                keyLevels: calculatedKeyLevels,
-                                timeEstimate: `Expected to move within ${selectedPatternDetails.timeframe}`,
-                                entryExit: {
-                                    entry: selectedPatternDetails.entryStrategy,
-                                    exit: selectedPatternDetails.exitStrategy
-                                },
-                            });
-                        }
-                    }
-                }
-            }
-        } catch (error) {
-            console.error('Error analyzing chart:', error);
-        }
-    };
-
     useEffect(() => {
         if (stockData) {
             const chartImageUrl = createChartFromData(stockData, analysis?.keyLevels, theme, chartCanvasRef);
             setUploadedImage(chartImageUrl);
+
+            try {
+                let calculatedKeyLevels = null;
+                let currentLongTermAssessment = null;
+                if (stockData && stockData.prices && stockD
+ata.prices.length > 0) {
+                    calculatedKeyLevels = calculateKeyLevels(stockData.prices);
+                    if (selectedTimeRange === '1y' || selectedTimeRange === '5y' || selectedTimeRange === '10y') {
+                        currentLongTermAssessment = generateLongTermAssessment(stockData, selectedTimeRange);
+                        if (currentLongTermAssessment) {
+                            setAnalysis({ longTermAssessment: currentLongTermAssessment });
+                        }
+                    } else {
+                        const patternAnalysis = detectPatternFromPriceData(stockData.prices);
+                        if (patternAnalysis) {
+                            const { pattern: detectedPatternName, confidence: confidenceScore, accuracy, detectedPoints } = patternAnalysis;
+                            if (detectedPatternName && chartPatterns[detectedPatternName]) {
+                                const selectedPatternDetails = chartPatterns[detectedPatternName];
+                                const rec = generateRecommendation(selectedPatternDetails, confidenceScore);
+                                const breakout = calculateBreakoutTiming(detectedPatternName, stockData, confidenceScore);
+                                setAnalysis({
+                                    patternDetected: {
+                                        name: detectedPatternName,
+                                        ...selectedPatternDetails,
+                                        accuracy: accuracy,
+                                        detectedPoints: detectedPoints,
+                                    },
+                                    prediction: selectedPatternDetails.prediction,
+                                    confidence: confidenceScore,
+                                    recommendation: rec,
+                                    breakoutTiming: breakout,
+                                    keyLevels: calculatedKeyLevels,
+                                    timeEstimate: `Expected to move within ${selectedPatternDetails.timeframe}`,
+                                    entryExit: {
+                                        entry: selectedPatternDetails.entryStrategy,
+                                        exit: selectedPatternDetails.exitStrategy
+                                    },
+                                });
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error analyzing chart:', error);
+            }
         }
-    }, [stockData, theme, analysis?.keyLevels]);
+    }, [stockData, theme, analysis?.keyLevels, selectedTimeRange]);
 
     return (
         <div className="min-h-screen bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100">
