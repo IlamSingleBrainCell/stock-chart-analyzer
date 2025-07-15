@@ -6,16 +6,24 @@ export const useStockData = () => {
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
     const [stockDatabase, setStockDatabase] = useState([]);
+    const [isDBLoaded, setIsDBLoaded] = useState(false);
 
     useEffect(() => {
         fetch('/stockDatabase.json')
             .then(response => response.json())
-            .then(data => setStockDatabase(data))
-            .catch(error => console.error('Error fetching stock database:', error));
+            .then(data => {
+                setStockDatabase(data);
+                setIsDBLoaded(true);
+            })
+            .catch(error => {
+                console.error('Error fetching stock database:', error);
+                setError('Could not load stock database.');
+                setIsDBLoaded(true);
+            });
     }, []);
 
     const fetchAllData = useCallback(async (symbol, timeRange = '3mo') => {
-        if (!symbol.trim()) return;
+        if (!symbol.trim() || !isDBLoaded) return;
         setLoading(true);
         setError(null);
         setStockData(null);
@@ -29,7 +37,6 @@ export const useStockData = () => {
                 symbolToFetch = stock.symbol;
             } else {
                 symbolToFetch = symbol.trim().toUpperCase();
-                // If it's likely an Indian stock and doesn't have .NS, add it.
                 if (!symbolToFetch.endsWith('.NS') && stockDatabase.some(s => s.market === 'India' && s.name.toLowerCase().includes(query))) {
                     symbolToFetch += '.NS';
                 }
@@ -45,12 +52,13 @@ export const useStockData = () => {
         } finally {
             setLoading(false);
         }
-    }, [stockDatabase]);
+    }, [stockDatabase, isDBLoaded]);
 
     return {
         stockData,
         loading,
         error,
         fetchAllData,
+        isDBLoaded,
     };
 };
