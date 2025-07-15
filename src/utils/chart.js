@@ -1,8 +1,4 @@
-import Chart from 'chart.js/auto';
-import annotationPlugin from 'chartjs-plugin-annotation';
 import { chartPatterns, chartThemeColors } from '../constants';
-
-Chart.register(annotationPlugin);
 
 let chartInstance = null;
 
