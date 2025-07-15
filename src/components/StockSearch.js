@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef } from 'react';
 import { Search } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { highlightMatch } from '../utils/helpers';
