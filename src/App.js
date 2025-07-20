@@ -1,15 +1,19 @@
 import React from 'react';
+import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { ThemeProvider } from './ThemeContext';
-import StockChartAnalyzer from './components/StockChartAnalyzer';
-import Logo from './logo';
+import MainLayout from './layouts/MainLayout';
+import StockChartAnalyzer from './pages/StockChartAnalyzer';
 
 function App() {
   return (
     <ThemeProvider>
-      <div style={{ position: 'absolute', top: '20px', left: '20px', textAlign: 'center' }}>
-        <Logo />
-      </div>
-      <StockChartAnalyzer />
+      <Router>
+        <MainLayout>
+          <Routes>
+            <Route path="/" element={<StockChartAnalyzer />} />
+          </Routes>
+        </MainLayout>
+      </Router>
     </ThemeProvider>
   );
 }
