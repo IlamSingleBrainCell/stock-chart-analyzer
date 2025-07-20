@@ -21,18 +21,10 @@ export const useStockData = () => {
         setStockData(null);
 
         try {
-            const query = symbol.trim().toLowerCase();
-            const stock = stockDatabase.find(s => s.symbol.toLowerCase() === `${query}.ns` || s.name.toLowerCase().includes(query) || s.symbol.toLowerCase() === query);
-
-            let symbolToFetch;
-            if (stock) {
-                symbolToFetch = stock.symbol;
-            } else {
-                symbolToFetch = symbol.trim().toUpperCase();
-                // If it's likely an Indian stock and doesn't have .NS, add it.
-                if (!symbolToFetch.endsWith('.NS') && stockDatabase.some(s => s.market === 'India' && s.name.toLowerCase().includes(query))) {
-                    symbolToFetch += '.NS';
-                }
+            let symbolToFetch = symbol.trim().toUpperCase();
+            const isIndianStock = stockDatabase.some(s => s.market === 'India' && (s.symbol.toLowerCase() === `${symbol.toLowerCase()}.ns` || s.name.toLowerCase().includes(symbol.toLowerCase())));
+            if (isIndianStock && !symbolToFetch.endsWith('.NS')) {
+                symbolToFetch += '.NS';
             }
 
             const data = await fetchYahooFinanceData(symbolToFetch, timeRange);

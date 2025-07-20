@@ -122,13 +122,6 @@ function StockChartAnalyzer() {
     const handleInputChange = (value) => {
         setStockSymbol(value);
         if (value.length >= 1) {
-            const suggestionQuery = value.toLowerCase();
-            const isIndianStock = stockDatabase.some(stock => stock.market === 'India' && (stock.symbol.toLowerCase() === `${suggestionQuery}.ns` || stock.name.toLowerCase().includes(suggestionQuery)));
-
-            if (isIndianStock && !suggestionQuery.endsWith('.ns')) {
-                // Keep the displayed value clean, but fetch with .NS
-            }
-
             const suggestions = filterSuggestions(value);
             setFilteredSuggestions(suggestions);
             setShowSuggestions(true);
@@ -176,9 +169,7 @@ function StockChartAnalyzer() {
     };
 
     const selectSuggestion = (stock) => {
-        // Display the symbol without .NS for Indian stocks for a cleaner UI
-        const displaySymbol = stock.market === 'India' ? stock.symbol.replace('.NS', '') : stock.symbol;
-        setStockSymbol(displaySymbol);
+        setStockSymbol(stock.symbol.replace('.NS', ''));
         setShowSuggestions(false);
         setSelectedSuggestionIndex(-1);
         setPrediction(null);
@@ -190,10 +181,7 @@ function StockChartAnalyzer() {
         setBreakoutTiming(null);
         setKeyLevels(null);
         setLongTermAssessment(null);
-
-        // Use the full symbol with .NS for fetching data
-        const symbolToFetch = stock.symbol;
-        fetchAllData(symbolToFetch, selectedTimeRange);
+        fetchAllData(stock.symbol, selectedTimeRange);
     };
 
     const handleTimeRangeChange = (range) => {
