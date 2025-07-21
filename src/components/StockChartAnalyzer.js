@@ -71,7 +71,9 @@ function StockChartAnalyzer() {
     const handleInputChange = async (value) => {
         setStockSymbol(value);
         if (value.length >= 1) {
-            const suggestions = await fetchStockSuggestions(value);
+            const isIndianStock = value.toLowerCase().includes('.ns') || ['tcs', 'reliance', 'hdfc', 'infy', 'jiofin'].some(term => value.toLowerCase().includes(term));
+            const region = isIndianStock ? 'IN' : 'US';
+            const suggestions = await fetchStockSuggestions(value, region);
             setFilteredSuggestions(suggestions);
             setShowSuggestions(true);
             setSelectedSuggestionIndex(-1);

@@ -109,11 +109,11 @@ export const fetchFinancialDataForProsCons = async (symbol) => {
     return fetchedProsConsData;
   };
 
-export const fetchStockSuggestions = async (query) => {
+export const fetchStockSuggestions = async (query, region = 'US') => {
     if (!query) return [];
     try {
         const proxyUrl = 'https://api.allorigins.win/raw?url=';
-        const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v1/finance/search?q=${query}&lang=en-US&region=US&quotesCount=6&newsCount=0`);
+        const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v1/finance/search?q=${query}&lang=en-US&region=${region}&quotesCount=6&newsCount=0`);
         const response = await fetch(proxyUrl + yahooUrl);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
