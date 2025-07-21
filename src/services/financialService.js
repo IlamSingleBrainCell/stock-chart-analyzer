@@ -123,7 +123,7 @@ export const fetchStockSuggestions = async (query, region = 'US') => {
             return data.quotes.map(quote => ({
                 symbol: quote.symbol,
                 name: quote.longname || quote.shortname,
-                market: quote.exhange || 'US',
+                market: quote.exchange === 'NSI' || quote.exchange === 'BSE' ? 'India' : 'US',
                 sector: quote.sector || 'N/A'
             }));
         }
