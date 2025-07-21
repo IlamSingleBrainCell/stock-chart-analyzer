@@ -279,11 +279,11 @@ function StockChartAnalyzer() {
                         </div>
 
                         <div>
-                            <p style={{ fontSize: '14px', color: 'var(--text-color-light)', marginBottom: '12px', fontWeight: '500' }}>Popular Stocks from {stockDatabase.length}+ available (<FlagIcon country="US" size={12} />US + <FlagIcon country="India" size={12} />Indian Markets):</p>
+                            <p style={{ fontSize: '14px', color: 'var(--text-color-light)', marginBottom: '12px', fontWeight: '500' }}>Popular Stocks from available (<FlagIcon country="US" size={12} />US + <FlagIcon country="India" size={12} />Indian Markets):</p>
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 {popularStocksData.map(stock => (<button key={stock.symbol} onClick={() => selectSuggestion(stock)} disabled={loading} style={{ padding: '8px 12px', background: stockSymbol === stock.symbol ? 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)' : 'var(--primary-accent-light)', color: stockSymbol === stock.symbol ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)', border: `1px solid var(--primary-accent-border)`, borderRadius: '20px', fontSize: '13px', fontWeight: '500', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '4px' }} onMouseEnter={(e) => { if (stockSymbol !== stock.symbol && !loading) { e.target.style.background = 'var(--input-background-hover)'; } }} onMouseLeave={(e) => { if (stockSymbol !== stock.symbol && !loading) { e.target.style.background = 'var(--primary-accent-light)'; } }}> <FlagIcon country={stock.market} size={12} /> {stock.symbol.replace('.NS', '')} </button>))}
                             </div>
-                            <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-color-lighter)' }}><strong>Examples:</strong> Search from {stockDatabase.length}+ stocks - try "TCS" (Indian IT), "Reliance" (Indian Oil), "AAPL" (US Tech), "HDFC" (Indian Banking), "NVDA" (US Semiconductors), or "Wipro" (Indian IT)</div>
+                            <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-color-lighter)' }}><strong>Examples:</strong> Search from stocks - try "TCS" (Indian IT), "Reliance" (Indian Oil), "AAPL" (US Tech), "HDFC" (Indian Banking), "NVDA" (US Semiconductors), or "Wipro" (Indian IT)</div>
                         </div>
                     </div>
 
