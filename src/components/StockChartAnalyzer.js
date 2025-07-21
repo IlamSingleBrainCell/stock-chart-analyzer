@@ -9,6 +9,7 @@ import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
 import { highlightMatch } from '../utils/helpers';
 import { useStockData } from '../hooks/useStockData';
+import { fetchStockSuggestions } from '../services/financialService';
 
 export const PatternVisualization = ({ patternName, theme = 'light', width = 300, height = 150 }) => {
     const canvasRef = useRef(null);
@@ -25,7 +26,6 @@ export const PatternVisualization = ({ patternName, theme = 'light', width = 300
 };
 
 function StockChartAnalyzer() {
-    const [stockDatabase, setStockDatabase] = useState([]);
     const popularStocksData = [
         { symbol: "AAPL", name: "Apple", market: "US" },
         { symbol: "GOOGL", name: "Google", market: "US" },
@@ -67,62 +67,11 @@ function StockChartAnalyzer() {
     const inputRef = useRef(null);
     const { theme, toggleTheme } = useContext(ThemeContext);
 
-    useEffect(() => {
-        fetch('/stockDatabase.json')
-            .then(response => response.json())
-            .then(data => setStockDatabase(data))
-            .catch(error => console.error('Error fetching stock database:', error));
-    }, []);
 
-    const filterSuggestions = (input) => {
-        if (!input || input.length < 1) return [];
-        const query = input.toLowerCase();
-        const matches = stockDatabase.filter(stock => {
-            const symbolMatch = stock.symbol.toLowerCase().includes(query);
-            const nameMatch = stock.name.toLowerCase().includes(query);
-            const sectorMatch = stock.sector && stock.sector.toLowerCase().includes(query);
-            const marketMatch = stock.market.toLowerCase().includes(query);
-            // Specific check for Indian stocks without typing ".NS"
-            const indianStockMatch = stock.market === 'India' && stock.symbol.toLowerCase().startsWith(query) && query.endsWith('.ns') === false;
-            return symbolMatch || nameMatch || sectorMatch || marketMatch || indianStockMatch;
-        });
-
-        return matches.sort((a, b) => {
-            const aSymbol = a.symbol.toLowerCase();
-            const bSymbol = b.symbol.toLowerCase();
-            const aName = a.name.toLowerCase();
-            const bName = b.name.toLowerCase();
-
-            // Prioritize exact symbol matches
-            if (aSymbol === query) return -1;
-            if (bSymbol === query) return 1;
-
-            // Prioritize symbols starting with the query
-            const aSymbolStartsWith = aSymbol.startsWith(query);
-            const bSymbolStartsWith = bSymbol.startsWith(query);
-            if (aSymbolStartsWith && !bSymbolStartsWith) return -1;
-            if (bSymbolStartsWith && !aSymbolStartsWith) return 1;
-            if (aSymbolStartsWith && bSymbolStartsWith) {
-                return aSymbol.length - bSymbol.length;
-            }
-
-            // Prioritize by market (US > India)
-            if (a.market === 'US' && b.market === 'India') return -1;
-            if (b.market === 'US' && a.market === 'India') return 1;
-
-            // Lastly, sort by name
-            if (aName.includes(query) && !bName.includes(query)) return -1;
-            if (bName.includes(query) && !aName.includes(query)) return 1;
-
-            return 0;
-        }).slice(0, 12);
-    };
-
-
-    const handleInputChange = (value) => {
+    const handleInputChange = async (value) => {
         setStockSymbol(value);
         if (value.length >= 1) {
-            const suggestions = filterSuggestions(value);
+            const suggestions = await fetchStockSuggestions(value);
             setFilteredSuggestions(suggestions);
             setShowSuggestions(true);
             setSelectedSuggestionIndex(-1);
@@ -200,13 +149,6 @@ function StockChartAnalyzer() {
         }
     };
 
-    const handleInputFocus = () => {
-        if (stockSymbol.length >= 1) {
-            const suggestions = filterSuggestions(stockSymbol);
-            setFilteredSuggestions(suggestions);
-            setShowSuggestions(true);
-        }
-    };
     const handleInputBlur = () => {
         setTimeout(() => {
             setShowSuggestions(false);
@@ -296,7 +238,7 @@ function StockChartAnalyzer() {
                         <div style={{ position: 'relative', marginBottom: '16px' }}>
                             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                                 <div style={{ flex: '1', minWidth: '300px', position: 'relative' }}>
-                                    <input ref={inputRef} type="text" value={stockSymbol} onChange={(e) => handleInputChange(e.target.value)} onKeyDown={handleKeyDown} onFocus={handleInputFocus} onBlur={handleInputBlur} placeholder="🔍 Search: AAPL, TCS.NS, Reliance, Microsoft, HDFC Bank..." style={{ width: '100%', padding: '14px 16px', border: showSuggestions ? '2px solid var(--input-border-focus)' : '2px solid var(--input-border)', borderRadius: showSuggestions ? '8px 8px 0 0' : '8px', fontSize: '16px', fontWeight: '500', outline: 'none', transition: 'border-color 0.2s', backgroundColor: 'var(--background-color)', color: 'var(--text-color)', borderBottom: showSuggestions ? '1px solid var(--input-border)' : '2px solid var(--input-border)' }} />
+                                    <input ref={inputRef} type="text" value={stockSymbol} onChange={(e) => handleInputChange(e.target.value)} onKeyDown={handleKeyDown} onBlur={handleInputBlur} placeholder="🔍 Search: AAPL, TCS.NS, Reliance, Microsoft, HDFC Bank..." style={{ width: '100%', padding: '14px 16px', border: showSuggestions ? '2px solid var(--input-border-focus)' : '2px solid var(--input-border)', borderRadius: showSuggestions ? '8px 8px 0 0' : '8px', fontSize: '16px', fontWeight: '500', outline: 'none', transition: 'border-color 0.2s', backgroundColor: 'var(--background-color)', color: 'var(--text-color)', borderBottom: showSuggestions ? '1px solid var(--input-border)' : '2px solid var(--input-border)' }} />
                                     {showSuggestions && (
                                         <div style={{ position: 'absolute', top: '100%', left: '0', right: '0', backgroundColor: 'var(--background-color)', border: '2px solid var(--input-border-focus)', borderTop: 'none', borderRadius: '0 0 8px 8px', boxShadow: '0 4px 20px rgba(0, 0, 0, 0.15)', zIndex: 1000, maxHeight: '300px', overflowY: 'auto' }}>
                                             {filteredSuggestions.length > 0 ? (

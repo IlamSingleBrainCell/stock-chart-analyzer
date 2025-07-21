@@ -108,3 +108,28 @@ export const fetchFinancialDataForProsCons = async (symbol) => {
     }
     return fetchedProsConsData;
   };
+
+export const fetchStockSuggestions = async (query) => {
+    if (!query) return [];
+    try {
+        const proxyUrl = 'https://api.allorigins.win/raw?url=';
+        const yahooUrl = encodeURIComponent(`https://query1.finance.yahoo.com/v1/finance/search?q=${query}&lang=en-US&region=US&quotesCount=6&newsCount=0`);
+        const response = await fetch(proxyUrl + yahooUrl);
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        if (data.quotes) {
+            return data.quotes.map(quote => ({
+                symbol: quote.symbol,
+                name: quote.longname || quote.shortname,
+                market: quote.exhange || 'US',
+                sector: quote.sector || 'N/A'
+            }));
+        }
+        return [];
+    } catch (error) {
+        console.error('Failed to fetch stock suggestions:', error);
+        return [];
+    }
+};
