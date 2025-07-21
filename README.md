@@ -2,7 +2,7 @@
 
 ## Project Description
 
-Stock Chart Analyzer is a sophisticated React application designed to empower users with tools for technical analysis of stock charts. It offers both real-time data analysis and educational resources to help users identify common chart patterns and make informed decisions. This tool is intended for educational and informational purposes.
+Stock Chart Analyzer is  a sophisticated React application designed to empower users with tools for technical analysis of stock charts. It offers both real-time data analysis and educational resources to help users identify common chart patterns and make informed decisions. This tool is intended for educational and informational purposes.
 
 **Live Application:** [https://IlamSingleBrainCell.github.io/stock-chart-analyzer](https://IlamSingleBrainCell.github.io/stock-chart-analyzer)
 
