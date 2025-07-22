@@ -112,7 +112,7 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
     const nextQuestionIndex = questionNumber + 1;
     if (nextQuestionIndex < totalQuestions) {
         setQuestionNumber(nextQuestionIndex);
-        // The useEffect watching questionNumber will trigger loadNextQuestion
+        loadNextQuestion();
     } else {
         setGameOver(true);
     }
@@ -120,7 +120,7 @@ const PatternRecognitionGame = ({ PatternVisualization, chartPatterns }) => {
 
   useEffect(() => {
     if (gameStarted && !gameOver) {
-      loadNextQuestion();
+      // loadNextQuestion();
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [questionNumber, gameStarted, gameOver]); // Trigger load when questionNumber changes while game is active
