@@ -5,11 +5,12 @@ import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
 import PatternDetectionModal from './PatternDetectionModal';
 import { chartPatterns } from '../constants';
-import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
+import { drawPatternOnCanvas } from '../utils/chart';
 import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
 import { highlightMatch } from '../utils/helpers';
 import { useStockData } from '../hooks/useStockData';
 import { fetchStockSuggestions } from '../services/financialService';
+import LightweightChart from './LightweightChart';
 
 export const PatternVisualization = ({ patternName, theme = 'light', width = 300, height = 150 }) => {
     const canvasRef = useRef(null);
@@ -63,7 +64,6 @@ function StockChartAnalyzer() {
     const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const canvasRef = useRef(null);
-    const chartCanvasRef = useRef(null);
     const inputRef = useRef(null);
     const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -193,18 +193,9 @@ function StockChartAnalyzer() {
         }
     };
 
-    useEffect(() => {
-        if (stockData) {
-            const chartImageUrl = createChartFromData(stockData, keyLevels, theme, chartCanvasRef);
-            setUploadedImage(chartImageUrl);
-        }
-    }, [stockData, keyLevels, theme]);
-
-
     return (
         <div style={{ maxWidth: '1200px', margin: '0 auto', padding: '20px', background: 'var(--app-background-start)', backdropFilter: 'blur(20px)', borderRadius: '20px', border: '2px solid var(--app-border)' }}>
             <canvas ref={canvasRef} style={{ display: 'none' }} />
-            <canvas ref={chartCanvasRef} style={{ display: 'none' }} />
 
             <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', marginBottom: '25px', padding: '10px', background: 'var(--card-background)', borderRadius: '12px', border: '1px solid var(--card-border)' }}>
                 <button onClick={() => setCurrentView('analyzer')} style={{ ...toggleButtonStyle, background: currentView === 'analyzer' ? 'var(--primary-accent)' : 'var(--primary-accent-light)', color: currentView === 'analyzer' ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)' }}>
@@ -300,9 +291,9 @@ function StockChartAnalyzer() {
                         <input type="file" accept="image/*" onChange={handleImageUpload} style={{ width: '100%', padding: '20px', border: '2px dashed var(--primary-accent-border)', borderRadius: '12px', background: 'var(--input-background)', fontSize: '16px', fontWeight: '500', color: 'var(--text-color)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.target.style.borderColor = 'var(--secondary-accent)'; e.target.style.background = 'var(--input-background-hover)'; }} onMouseLeave={(e) => { e.target.style.borderColor = 'var(--primary-accent-border)'; e.target.style.background = 'var(--input-background)'; }} />
                     </div>
 
-                    {uploadedImage && (
+                    {stockData && (
                         <div style={{ marginBottom: '32px' }}>
-                            <div style={{ width: '100%', height: '400px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}><img src={uploadedImage} alt="Stock chart" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} /></div>
+                            <LightweightChart data={stockData.prices} theme={theme} />
                             {stockData && (<div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}><div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : selectedTimeRange === '10y' ? '10 Years' : '3 Months'} Data):</div><div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div><div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |<strong> Data Points:</strong> {stockData.prices.length} {selectedTimeRange === '1y' ? 'weeks' : (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'}</div>{stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}</div>)}
                             <button onClick={() => {
                                 try {
