@@ -1,14 +1,16 @@
 import React, { useState, useRef, useEffect, useContext } from 'react';
-import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award } from 'lucide-react';
+import { TrendingUp, TrendingDown, Calendar, BarChart, Target, DollarSign, Search, RefreshCw, Clock, Info, ChevronUp, Sun, Moon, Zap, Award, Filter } from 'lucide-react';
 import FlagIcon from './FlagIcon';
 import { ThemeContext } from '../ThemeContext';
 import PatternRecognitionGame from './PatternRecognitionGame';
 import PatternDetectionModal from './PatternDetectionModal';
+import StockFilterModal from './StockFilterModal';
 import { chartPatterns } from '../constants';
 import { drawPatternOnCanvas, createChartFromData } from '../utils/chart';
-import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation } from '../utils/analysis';
+import { detectPatternFromPriceData, calculateKeyLevels, calculateBreakoutTiming, generateLongTermAssessment, generateRecommendation, hasBullishPattern } from '../utils/analysis';
 import { highlightMatch } from '../utils/helpers';
 import { useStockData } from '../hooks/useStockData';
+import { fetchYahooFinanceData } from '../services/stockService';
 import { fetchStockSuggestions } from '../services/financialService';
 
 export const PatternVisualization = ({ patternName, theme = 'light', width = 300, height = 150 }) => {
@@ -62,6 +64,9 @@ function StockChartAnalyzer() {
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
     const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
+    const [isFilterModalOpen, setIsFilterModalOpen] = useState(false);
+    const [filteredStocks, setFilteredStocks] = useState([]);
+    const [isFiltering, setIsFiltering] = useState(false);
     const canvasRef = useRef(null);
     const chartCanvasRef = useRef(null);
     const inputRef = useRef(null);
@@ -284,6 +289,10 @@ function StockChartAnalyzer() {
                             <p style={{ fontSize: '14px', color: 'var(--text-color-light)', marginBottom: '12px', fontWeight: '500' }}>Popular Stocks from available (<FlagIcon country="US" size={12} />US + <FlagIcon country="India" size={12} />Indian Markets):</p>
                             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
                                 {popularStocksData.map(stock => (<button key={stock.symbol} onClick={() => selectSuggestion(stock)} disabled={loading} style={{ padding: '8px 12px', background: stockSymbol === stock.symbol ? 'linear-gradient(135deg, var(--primary-accent) 0%, var(--secondary-accent) 100%)' : 'var(--primary-accent-light)', color: stockSymbol === stock.symbol ? 'var(--button-primary-text)' : 'var(--primary-accent-darker)', border: `1px solid var(--primary-accent-border)`, borderRadius: '20px', fontSize: '13px', fontWeight: '500', cursor: loading ? 'not-allowed' : 'pointer', transition: 'all 0.2s', opacity: loading ? 0.6 : 1, display: 'flex', alignItems: 'center', gap: '4px' }} onMouseEnter={(e) => { if (stockSymbol !== stock.symbol && !loading) { e.target.style.background = 'var(--input-background-hover)'; } }} onMouseLeave={(e) => { if (stockSymbol !== stock.symbol && !loading) { e.target.style.background = 'var(--primary-accent-light)'; } }}> <FlagIcon country={stock.market} size={12} /> {stock.symbol.replace('.NS', '')} </button>))}
+                                <button onClick={() => setIsFilterModalOpen(true)} style={{ padding: '8px 12px', background: 'var(--primary-accent-light)', color: 'var(--primary-accent-darker)', border: '1px solid var(--primary-accent-border)', borderRadius: '20px', fontSize: '13px', fontWeight: '500', cursor: 'pointer', transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                    <Filter size={14} />
+                                    Filter Stocks
+                                </button>
                             </div>
                             <div style={{ marginTop: '12px', fontSize: '12px', color: 'var(--text-color-lighter)' }}><strong>Examples:</strong> Search from stocks - try "TCS" (Indian IT), "Reliance" (Indian Oil), "AAPL" (US Tech), "HDFC" (Indian Banking), "NVDA" (US Semiconductors), or "Wipro" (Indian IT)</div>
                         </div>
@@ -420,6 +429,62 @@ function StockChartAnalyzer() {
                 stockData={stockData}
                 theme={theme}
             />
+
+            <StockFilterModal
+                isOpen={isFilterModalOpen}
+                onClose={() => setIsFilterModalOpen(false)}
+                stockDatabase={stockDatabase}
+                onApplyFilter={async (filters) => {
+                    setIsFiltering(true);
+                    let results = stockDatabase;
+
+                    if (filters.market !== 'All') {
+                        results = results.filter(stock => stock.market === filters.market);
+                    }
+
+                    if (filters.potential) {
+                        const potentialStocks = [];
+                        for (const stock of results) {
+                            try {
+                                const data = await fetchYahooFinanceData(stock.symbol, '3mo');
+                                if (data && data.prices && hasBullishPattern(data.prices)) {
+                                    potentialStocks.push(stock);
+                                }
+                            } catch (error) {
+                                console.error(`Error fetching data for ${stock.symbol}:`, error);
+                            }
+                        }
+                        results = potentialStocks;
+                    }
+
+                    setFilteredStocks(results);
+                    setIsFiltering(false);
+                }}
+            />
+
+            {isFiltering && (
+                <div style={{ textAlign: 'center', margin: '20px 0' }}>
+                    <RefreshCw size={24} style={{ animation: 'spin 1s linear infinite', color: 'var(--primary-accent)' }} />
+                    <p style={{ color: 'var(--text-color-light)' }}>Filtering stocks...</p>
+                </div>
+            )}
+
+            {filteredStocks.length > 0 && (
+                <div style={{ marginTop: '32px' }}>
+                    <h2 style={{ fontSize: '24px', fontWeight: '700', color: 'var(--text-color)', marginBottom: '16px' }}>Filtered Results</h2>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(250px, 1fr))', gap: '16px' }}>
+                        {filteredStocks.map(stock => (
+                            <div key={stock.symbol} onClick={() => selectSuggestion(stock)} style={{ background: 'var(--card-background)', padding: '16px', borderRadius: '12px', border: '1px solid var(--card-border)', cursor: 'pointer', transition: 'all 0.2s' }}>
+                                <div style={{ fontWeight: '600', fontSize: '16px', color: 'var(--text-color)' }}>{stock.name} ({stock.symbol})</div>
+                                <div style={{ fontSize: '14px', color: 'var(--text-color-lighter)', marginTop: '4px' }}>{stock.sector}</div>
+                                <div style={{ fontSize: '12px', color: stock.market === 'India' ? 'var(--danger-color)' : 'var(--primary-accent)', marginTop: '8px' }}>
+                                    <FlagIcon country={stock.market} size={12} /> {stock.market}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             <div style={{ fontSize: '15px', color: 'var(--text-color-light)', background: 'var(--card-background)', padding: '24px', borderRadius: '16px', border: '2px solid var(--card-border)', lineHeight: '1.7', marginBottom: '24px', fontWeight: '500', textAlign: 'center' }}>
                 <p style={{ marginBottom: '12px' }}><strong>⚠️ Important Disclaimer:</strong> This application provides technical analysis and historical data reviews for educational purposes only.</p>
