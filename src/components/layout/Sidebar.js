@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
-import { ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const SidebarWrapper = styled.aside`
-  width: 250px;
+  width: ${({ isOpen }) => (isOpen ? '250px' : '60px')};
   background-color: var(--surface);
   border-right: 1px solid var(--surface-hover);
   padding: 20px;
