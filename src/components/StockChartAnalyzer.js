@@ -61,8 +61,6 @@ function StockChartAnalyzer() {
     const [selectedSuggestionIndex, setSelectedSuggestionIndex] = useState(-1);
     const [showConfidenceHelp, setShowConfidenceHelp] = useState(false);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const canvasRef = useRef(null);
-    const chartCanvasRef = useRef(null);
     const inputRef = useRef(null);
     const { theme, toggleTheme } = useContext(ThemeContext);
 
@@ -157,11 +155,6 @@ function StockChartAnalyzer() {
         }, 200);
     };
 
-    useEffect(() => {
-        if (stockData) {
-            createChartFromData(stockData, keyLevels, theme, chartCanvasRef);
-        }
-    }, [stockData, keyLevels, theme]);
 
 
     return (
@@ -257,7 +250,7 @@ function StockChartAnalyzer() {
 
                     {stockData && (
                         <div style={{ marginBottom: '32px' }}>
-                            <div style={{ width: '100%', height: '400px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}><img src={stockData} alt="Stock chart" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} /></div>
+                            <TradingViewChart data={stockData.prices} />
                             {stockData && (<div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}><div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : selectedTimeRange === '10y' ? '10 Years' : '3 Months'} Data):</div><div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div><div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |<strong> Data Points:</strong> {stockData.prices.length} {selectedTimeRange === '1y' ? 'weeks' : (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'}</div>{stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}</div>)}
                             <button onClick={() => {
                                 try {
