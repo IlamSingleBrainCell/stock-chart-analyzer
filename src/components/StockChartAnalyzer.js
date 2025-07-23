@@ -37,7 +37,6 @@ function StockChartAnalyzer() {
         { symbol: "INFY.NS", name: "Infosys", market: "India" },
         { symbol: "JIOFIN.NS", name: "Jio Financial", market: "India" },
     ];
-    const [uploadedImage, setUploadedImage] = useState(null);
     const [stockSymbol, setStockSymbol] = useState('');
     const {
         stockData,
@@ -158,45 +157,9 @@ function StockChartAnalyzer() {
         }, 200);
     };
 
-    const clearAnalysis = () => {
-        setUploadedImage(null);
-        setStockSymbol('');
-        setPrediction(null);
-        setPatternDetected(null);
-        setConfidence(null);
-        setRecommendation(null);
-        setEntryExit(null);
-        setTimeEstimate(null);
-        setBreakoutTiming(null);
-        setKeyLevels(null);
-        setLongTermAssessment(null);
-    };
-
-    const handleImageUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onload = () => {
-                setUploadedImage(reader.result);
-                setStockSymbol('');
-                setPrediction(null);
-                setPatternDetected(null);
-                setConfidence(null);
-                setRecommendation(null);
-                setEntryExit(null);
-                setTimeEstimate(null);
-                setBreakoutTiming(null);
-                setKeyLevels(null);
-                setLongTermAssessment(null);
-            };
-            reader.readAsDataURL(file);
-        }
-    };
-
     useEffect(() => {
         if (stockData) {
-            const chartImageUrl = createChartFromData(stockData, keyLevels, theme, chartCanvasRef);
-            setUploadedImage(chartImageUrl);
+            createChartFromData(stockData, keyLevels, theme, chartCanvasRef);
         }
     }, [stockData, keyLevels, theme]);
 
@@ -260,7 +223,7 @@ function StockChartAnalyzer() {
                                     {loading ? <RefreshCw size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Search size={16} />}
                                     {loading ? 'Fetching...' : 'Get Chart'}
                                 </button>
-                                <button onClick={clearAnalysis} style={{ padding: '14px 24px', background: 'var(--danger-background)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
+                                <button onClick={() => setStockSymbol('')} style={{ padding: '14px 24px', background: 'var(--danger-background)', color: 'var(--button-primary-text)', border: 'none', borderRadius: '8px', fontWeight: '600', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '8px', transition: 'all 0.2s', minWidth: '140px', justifyContent: 'center' }}>
                                     Clear
                                 </button>
                             </div>
@@ -292,17 +255,9 @@ function StockChartAnalyzer() {
                     {error && (<div style={{ background: 'var(--danger-background)', border: '2px solid var(--danger-border)', borderRadius: '8px', padding: '16px', marginBottom: '20px', color: 'var(--danger-color)' }}><strong>⚠️ Chart Error:</strong> {error}</div>)}
 
 
-                    <div style={{ display: 'flex', alignItems: 'center', marginBottom: '32px', gap: '16px' }}><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, transparent, var(--separator-color), transparent)' }}></div><span style={{ color: 'var(--text-color-lighter)', fontWeight: '600', fontSize: '14px', background: 'var(--card-background)', padding: '8px 16px', borderRadius: '20px', border: '1px solid var(--card-border)' }}>OR</span><div style={{ flex: '1', height: '2px', background: 'linear-gradient(90deg, var(--separator-color), transparent)' }}></div></div>
-
-                    <div style={{ marginBottom: '32px' }}>
-                        <label style={{ display: 'block', fontWeight: '600', marginBottom: '8px', color: 'var(--text-color)', fontSize: '18px' }}>📁 Upload Your Own Chart Image (for Educational Exploration)</label>
-                        <p style={{ fontSize: '13px', color: 'var(--text-color-lighter)', marginBottom: '12px', marginTop: '0px' }}>Note: Analysis for uploaded images provides an educational example of pattern types. For data-driven analysis, please use the live stock chart feature above.</p>
-                        <input type="file" accept="image/*" onChange={handleImageUpload} style={{ width: '100%', padding: '20px', border: '2px dashed var(--primary-accent-border)', borderRadius: '12px', background: 'var(--input-background)', fontSize: '16px', fontWeight: '500', color: 'var(--text-color)', cursor: 'pointer', textAlign: 'center', transition: 'all 0.2s' }} onMouseEnter={(e) => { e.target.style.borderColor = 'var(--secondary-accent)'; e.target.style.background = 'var(--input-background-hover)'; }} onMouseLeave={(e) => { e.target.style.borderColor = 'var(--primary-accent-border)'; e.target.style.background = 'var(--input-background)'; }} />
-                    </div>
-
-                    {uploadedImage && (
+                    {stockData && (
                         <div style={{ marginBottom: '32px' }}>
-                            <div style={{ width: '100%', height: '400px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}><img src={uploadedImage} alt="Stock chart" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} /></div>
+                            <div style={{ width: '100%', height: '400px', background: 'var(--card-background)', borderRadius: '16px', overflow: 'hidden', marginBottom: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', border: '2px solid var(--card-border)', boxShadow: '0 4px 20px var(--card-shadow)' }}><img src={stockData} alt="Stock chart" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '12px' }} /></div>
                             {stockData && (<div style={{ background: 'var(--success-background)', border: '2px solid var(--success-border)', borderRadius: '12px', padding: '16px', marginBottom: '16px', fontSize: '15px', color: 'var(--success-color)' }}><div style={{ fontWeight: '700', marginBottom: '8px' }}>📊 Stock Information ({selectedTimeRange === '1y' ? '1 Year' : selectedTimeRange === '5y' ? '5 Years' : selectedTimeRange === '10y' ? '10 Years' : '3 Months'} Data):</div><div><strong>Symbol:</strong> {stockData.symbol} | <strong>Company:</strong> {stockData.companyName}</div><div><strong>Current Price:</strong> {stockData.currency === 'INR' || stockData.symbol.includes('.NS') ? '₹' : '$'}{stockData.currentPrice?.toFixed(2)} {stockData.currency} |<strong> Data Points:</strong> {stockData.prices.length} {selectedTimeRange === '1y' ? 'weeks' : (selectedTimeRange === '5y' || selectedTimeRange === '10y') ? 'months' : 'days'}</div>{stockData.isMockData && <div style={{ color: 'var(--warning-color)', fontStyle: 'italic', marginTop: '4px' }}>⚠️ Using demo data - API temporarily unavailable</div>}</div>)}
                             <button onClick={() => {
                                 try {
