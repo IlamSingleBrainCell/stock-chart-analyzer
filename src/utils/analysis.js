@@ -614,3 +614,14 @@ export const generateRecommendation = (pattern, confidence) => {
     }
     return { action, reasoning };
 };
+
+export const hasBullishPattern = (prices) => {
+    if (!prices || prices.length < 20) return false;
+
+    const analysis = detectPatternFromPriceData(prices);
+    if (analysis && analysis.pattern && chartPatterns[analysis.pattern]) {
+        const patternDetails = chartPatterns[analysis.pattern];
+        return patternDetails.prediction === 'up' && analysis.confidence > 60;
+    }
+    return false;
+};
